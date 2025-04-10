@@ -12,8 +12,13 @@ document.addEventListener('DOMContentLoaded', function() {
     const submitButton = document.getElementById('submitButton');
     const progressFill = document.getElementById('progressFill');
     const currentQuestionSpan = document.getElementById('currentQuestion');
+    const totalQuestionsSpan = document.getElementById('totalQuestions');
+    const tierBadge = document.getElementById('tierBadge');
     const loadingOverlay = document.getElementById('loadingOverlay');
+    const loadingMessage = document.getElementById('loadingMessage');
     const saveUrlModal = document.getElementById('saveUrlModal');
+    const basicPaymentModal = document.getElementById('basicPaymentModal');
+    const premiumPaymentModal = document.getElementById('premiumPaymentModal');
     const uniqueUrlInput = document.getElementById('uniqueUrl');
     const copyUrlButton = document.getElementById('copyUrlButton');
     
@@ -29,8 +34,13 @@ document.addEventListener('DOMContentLoaded', function() {
         id: userId || null,
         name: '',
         email: '',
-        progress_state: '0'
+        progress_state: '0',
+        payment_tier: 'none'
     };
+    
+    // Constants for tiers
+    const BASIC_TIER_QUESTIONS = 5;
+    const PREMIUM_TIER_QUESTIONS = 25;
     
     // Generate remaining question slides (from 6 to 25)
     function generateRemainingSlides() {
@@ -106,11 +116,13 @@ document.addEventListener('DOMContentLoaded', function() {
         nextButton.addEventListener('click', goToNextSlide);
         submitButton.addEventListener('click', submitForm);
         
-        // Close modal button
+        // Close modal buttons
         const closeModalButtons = document.querySelectorAll('.close-modal');
         closeModalButtons.forEach(button => {
             button.addEventListener('click', () => {
                 saveUrlModal.style.display = 'none';
+                basicPaymentModal.style.display = 'none';
+                premiumPaymentModal.style.display = 'none';
             });
         });
         
@@ -123,12 +135,53 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
         
+        // Payment buttons
+        document.getElementById('proceedToBasicPayment').addEventListener('click', () => {
+            initiatePayment('basic');
+        });
+        
+        document.getElementById('proceedToPremiumPayment').addEventListener('click', () => {
+            initiatePayment('premium');
+        });
+        
+        document.getElementById('saveAndExitBasic').addEventListener('click', () => {
+            basicPaymentModal.style.display = 'none';
+            showSaveUrlModal();
+        });
+        
+        document.getElementById('saveAndExitPremium').addEventListener('click', () => {
+            premiumPaymentModal.style.display = 'none';
+            showSaveUrlModal();
+        });
+        
+        // Set initial tier badge
+        updateTierBadge();
+        
         // Show first slide
         showSlide(currentSlide);
         
         // If user ID exists, load saved responses
         if (userId) {
             loadUserData();
+        }
+    }
+    
+    // Update tier badge based on current progress and payment tier
+    function updateTierBadge() {
+        const progress = parseInt(user.progress_state);
+        
+        if (user.payment_tier === 'premium') {
+            tierBadge.textContent = 'Premium Tier';
+            tierBadge.className = 'tier-badge premium';
+            totalQuestionsSpan.textContent = PREMIUM_TIER_QUESTIONS;
+        } else if (user.payment_tier === 'basic' || progress >= BASIC_TIER_QUESTIONS) {
+            tierBadge.textContent = 'Basic Tier';
+            tierBadge.className = 'tier-badge basic';
+            totalQuestionsSpan.textContent = BASIC_TIER_QUESTIONS;
+        } else {
+            tierBadge.textContent = 'Free Tier';
+            tierBadge.className = 'tier-badge free';
+            totalQuestionsSpan.textContent = BASIC_TIER_QUESTIONS;
         }
     }
     
@@ -162,7 +215,8 @@ document.addEventListener('DOMContentLoaded', function() {
     // Update submit button state based on form completion
     function updateSubmitButtonState() {
         const answeredQuestions = Object.keys(userResponses).length;
-        const allQuestionsAnswered = answeredQuestions === 25;
+        const targetQuestions = user.payment_tier === 'premium' ? PREMIUM_TIER_QUESTIONS : BASIC_TIER_QUESTIONS;
+        const allQuestionsAnswered = answeredQuestions >= targetQuestions;
         
         // Enable/disable submit button based on completion
         submitButton.disabled = !allQuestionsAnswered;
@@ -170,7 +224,7 @@ document.addEventListener('DOMContentLoaded', function() {
         // Add visual indication
         if (!allQuestionsAnswered) {
             submitButton.classList.add('disabled');
-            submitButton.title = `Please answer all questions. You've completed ${answeredQuestions} of 25.`;
+            submitButton.title = `Please answer all questions. You've completed ${answeredQuestions} of ${targetQuestions}.`;
         } else {
             submitButton.classList.remove('disabled');
             submitButton.title = 'Submit your responses';
@@ -196,8 +250,9 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         
         // Update progress bar
-        const progress = (slideIndex / (totalSlides - 1)) * 100;
-        progressFill.style.width = `${progress}%`;
+        const maxQuestions = user.payment_tier === 'premium' ? PREMIUM_TIER_QUESTIONS : BASIC_TIER_QUESTIONS;
+        const progress = (slideIndex / maxQuestions) * 100;
+        progressFill.style.width = `${Math.min(progress, 100)}%`;
         
         // Update current question number (adjust for user info slide)
         if (slideIndex > 0) {
@@ -207,7 +262,11 @@ document.addEventListener('DOMContentLoaded', function() {
         // Update button states
         prevButton.disabled = slideIndex === 0;
         
-        if (slideIndex === totalSlides - 1) {
+        // Check if we've reached the end of the current tier
+        const isEndOfBasicTier = slideIndex === BASIC_TIER_QUESTIONS && user.payment_tier !== 'premium';
+        const isEndOfPremiumTier = slideIndex === PREMIUM_TIER_QUESTIONS;
+        
+        if (isEndOfBasicTier || isEndOfPremiumTier) {
             nextButton.style.display = 'none';
             submitButton.style.display = 'block';
             
@@ -267,6 +326,13 @@ document.addEventListener('DOMContentLoaded', function() {
             saveCurrentSlideData();
         }
         
+        // Check if we're at the end of basic tier and need to show payment modal
+        if (currentSlide === BASIC_TIER_QUESTIONS && user.payment_tier === 'none') {
+            // Show basic payment modal
+            basicPaymentModal.style.display = 'flex';
+            return;
+        }
+        
         if (currentSlide < totalSlides - 1) {
             showSlide(currentSlide + 1);
         }
@@ -300,7 +366,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         
         // If we're on the last slide, update the submit button state
-        if (currentSlide === totalSlides - 1) {
+        if (currentSlide === BASIC_TIER_QUESTIONS || currentSlide === PREMIUM_TIER_QUESTIONS) {
             updateSubmitButtonState();
         }
     }
@@ -316,15 +382,78 @@ document.addEventListener('DOMContentLoaded', function() {
         // If button is disabled, don't proceed
         if (submitButton.disabled || submitButton.classList.contains('disabled')) {
             const answeredQuestions = Object.keys(userResponses).length;
-            showNotification(`Please answer all questions. You've completed ${answeredQuestions} of 25.`, 'error');
+            const targetQuestions = user.payment_tier === 'premium' ? PREMIUM_TIER_QUESTIONS : BASIC_TIER_QUESTIONS;
+            showNotification(`Please answer all questions. You've completed ${answeredQuestions} of ${targetQuestions}.`, 'error');
+            return;
+        }
+        
+        // Check if we're at the end of basic tier and need to show payment modal
+        if (currentSlide === BASIC_TIER_QUESTIONS && user.payment_tier === 'none') {
+            // Show basic payment modal
+            basicPaymentModal.style.display = 'flex';
+            return;
+        }
+        
+        // Check if we're at the end of premium tier and need to show payment modal
+        if (currentSlide === PREMIUM_TIER_QUESTIONS && user.payment_tier !== 'premium') {
+            // Show premium payment modal
+            premiumPaymentModal.style.display = 'flex';
             return;
         }
         
         // Show loading overlay
         loadingOverlay.style.display = 'flex';
         
-        // Generate results
-        generateResults();
+        // Generate results based on tier
+        if (user.payment_tier === 'premium') {
+            loadingMessage.textContent = 'Generating your comprehensive life plan...';
+            generatePremiumResults();
+        } else {
+            loadingMessage.textContent = 'Generating your personal insight...';
+            generateBasicResults();
+        }
+    }
+    
+    // Show save URL modal
+    function showSaveUrlModal() {
+        if (user.id) {
+            uniqueUrlInput.value = `${window.location.origin}/form/${user.id}`;
+            saveUrlModal.style.display = 'flex';
+        }
+    }
+    
+    // Initiate payment process
+    function initiatePayment(tier) {
+        // Hide payment modals
+        basicPaymentModal.style.display = 'none';
+        premiumPaymentModal.style.display = 'none';
+        
+        // Show loading overlay
+        loadingOverlay.style.display = 'flex';
+        loadingMessage.textContent = 'Preparing payment...';
+        
+        // Call payment API
+        fetch(`/api/payments/${user.id}/create-checkout-session/${tier}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Failed to create checkout session');
+            }
+            return response.json();
+        })
+        .then(data => {
+            // Redirect to checkout URL
+            window.location.href = data.checkout_url;
+        })
+        .catch(error => {
+            console.error('Error creating checkout session:', error);
+            loadingOverlay.style.display = 'none';
+            showNotification('Error processing payment. Please try again.', 'error');
+        });
     }
     
     // Utility function to validate email
@@ -369,8 +498,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 body: JSON.stringify({
                     name: user.name,
                     email: user.email,
+                    dob: new Date().toISOString(), // This should be collected in the registration page
                     progress_state: '0',
-                    payment_complete: false
+                    payment_tier: 'none'
                 }),
             });
             
@@ -382,12 +512,11 @@ document.addEventListener('DOMContentLoaded', function() {
             user.id = data.id;
             
             // Update URL with user ID
-            const newUrl = `${window.location.pathname}?user_id=${user.id}`;
+            const newUrl = `${window.location.pathname}/${user.id}`;
             window.history.replaceState({}, '', newUrl);
             
             // Show save URL modal
-            uniqueUrlInput.value = `${window.location.origin}/form?user_id=${user.id}`;
-            saveUrlModal.style.display = 'flex';
+            showSaveUrlModal();
             
             showNotification('Your progress will be saved automatically.');
             
@@ -409,7 +538,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     name: user.name,
                     email: user.email,
                     progress_state: user.progress_state,
-                    payment_complete: false
+                    payment_tier: user.payment_tier
                 }),
             });
             
@@ -478,6 +607,9 @@ document.addEventListener('DOMContentLoaded', function() {
             const userData = await userResponse.json();
             user = userData;
             
+            // Update tier badge
+            updateTierBadge();
+            
             // Fill user info fields
             document.getElementById('userName').value = user.name;
             document.getElementById('userEmail').value = user.email;
@@ -514,10 +646,10 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
     
-    // Generate results
-    async function generateResults() {
+    // Generate basic results (summary and mantra)
+    async function generateBasicResults() {
         try {
-            const response = await fetch(`/api/ai/${user.id}/generate`, {
+            const response = await fetch(`/api/ai/${user.id}/generate-basic`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -525,7 +657,7 @@ document.addEventListener('DOMContentLoaded', function() {
             });
             
             if (!response.ok) {
-                throw new Error('Failed to generate results');
+                throw new Error('Failed to generate basic results');
             }
             
             const data = await response.json();
@@ -534,7 +666,33 @@ document.addEventListener('DOMContentLoaded', function() {
             window.location.href = `/results/${user.id}`;
             
         } catch (error) {
-            console.error('Error generating results:', error);
+            console.error('Error generating basic results:', error);
+            loadingOverlay.style.display = 'none';
+            showNotification('Error generating your results. Please try again.', 'error');
+        }
+    }
+    
+    // Generate premium results (full path and plan)
+    async function generatePremiumResults() {
+        try {
+            const response = await fetch(`/api/ai/${user.id}/generate-premium`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            });
+            
+            if (!response.ok) {
+                throw new Error('Failed to generate premium results');
+            }
+            
+            const data = await response.json();
+            
+            // Redirect to results page
+            window.location.href = `/results/${user.id}`;
+            
+        } catch (error) {
+            console.error('Error generating premium results:', error);
             loadingOverlay.style.display = 'none';
             showNotification('Error generating your results. Please try again.', 'error');
         }

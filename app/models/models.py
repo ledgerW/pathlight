@@ -9,10 +9,11 @@ class User(SQLModel, table=True):
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
     name: str
     email: str
+    dob: datetime  # Date of birth
     progress_state: str = Field(default="0")  # Stores the current question number
     created_at: datetime = Field(default_factory=datetime.utcnow)
     updated_at: datetime = Field(default_factory=datetime.utcnow)
-    payment_complete: bool = Field(default=False)
+    payment_tier: str = Field(default="none")  # none, basic, premium
     
     # Relationships
     form_responses: List["FormResponse"] = Relationship(back_populates="user")

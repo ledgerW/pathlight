@@ -15,18 +15,47 @@ templates = Jinja2Templates(directory="app/templates")
 async def index(request: Request):
     return templates.TemplateResponse("index.html", {"request": request})
 
+@router.get("/register", response_class=HTMLResponse)
+async def register(request: Request):
+    """Initial registration page to collect name, email, and DOB"""
+    return templates.TemplateResponse("register.html", {"request": request})
+
 @router.get("/form", response_class=HTMLResponse)
 async def form(request: Request):
-    return templates.TemplateResponse("form.html", {"request": request})
+    """Redirect to registration if no user_id is provided"""
+    return RedirectResponse(url="/register")
 
 @router.get("/form/{user_id}", response_class=HTMLResponse)
 async def form_with_user(request: Request, user_id: uuid.UUID, session: Session = Depends(get_session)):
     # Check if user exists
     user = session.get(User, user_id)
     if not user:
-        return RedirectResponse(url="/form")
+        return RedirectResponse(url="/register")
     
-    return templates.TemplateResponse("form.html", {"request": request, "user_id": user_id})
+    # Get current progress
+    progress = int(user.progress_state)
+    
+    # Determine if user is in basic or premium phase
+    phase = "basic" if progress < 5 else "premium"
+    
+    # Check if user has completed basic phase and paid
+    basic_complete = progress >= 5 and user.payment_tier != "none"
+    
+    # Check if user has completed premium phase
+    premium_complete = progress >= 25
+    
+    return templates.TemplateResponse(
+        "form.html", 
+        {
+            "request": request, 
+            "user_id": user_id,
+            "progress": progress,
+            "phase": phase,
+            "basic_complete": basic_complete,
+            "premium_complete": premium_complete,
+            "payment_tier": user.payment_tier
+        }
+    )
 
 @router.get("/results/{user_id}", response_class=HTMLResponse)
 async def results(request: Request, user_id: uuid.UUID, session: Session = Depends(get_session)):
@@ -43,16 +72,25 @@ async def results(request: Request, user_id: uuid.UUID, session: Session = Depen
         # If no results, redirect to form
         return RedirectResponse(url=f"/form/{user_id}")
     
+    # Get current progress
+    progress = int(user.progress_state)
+    
     return templates.TemplateResponse(
         "results.html", 
-        {"request": request, "user_id": str(user_id), "payment_complete": user.payment_complete}
+        {
+            "request": request, 
+            "user_id": str(user_id), 
+            "payment_tier": user.payment_tier,
+            "progress": progress,
+            "show_upgrade": user.payment_tier == "basic" and progress >= 5
+        }
     )
 
 @router.get("/success", response_class=HTMLResponse)
-async def success(request: Request, session_id: str, user_id: uuid.UUID):
+async def success(request: Request, session_id: str, user_id: uuid.UUID, tier: str):
     return templates.TemplateResponse(
         "success.html", 
-        {"request": request, "session_id": session_id, "user_id": user_id}
+        {"request": request, "session_id": session_id, "user_id": user_id, "tier": tier}
     )
 
 @router.get("/cancel", response_class=HTMLResponse)

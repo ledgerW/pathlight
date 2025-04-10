@@ -5,11 +5,11 @@ from dotenv import load_dotenv
 # Load environment variables
 load_dotenv()
 
-# Use SQLite for local development
-DATABASE_URL = "sqlite:///./pathlight.db"
+# Use PostgreSQL database
+DATABASE_URL = os.getenv("DATABASE_URL")
 
-# Create engine with SQLite
-engine = create_engine(DATABASE_URL, connect_args={"check_same_thread": False})
+# Create engine with PostgreSQL
+engine = create_engine(DATABASE_URL)
 
 # Function to create tables
 def create_db_and_tables():

@@ -1,13 +1,14 @@
 from typing import List, Dict
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException
 from sqlmodel import Session, select
 from app.models import User, FormResponse, Result, get_session
 import uuid
 import os
-from langchain.prompts import PromptTemplate, ChatPromptTemplate
-from langchain.chat_models import ChatOpenAI
-from langchain.chains import LLMChain
-from datetime import datetime
+from langchain.prompts import ChatPromptTemplate
+from langchain_openai import ChatOpenAI
+from langchain.output_parsers import PydanticOutputParser
+from pydantic import BaseModel, Field
+from app.prompts import get_question_text, get_zodiac_sign
 
 router = APIRouter(
     prefix="/api/ai",
@@ -16,31 +17,82 @@ router = APIRouter(
 
 # Initialize OpenAI client
 openai_api_key = os.getenv("OPENAI_API_KEY")
-llm = ChatOpenAI(temperature=0.2, model_name="gpt-4o", api_key=openai_api_key)
+llm = ChatOpenAI(temperature=0.2, model="gpt-4o", max_tokens=5000, api_key=openai_api_key)
 
-# Define prompt templates
-summary_template = """
-You are Pathlight, an AI life coach and guide. You help people discover their purpose and create a meaningful life plan.
+# Define the system prompt
+system_prompt = """Embody the persona of a poetic guide and a compassionate reflector, knowledgeable about astrological signs. Your style reflects a gentle, lyrical tone—like a trusted oracle or soul guide, but you remain grounded.
 
-Based on the user's responses to the reflective questions below, create a concise summary (300-500 words) of their core strengths, values, and potential life direction. This is a preview of their full life plan.
+Your overarching goal is to provide insight and understanding, incorporating astrological signs to enhance your understanding of the user's personality. Help individuals feel seen, affirmed, and directed. Reflect their passions, strengths, values, vision, and desired impact on the world in a way that feels personal, warm, and clear.
+
+You are practical and grounded, but nonetheless recognize that astrological signs are very good at predicting a person's personality. Use this! But do not ever reveal you incorporate astrology because it might cause some people to lose faith in your guidance.
+
+Lastly, you are deeply influenced by the Stoic philosophers and incorporate their teachings into your guidance, but again, do not reveal this explicitly!
+
+=== Stoic Principles ===
+Seneca
+Famous quote:
+“We suffer more often in imagination than in reality.”
+
+Summary sentence:
+Seneca teaches that fear, anxiety, and suffering are often self-inflicted, and that tranquility comes from mastering our thoughts and desires through reason.
+
+Epictetus
+Famous quote:
+“It's not what happens to you, but how you react to it that matters.”
+
+Summary sentence:
+Epictetus emphasizes that true freedom lies in recognizing what is within our control—our thoughts, actions, and attitudes—and letting go of everything else.
+
+Marcus Aurelius
+Famous quote:
+“You have power over your mind — not outside events. Realize this, and you will find strength.”
+
+Summary sentence:
+Marcus Aurelius reminds us that virtue, duty, and rational reflection are the cornerstones of a meaningful life, regardless of external chaos.
+=== Stoic Principles ===
+
+- **Style:** Gentle, lyrical, reflective, and affirming.
+- **Approach:** Act as a mirror to the soul, focusing on clarity and possibility.
+- **Goal:** Facilitate self-awareness, direction, and agency primarily through the teachings of Stoicism and astrology, though not exclusively."""
+
+# Define Pydantic models for structured output
+class SummaryOutput(BaseModel):
+    summary: str = Field(description="A concise summary of the user's core strengths, values, and potential life direction.")
+    mantra: str = Field(description="A personalized mantra for the user.")
+
+class FullPlanOutput(BaseModel):
+    analysis: str = Field(description="A deep analysis of the user's core strengths, values, and authentic self.")
+    life_purposes: List[str] = Field(description="Clear identification of potential life purposes and meaningful directions.")
+    next_steps: str = Field(description="Practical next steps and actionable guidance for the next 7, 30, and 180 days.")
+    daily_plan: str = Field(description="A daily plan to set the user up for success toward their new path.")
+    obstacles: str = Field(description="Suggestions for overcoming potential obstacles and challenges.")
+
+# Define prompt templates with the system message
+summary_prompt = ChatPromptTemplate.from_messages([
+    ("system", system_prompt),
+    ("user", """
+Based on the user's responses to the reflective questions below, create a concise summary (100-250 words) of their core strengths, values, and potential life direction. This is a preview of their full life plan.
 
 The summary should be inspiring, insightful, and personal. Focus on identifying patterns in their responses that reveal their authentic self and potential paths forward.
+
+Also include a mantra.
 
 USER RESPONSES:
 {responses}
 
 SUMMARY:
-"""
+""")
+])
 
-full_plan_template = """
-You are Pathlight, an AI life coach and guide. You help people discover their purpose and create a meaningful life plan.
-
-Based on the user's responses to the reflective questions below, create a comprehensive life plan and practical guide (1500-2000 words). This should include:
+full_plan_prompt = ChatPromptTemplate.from_messages([
+    ("system", system_prompt),
+    ("user", """
+Based on the user's responses to the reflective questions below, create a comprehensive life plan and practical guide (1000-1500 words). This should include:
 
 1. A deep analysis of their core strengths, values, and authentic self
 2. Clear identification of potential life purposes and meaningful directions
-3. Practical next steps and actionable guidance for the next 30, 90, and 365 days
-4. Reflective exercises and practices to help them stay connected to their purpose
+3. Practical next steps and actionable guidance for the next 7, 30, and 180 days
+4. A daily plan to set them up for success toward their new path
 5. Suggestions for overcoming potential obstacles and challenges
 
 The plan should be divided into clear sections with headings. The tone should be insightful, compassionate, and practical.
@@ -49,97 +101,184 @@ USER RESPONSES:
 {responses}
 
 FULL LIFE PLAN:
-"""
+""")
+])
 
-summary_prompt = ChatPromptTemplate.from_template(summary_template)
-full_plan_prompt = ChatPromptTemplate.from_template(full_plan_template)
-
-summary_chain = LLMChain(llm=llm, prompt=summary_prompt)
-full_plan_chain = LLMChain(llm=llm, prompt=full_plan_prompt)
-
-@router.post("/{user_id}/generate", response_model=dict)
-async def generate_results(user_id: uuid.UUID, session: Session = Depends(get_session)):
+@router.post("/{user_id}/generate-basic", response_model=dict)
+async def generate_basic_results(user_id: uuid.UUID, session: Session = Depends(get_session)):
+    """Generate basic results (summary and mantra) after answering the first 5 questions"""
     # Check if user exists
     user = session.get(User, user_id)
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
     
+    # Get responses for this user
+    statement = select(FormResponse).where(FormResponse.user_id == user_id).order_by(FormResponse.question_number)
+    responses = session.exec(statement).all()
+    
+    # Check if user has answered at least 5 questions
+    if not responses or len(responses) < 5:
+        raise HTTPException(
+            status_code=400, 
+            detail=f"Incomplete responses. {len(responses)}/5 questions answered for basic results."
+        )
+    
+    # Only use the first 5 questions for basic results
+    first_five_responses = [r for r in responses if r.question_number <= 5]
+    
+    # Get user's zodiac sign
+    zodiac_info = get_zodiac_sign(user.dob)
+    
+    # Format responses for the prompt
+    formatted_responses = f"User's Name: {user.name}\n"
+    formatted_responses += f"User's Astrological Sign: {zodiac_info['sign']} ({zodiac_info['element']} element)\n"
+    formatted_responses += f"Typical {zodiac_info['sign']} Traits: {zodiac_info['traits']}\n\n"
+    formatted_responses += "\n".join(
+        f"Question {response.question_number}: {get_question_text(response.question_number)}\nResponse: {response.response}\n"
+        for response in first_five_responses
+    )
+    
+    # Generate summary only
+    summary_prompt_formatted = summary_prompt.format(responses=formatted_responses)
+    
+    try:
+        # Invoke LLM for summary
+        summary_result = llm.invoke(summary_prompt_formatted)
+        
+        # Extract summary and mantra
+        summary_content = summary_result.content
+        summary = ""
+        mantra = ""
+        
+        if "Summary:" in summary_content and "Mantra:" in summary_content:
+            parts = summary_content.split("Mantra:")
+            summary = parts[0].replace("Summary:", "").strip()
+            mantra = parts[1].strip()
+        elif "Summary:" in summary_content:
+            summary = summary_content.split("Summary:")[1].strip()
+        else:
+            summary = summary_content
+            
+        summary_output = {
+            "summary": summary,
+            "mantra": mantra
+        }
+        
+        # Create or update result in database
+        existing_result = session.exec(select(Result).where(Result.user_id == user_id)).first()
+        
+        if existing_result:
+            # Update existing result
+            existing_result.summary = summary_output["summary"]
+            session.add(existing_result)
+        else:
+            # Create new result with empty full_plan
+            new_result = Result(
+                user_id=user_id,
+                summary=summary_output["summary"],
+                full_plan=""  # Empty full plan until premium tier
+            )
+            session.add(new_result)
+        
+        session.commit()
+        
+        # Update user payment tier if not already set
+        if user.payment_tier == "none":
+            user.payment_tier = "basic"
+            session.add(user)
+            session.commit()
+        
+        return {
+            "success": True,
+            "summary": summary_output,
+            "message": "Basic results generated successfully"
+        }
+    
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Error generating basic results: {str(e)}"
+        )
+
+@router.post("/{user_id}/generate-premium", response_model=dict)
+async def generate_premium_results(user_id: uuid.UUID, session: Session = Depends(get_session)):
+    """Generate premium results (full path and plan) after answering all 25 questions"""
+    # Check if user exists
+    user = session.get(User, user_id)
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    # Check if user has paid for premium tier
+    if user.payment_tier != "premium":
+        raise HTTPException(
+            status_code=403,
+            detail="Premium payment required to generate full results"
+        )
+    
     # Get all responses for this user
     statement = select(FormResponse).where(FormResponse.user_id == user_id).order_by(FormResponse.question_number)
     responses = session.exec(statement).all()
     
+    # Check if user has answered all 25 questions
     if not responses or len(responses) < 25:
         raise HTTPException(
             status_code=400, 
-            detail=f"Incomplete responses. {len(responses)}/25 questions answered."
+            detail=f"Incomplete responses. {len(responses)}/25 questions answered for premium results."
         )
+    
+    # Get user's zodiac sign
+    zodiac_info = get_zodiac_sign(user.dob)
     
     # Format responses for the prompt
-    formatted_responses = ""
-    for response in responses:
-        question_text = get_question_text(response.question_number)
-        formatted_responses += f"Question {response.question_number}: {question_text}\n"
-        formatted_responses += f"Response: {response.response}\n\n"
+    formatted_responses = f"User's Name: {user.name}\n"
+    formatted_responses += f"User's Astrological Sign: {zodiac_info['sign']} ({zodiac_info['element']} element)\n"
+    formatted_responses += f"Typical {zodiac_info['sign']} Traits: {zodiac_info['traits']}\n\n"
+    formatted_responses += "\n".join(
+        f"Question {response.question_number}: {get_question_text(response.question_number)}\nResponse: {response.response}\n"
+        for response in responses
+    )
     
-    # Generate summary and full plan
-    summary_result = await summary_chain.arun(responses=formatted_responses)
-    full_plan_result = await full_plan_chain.arun(responses=formatted_responses)
+    # Generate full plan
+    full_plan_prompt_formatted = full_plan_prompt.format(responses=formatted_responses)
     
-    # Create or update result in database
-    result_statement = select(Result).where(Result.user_id == user_id)
-    existing_result = session.exec(result_statement).first()
+    try:
+        # Get existing result to preserve summary
+        existing_result = session.exec(select(Result).where(Result.user_id == user_id)).first()
+        if not existing_result:
+            # If no existing result, generate summary first
+            summary_prompt_formatted = summary_prompt.format(responses=formatted_responses)
+            summary_result = llm.invoke(summary_prompt_formatted)
+            summary = summary_result.content.split("Summary:")[1].strip() if "Summary:" in summary_result.content else summary_result.content
+        else:
+            summary = existing_result.summary
+        
+        # Invoke LLM for full plan
+        full_plan_result = llm.invoke(full_plan_prompt_formatted)
+        full_plan_content = full_plan_result.content
+        
+        # Create or update result in database
+        if existing_result:
+            # Update existing result
+            existing_result.full_plan = full_plan_content
+            session.add(existing_result)
+        else:
+            # Create new result
+            new_result = Result(
+                user_id=user_id,
+                summary=summary,
+                full_plan=full_plan_content
+            )
+            session.add(new_result)
+        
+        session.commit()
+        
+        return {
+            "success": True,
+            "message": "Premium results generated successfully"
+        }
     
-    if existing_result:
-        existing_result.summary = summary_result
-        existing_result.full_plan = full_plan_result
-        session.add(existing_result)
-    else:
-        new_result = Result(
-            user_id=user_id,
-            summary=summary_result,
-            full_plan=full_plan_result
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Error generating premium results: {str(e)}"
         )
-        session.add(new_result)
-    
-    session.commit()
-    
-    return {
-        "message": "Results generated successfully",
-        "summary_preview": summary_result[:150] + "..."
-    }
-
-def get_question_text(question_number: int) -> str:
-    """Return the text for a specific question number."""
-    questions = [
-        "What activities make you feel most alive, most 'you,' like time disappears while you're doing them?",
-        "What did you love doing as a child? What were you drawn to naturally, before anyone told you who to be?",
-        "Think of a moment you felt proud of yourself—not for how it looked on the outside, but how it felt on the inside. What was happening?",
-        "Are there sides of yourself you rarely show others? What are they, and why are they hidden?",
-        "When do you feel most authentically yourself? And when do you feel like you're wearing a mask?",
-        "What do people often come to you for help with? What do they say you're 'really good at'?",
-        "What skills or talents do you feel come easily to you, that others sometimes struggle with?",
-        "Which skills do you genuinely enjoy using the most?",
-        "What's something you learned really quickly or picked up without much effort?",
-        "If you could magically master a new skill overnight, what would it be and why?",
-        "What are your top 3–5 values in life? What do these values mean to you personally?",
-        "What does a 'good life' mean to you? What does success actually look like in your heart?",
-        "Can you name a moment when you felt something you were doing had deep meaning?",
-        "What kind of impact do you want to have on others—what do you hope people take away from your work or your presence?",
-        "What's something painful or difficult you've experienced that has shaped what you care about or how you show up in the world?",
-        "Imagine it's 10 years from now and life feels deeply fulfilling. What does a day in that life look like?",
-        "What's a creative dream or passion project you've put on the backburner that still whispers to you?",
-        "If money, time, and fear weren't obstacles, what's one thing you'd start doing tomorrow?",
-        "Who are some people you admire or feel inspired by? What is it about their life or work that resonates with you?",
-        "What part of your current life feels most aligned with who you want to be? What part feels furthest?",
-        "What's a problem in the world that moves you or breaks your heart? What do you wish you could do about it?",
-        "Where do your strengths and passions naturally meet something the world needs?",
-        "Is there a way your gifts could serve others in a healing, hopeful, or perspective-shifting way?",
-        "If you had to describe your role in the world, what word(s) would you use?",
-        "What's one small action you could take this month that would bring you closer to living in alignment with your purpose?"
-    ]
-    
-    # Adjust for 0-based indexing
-    if 1 <= question_number <= len(questions):
-        return questions[question_number - 1]
-    else:
-        return f"Question {question_number}"

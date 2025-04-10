@@ -13,7 +13,10 @@
             <div class="progress-fill" id="progressFill"></div>
         </div>
         <div class="progress-text">
-            Question <span id="currentQuestion">1</span> of 25
+            <span id="progressText">Question <span id="currentQuestion">1</span> of <span id="totalQuestions">5</span></span>
+        </div>
+        <div class="tier-indicator">
+            <span id="tierBadge" class="tier-badge">Basic Tier</span>
         </div>
     </div>
     
@@ -166,7 +169,7 @@
 <div id="loadingOverlay" class="loading-overlay" style="display: none;">
     <div class="loading-content">
         <div class="loading-spinner"></div>
-        <p>Processing your responses...</p>
+        <p id="loadingMessage">Processing your responses...</p>
     </div>
 </div>
 
@@ -181,6 +184,46 @@
             <button id="copyUrlButton">Copy</button>
         </div>
         <p>We've also sent this link to your email for safekeeping.</p>
+    </div>
+</div>
+
+<!-- Basic Tier Payment Modal -->
+<div id="basicPaymentModal" class="modal" style="display: none;">
+    <div class="modal-content">
+        <span class="close-modal">&times;</span>
+        <h2>Unlock Your Personal Insight</h2>
+        <p>Congratulations on completing the first part of your journey!</p>
+        <p>For just $0.99, you'll receive:</p>
+        <ul>
+            <li>A personalized summary of your core strengths and values</li>
+            <li>A unique mantra crafted just for you</li>
+            <li>The ability to save and return to your progress</li>
+        </ul>
+        <div class="payment-buttons">
+            <button id="proceedToBasicPayment" class="btn-primary">Continue ($0.99)</button>
+            <button id="saveAndExitBasic" class="btn-secondary">Save & Exit</button>
+        </div>
+    </div>
+</div>
+
+<!-- Premium Tier Payment Modal -->
+<div id="premiumPaymentModal" class="modal" style="display: none;">
+    <div class="modal-content">
+        <span class="close-modal">&times;</span>
+        <h2>Unlock Your Full Life Path</h2>
+        <p>Ready to discover your complete life path and purpose?</p>
+        <p>For $7.49, you'll receive:</p>
+        <ul>
+            <li>A comprehensive analysis of your authentic self</li>
+            <li>Clear identification of potential life purposes</li>
+            <li>Practical next steps for 7, 30, and 180 days</li>
+            <li>A daily plan to set you up for success</li>
+            <li>Strategies for overcoming obstacles</li>
+        </ul>
+        <div class="payment-buttons">
+            <button id="proceedToPremiumPayment" class="btn-primary">Continue ($7.49)</button>
+            <button id="saveAndExitPremium" class="btn-secondary">Save & Exit</button>
+        </div>
     </div>
 </div>
 {% endblock %}

@@ -49,9 +49,17 @@ document.addEventListener('DOMContentLoaded', function() {
         // Check URL parameters for payment success
         const urlParams = new URLSearchParams(window.location.search);
         const sessionId = urlParams.get('session_id');
+        const tier = urlParams.get('tier');
         
-        if (sessionId) {
-            verifyPayment(sessionId);
+        if (sessionId && tier) {
+            verifyPayment(sessionId, tier);
+        }
+        
+        // Check if upgrade button should be shown
+        if (typeof showUpgrade !== 'undefined' && showUpgrade) {
+            // Show upgrade section
+            paymentSection.style.display = 'block';
+            fullContent.style.display = 'none';
         }
     }
     
@@ -61,13 +69,28 @@ document.addEventListener('DOMContentLoaded', function() {
             const response = await fetch(`/api/results/${userId}/summary`);
             
             if (!response.ok) {
+                if (response.status === 403) {
+                    // Payment required
+                    summaryContent.innerHTML = '<p class="error-message">Please complete your payment to view your summary.</p>';
+                    return;
+                }
                 throw new Error('Failed to load summary');
             }
             
             const data = await response.json();
             
             // Format and display summary
-            summaryContent.innerHTML = formatContent(data.summary);
+            let formattedContent = formatContent(data.summary);
+            
+            // Add mantra if available
+            if (data.mantra) {
+                formattedContent += `<div class="mantra-section">
+                    <h3>Your Personal Mantra</h3>
+                    <blockquote class="mantra">${data.mantra}</blockquote>
+                </div>`;
+            }
+            
+            summaryContent.innerHTML = formattedContent;
             
         } catch (error) {
             console.error('Error loading summary:', error);
@@ -113,9 +136,22 @@ document.addEventListener('DOMContentLoaded', function() {
             
             const data = await response.json();
             
-            if (data.payment_complete) {
-                // User has paid, show full plan
+            // Update UI based on payment tier
+            if (data.payment_tier === 'premium') {
+                // User has premium tier, show full plan
                 showFullPlan();
+            } else if (data.payment_tier === 'basic') {
+                // User has basic tier, show upgrade option
+                // But hide the full plan section if they haven't completed all questions
+                if (!data.has_paid) {
+                    document.getElementById('fullResultsSection').style.display = 'none';
+                }
+            } else {
+                // User hasn't paid, redirect to form
+                showNotification('Please complete the form and payment to view your results.', 'error');
+                setTimeout(() => {
+                    window.location.href = `/form/${userId}`;
+                }, 3000);
             }
             
         } catch (error) {
@@ -155,8 +191,8 @@ document.addEventListener('DOMContentLoaded', function() {
             // Show payment modal
             paymentModal.style.display = 'flex';
             
-            // Create checkout session
-            const response = await fetch(`/api/payments/${userId}/create-checkout-session`, {
+            // Create checkout session for premium tier
+            const response = await fetch(`/api/payments/${userId}/create-checkout-session/premium`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -180,7 +216,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     // Verify payment
-    async function verifyPayment(sessionId) {
+    async function verifyPayment(sessionId, tier) {
         try {
             const response = await fetch(`/api/payments/${userId}/verify-payment`, {
                 method: 'POST',
@@ -188,7 +224,8 @@ document.addEventListener('DOMContentLoaded', function() {
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({
-                    session_id: sessionId
+                    session_id: sessionId,
+                    tier: tier
                 })
             });
             
@@ -202,13 +239,21 @@ document.addEventListener('DOMContentLoaded', function() {
                 // Show success modal
                 successModal.style.display = 'flex';
                 
-                // Remove session_id from URL
+                // Remove session_id and tier from URL
                 const url = new URL(window.location.href);
                 url.searchParams.delete('session_id');
+                url.searchParams.delete('tier');
                 window.history.replaceState({}, '', url);
                 
-                // Show full plan
-                showFullPlan();
+                // If premium tier, show full plan
+                if (tier === 'premium') {
+                    showFullPlan();
+                } else {
+                    // Reload the page to refresh the summary
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 3000);
+                }
             }
             
         } catch (error) {

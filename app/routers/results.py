@@ -59,27 +59,11 @@ def get_result_summary(user_id: uuid.UUID, session: Session = Depends(get_sessio
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
     
-    # Get result for this user
-    statement = select(Result).where(Result.user_id == user_id)
-    result = session.exec(statement).first()
-    
-    if not result:
-        raise HTTPException(status_code=404, detail="Result not found")
-    
-    return {"summary": result.summary}
-
-@router.get("/{user_id}/full", response_model=dict)
-def get_full_result(user_id: uuid.UUID, session: Session = Depends(get_session)):
-    # Check if user exists
-    user = session.get(User, user_id)
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
-    
-    # Check if user has paid
-    if not user.payment_complete:
+    # Check if user has at least basic tier
+    if user.payment_tier == "none":
         raise HTTPException(
             status_code=403, 
-            detail="Payment required to access full results"
+            detail="Basic payment required to access summary results"
         )
     
     # Get result for this user
@@ -89,4 +73,41 @@ def get_full_result(user_id: uuid.UUID, session: Session = Depends(get_session))
     if not result:
         raise HTTPException(status_code=404, detail="Result not found")
     
-    return {"full_plan": result.full_plan}
+    # Extract mantra if available
+    mantra = ""
+    if "Mantra:" in result.summary:
+        parts = result.summary.split("Mantra:")
+        mantra = parts[1].strip()
+    
+    return {
+        "summary": result.summary,
+        "mantra": mantra,
+        "payment_tier": user.payment_tier
+    }
+
+@router.get("/{user_id}/full", response_model=dict)
+def get_full_result(user_id: uuid.UUID, session: Session = Depends(get_session)):
+    # Check if user exists
+    user = session.get(User, user_id)
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    # Check if user has premium tier
+    if user.payment_tier != "premium":
+        raise HTTPException(
+            status_code=403, 
+            detail="Premium payment required to access full results"
+        )
+    
+    # Get result for this user
+    statement = select(Result).where(Result.user_id == user_id)
+    result = session.exec(statement).first()
+    
+    if not result:
+        raise HTTPException(status_code=404, detail="Result not found")
+    
+    return {
+        "summary": result.summary,
+        "full_plan": result.full_plan,
+        "payment_tier": user.payment_tier
+    }

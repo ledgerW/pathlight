@@ -11,10 +11,17 @@
     <div class="payment-content success">
         <img src="/static/images/16TheHorizon.png" alt="The Horizon" class="payment-image">
         <h1>Payment Successful!</h1>
-        <p>Thank you for your purchase. Your full life plan is now available.</p>
-        <div class="payment-actions">
-            <a href="/results/{{ user_id }}" class="cta-button">View Your Complete Plan</a>
-        </div>
+        {% if tier == 'premium' %}
+            <p>Thank you for your purchase. Your complete life plan is now available.</p>
+            <div class="payment-actions">
+                <a href="/results/{{ user_id }}" class="cta-button">View Your Complete Plan</a>
+            </div>
+        {% else %}
+            <p>Thank you for your purchase. Your personal insight and mantra are now available.</p>
+            <div class="payment-actions">
+                <a href="/results/{{ user_id }}" class="cta-button">View Your Insights</a>
+            </div>
+        {% endif %}
     </div>
 </div>
 {% endblock %}
@@ -26,15 +33,19 @@
         const urlParams = new URLSearchParams(window.location.search);
         const sessionId = urlParams.get('session_id');
         const userId = urlParams.get('user_id');
+        const tier = urlParams.get('tier');
         
-        if (sessionId && userId) {
+        if (sessionId && userId && tier) {
             try {
                 const response = await fetch(`/api/payments/${userId}/verify-payment`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                     },
-                    body: JSON.stringify({ session_id: sessionId }),
+                    body: JSON.stringify({ 
+                        session_id: sessionId,
+                        tier: tier
+                    }),
                 });
                 
                 const data = await response.json();

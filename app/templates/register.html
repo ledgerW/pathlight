@@ -1,0 +1,125 @@
+{% extends "base.html" %}
+
+{% block title %}Register - Pathlight{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="/static/css/form.css">
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1>Welcome to Pathlight</h1>
+    <p class="intro">
+        Begin your journey of self-discovery by providing a few details about yourself. 
+        This information helps us personalize your experience and allows you to return later to continue your journey.
+    </p>
+
+    <form id="registration-form" class="form-container">
+        <div class="form-group">
+            <label for="name">First Name</label>
+            <input type="text" id="name" name="name" required>
+        </div>
+
+        <div class="form-group">
+            <label for="email">Email Address</label>
+            <input type="email" id="email" name="email" required>
+        </div>
+
+        <div class="form-group">
+            <label for="dob">Date of Birth</label>
+            <input type="date" id="dob" name="dob" required>
+        </div>
+
+        <button type="submit" class="btn-primary">Begin Journey</button>
+    </form>
+
+    <div id="returning-user" class="hidden">
+        <h2>Welcome Back!</h2>
+        <p>We found your previous progress. Would you like to continue where you left off?</p>
+        <button id="continue-journey" class="btn-primary">Continue Journey</button>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const form = document.getElementById('registration-form');
+        const returningUserSection = document.getElementById('returning-user');
+        const continueButton = document.getElementById('continue-journey');
+        let foundUserId = null;
+
+        // Check if user exists when email is entered
+        const emailInput = document.getElementById('email');
+        emailInput.addEventListener('blur', async function() {
+            const email = emailInput.value.trim();
+            if (email && email.includes('@')) {
+                try {
+                    const response = await fetch(`/api/users/find-by-email?email=${encodeURIComponent(email)}`);
+                    const data = await response.json();
+                    
+                    if (data && data.id) {
+                        // User found, show returning user section
+                        foundUserId = data.id;
+                        returningUserSection.classList.remove('hidden');
+                        form.classList.add('hidden');
+                    } else {
+                        // No user found, show registration form
+                        returningUserSection.classList.add('hidden');
+                        form.classList.remove('hidden');
+                    }
+                } catch (error) {
+                    console.error('Error checking user:', error);
+                }
+            }
+        });
+
+        // Handle continue button for returning users
+        continueButton.addEventListener('click', function() {
+            if (foundUserId) {
+                window.location.href = `/form/${foundUserId}`;
+            }
+        });
+
+        // Handle form submission for new users
+        form.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const name = document.getElementById('name').value.trim();
+            const email = document.getElementById('email').value.trim();
+            const dobInput = document.getElementById('dob').value;
+            
+            // Format date as ISO string
+            const dob = new Date(dobInput).toISOString();
+            
+            try {
+                const response = await fetch('/api/users/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        name,
+                        email,
+                        dob,
+                        progress_state: "0",
+                        payment_tier: "none"
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data && data.id) {
+                    // Redirect to form with user ID
+                    window.location.href = `/form/${data.id}`;
+                } else {
+                    alert('Error creating user. Please try again.');
+                }
+            } catch (error) {
+                console.error('Error creating user:', error);
+                alert('Error creating user. Please try again.');
+            }
+        });
+    });
+</script>
+{% endblock %}
