@@ -1,0 +1,91 @@
+{% extends "base.html" %}
+
+{% block title %}Pathlight - Discover Your Life's Purpose{% endblock %}
+
+{% block styles %}
+<link rel="stylesheet" href="/static/css/index.css">
+{% endblock %}
+
+{% block content %}
+<section class="hero">
+    <div class="hero-content">
+        <div class="hero-text">
+            <h1>Illuminate Your Path</h1>
+            <p>Discover your authentic purpose and create a meaningful life plan through guided reflection.</p>
+            <a href="/form" class="cta-button">Begin Your Journey</a>
+        </div>
+        <div class="hero-image">
+            <img src="/static/images/1TheSpark.png" alt="The Spark - Begin your journey">
+            <div class="celestial-decoration">
+                <div class="star star1"></div>
+                <div class="star star2"></div>
+                <div class="star star3"></div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="about">
+    <div class="about-content">
+        <h2>What is Pathlight?</h2>
+        <div class="about-columns">
+            <div class="about-column">
+                <img src="/static/images/6TheBeacon.png" alt="The Beacon" class="about-image">
+                <h3>Reflective Questions</h3>
+                <p>Answer thoughtfully crafted questions designed to reveal your authentic self, core values, and natural gifts.</p>
+            </div>
+            <div class="about-column">
+                <img src="/static/images/11TheCompass.png" alt="The Compass" class="about-image">
+                <h3>AI-Generated Insights</h3>
+                <p>Receive personalized analysis that identifies patterns and connections you might not see yourself.</p>
+            </div>
+            <div class="about-column">
+                <img src="/static/images/16TheHorizon.png" alt="The Horizon" class="about-image">
+                <h3>Practical Life Plan</h3>
+                <p>Get a comprehensive guide with actionable steps to align your life with your newly discovered purpose.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="how-it-works">
+    <div class="how-it-works-content">
+        <h2>How It Works</h2>
+        <div class="steps">
+            <div class="step">
+                <div class="step-number">1</div>
+                <div class="step-content">
+                    <h3>Reflect</h3>
+                    <p>Answer 25 thoughtfully designed questions at your own pace. Save your progress and return anytime.</p>
+                </div>
+            </div>
+            <div class="step">
+                <div class="step-number">2</div>
+                <div class="step-content">
+                    <h3>Discover</h3>
+                    <p>Receive a free summary of your core strengths, values, and potential life direction.</p>
+                </div>
+            </div>
+            <div class="step">
+                <div class="step-number">3</div>
+                <div class="step-content">
+                    <h3>Transform</h3>
+                    <p>Unlock your full personalized life plan with practical guidance for the next 30, 90, and 365 days.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="cta">
+    <div class="cta-content">
+        <h2>Ready to Find Your Path?</h2>
+        <p>Begin your journey of self-discovery and purpose today.</p>
+        <a href="/form" class="cta-button">Start Now</a>
+    </div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script src="/static/js/index.js"></script>
+{% endblock %}

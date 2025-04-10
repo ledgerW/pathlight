@@ -1,0 +1,267 @@
+/* Index page styles for Pathlight */
+
+/* Hero section */
+.hero {
+    padding: var(--spacing-xl) 0;
+    background-color: var(--cream);
+    position: relative;
+    overflow: hidden;
+}
+
+.hero-content {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 var(--spacing-lg);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--spacing-xl);
+}
+
+.hero-text {
+    flex: 1;
+}
+
+.hero-text h1 {
+    font-size: 3rem;
+    margin-bottom: var(--spacing-md);
+    color: var(--teal);
+}
+
+.hero-text p {
+    font-size: 1.25rem;
+    margin-bottom: var(--spacing-lg);
+    max-width: 600px;
+}
+
+.hero-image {
+    flex: 1;
+    position: relative;
+    display: flex;
+    justify-content: center;
+}
+
+.hero-image img {
+    max-width: 100%;
+    height: auto;
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-lg);
+    z-index: 1;
+}
+
+.celestial-decoration {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    z-index: 0;
+}
+
+.star {
+    position: absolute;
+}
+
+.star1 {
+    top: 10%;
+    left: 10%;
+    width: 20px;
+    height: 20px;
+}
+
+.star2 {
+    top: 30%;
+    right: 15%;
+    width: 15px;
+    height: 15px;
+}
+
+.star3 {
+    bottom: 20%;
+    left: 20%;
+    width: 25px;
+    height: 25px;
+}
+
+/* About section */
+.about {
+    padding: var(--spacing-xl) 0;
+    background-color: var(--dark-cream);
+}
+
+.about-content {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 var(--spacing-lg);
+    text-align: center;
+}
+
+.about-content h2 {
+    margin-bottom: var(--spacing-xl);
+}
+
+.about-columns {
+    display: flex;
+    justify-content: space-between;
+    gap: var(--spacing-lg);
+}
+
+.about-column {
+    flex: 1;
+    padding: var(--spacing-lg);
+    background-color: var(--cream);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-md);
+    transition: transform 0.3s ease;
+}
+
+.about-column:hover {
+    transform: translateY(-5px);
+}
+
+.about-image {
+    width: 120px;
+    height: 120px;
+    object-fit: cover;
+    border-radius: 50%;
+    margin-bottom: var(--spacing-md);
+    border: 2px solid var(--gold);
+}
+
+.about-column h3 {
+    margin-bottom: var(--spacing-sm);
+}
+
+/* How it works section */
+.how-it-works {
+    padding: var(--spacing-xl) 0;
+    background-color: var(--cream);
+}
+
+.how-it-works-content {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 var(--spacing-lg);
+    text-align: center;
+}
+
+.how-it-works-content h2 {
+    margin-bottom: var(--spacing-xl);
+}
+
+.steps {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-lg);
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.step {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-lg);
+    text-align: left;
+    padding: var(--spacing-lg);
+    background-color: var(--white);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-md);
+}
+
+.step-number {
+    width: 50px;
+    height: 50px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: var(--gold);
+    color: var(--teal);
+    font-weight: bold;
+    font-size: 1.5rem;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.step-content {
+    flex: 1;
+}
+
+.step-content h3 {
+    margin-bottom: var(--spacing-xs);
+}
+
+/* CTA section */
+.cta {
+    padding: var(--spacing-xl) 0;
+    background-color: var(--teal);
+    color: var(--cream);
+    text-align: center;
+}
+
+.cta-content {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 0 var(--spacing-lg);
+}
+
+.cta-content h2 {
+    color: var(--cream);
+    margin-bottom: var(--spacing-md);
+}
+
+.cta-content p {
+    margin-bottom: var(--spacing-lg);
+    font-size: 1.25rem;
+}
+
+.cta .cta-button {
+    background-color: var(--gold);
+    color: var(--teal);
+}
+
+.cta .cta-button:hover {
+    background-color: var(--cream);
+    color: var(--teal);
+}
+
+/* Responsive styles */
+@media (max-width: 992px) {
+    .hero-content {
+        flex-direction: column;
+        text-align: center;
+    }
+    
+    .hero-text {
+        order: 1;
+    }
+    
+    .hero-image {
+        order: 0;
+        margin-bottom: var(--spacing-lg);
+    }
+    
+    .about-columns {
+        flex-direction: column;
+    }
+    
+    .about-column {
+        margin-bottom: var(--spacing-lg);
+    }
+}
+
+@media (max-width: 768px) {
+    .hero-text h1 {
+        font-size: 2.5rem;
+    }
+    
+    .hero-text p {
+        font-size: 1.1rem;
+    }
+    
+    .step {
+        flex-direction: column;
+        text-align: center;
+    }
+    
+    .step-number {
+        margin-bottom: var(--spacing-md);
+    }
+}

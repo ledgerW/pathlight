@@ -1,0 +1,229 @@
+{% extends "base.html" %}
+
+{% block title %}Pathlight - Your Reflective Journey{% endblock %}
+
+{% block styles %}
+<link rel="stylesheet" href="/static/css/form.css">
+{% endblock %}
+
+{% block content %}
+<div class="form-container">
+    <div class="form-progress">
+        <div class="progress-bar">
+            <div class="progress-fill" id="progressFill"></div>
+        </div>
+        <div class="progress-text">
+            Question <span id="currentQuestion">1</span> of 25
+        </div>
+    </div>
+    
+    <div class="form-content">
+        <div class="form-slides" id="formSlides">
+            <!-- Initial slide for user information -->
+            <div class="form-slide" data-slide="0">
+                <div class="slide-content">
+                    <div class="slide-image-container">
+                        <img src="/static/images/1TheSpark.png" alt="The Spark" class="slide-image">
+                    </div>
+                    <div class="slide-text">
+                        <h2>Welcome to Your Journey</h2>
+                        <p>Before we begin, please tell us a little about yourself.</p>
+                        <div class="form-fields">
+                            <div class="form-field">
+                                <label for="userName">Your Name</label>
+                                <input type="text" id="userName" name="userName" required>
+                            </div>
+                            <div class="form-field">
+                                <label for="userEmail">Your Email</label>
+                                <input type="email" id="userEmail" name="userEmail" required>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Question slides will be dynamically generated -->
+            <!-- Test slide 1 -->
+            <div class="form-slide" data-slide="1">
+                <div class="slide-content">
+                    <div class="slide-image-container">
+                        <img src="/static/images/1TheSpark.png" alt="The Spark" class="slide-image">
+                    </div>
+                    <div class="slide-text">
+                        <h2>Question 1</h2>
+                        <p class="question-text">What activities make you feel most alive, most "you," like time disappears while you're doing them?</p>
+                        <div class="form-fields">
+                            <div class="form-field">
+                                <textarea id="question1" name="question1" rows="6" placeholder="Your response..."></textarea>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Test slide 2 -->
+            <div class="form-slide" data-slide="2">
+                <div class="slide-content">
+                    <div class="slide-image-container">
+                        <img src="/static/images/2TheRoot.png" alt="The Root" class="slide-image">
+                    </div>
+                    <div class="slide-text">
+                        <h2>Question 2</h2>
+                        <p class="question-text">What did you love doing as a child? What were you drawn to naturally, before anyone told you who to be?</p>
+                        <div class="form-fields">
+                            <div class="form-field">
+                                <textarea id="question2" name="question2" rows="6" placeholder="Your response..."></textarea>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Test slide 3 -->
+            <div class="form-slide" data-slide="3">
+                <div class="slide-content">
+                    <div class="slide-image-container">
+                        <img src="/static/images/3TheFlame.png" alt="The Flame" class="slide-image">
+                    </div>
+                    <div class="slide-text">
+                        <h2>Question 3</h2>
+                        <p class="question-text">Think of a moment you felt proud of yourself—not for how it looked on the outside, but how it felt on the inside. What was happening?</p>
+                        <div class="form-fields">
+                            <div class="form-field">
+                                <textarea id="question3" name="question3" rows="6" placeholder="Your response..."></textarea>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Test slide 4 -->
+            <div class="form-slide" data-slide="4">
+                <div class="slide-content">
+                    <div class="slide-image-container">
+                        <img src="/static/images/4TheVeil.png" alt="The Veil" class="slide-image">
+                    </div>
+                    <div class="slide-text">
+                        <h2>Question 4</h2>
+                        <p class="question-text">Are there sides of yourself you rarely show others? What are they, and why are they hidden?</p>
+                        <div class="form-fields">
+                            <div class="form-field">
+                                <textarea id="question4" name="question4" rows="6" placeholder="Your response..."></textarea>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Test slide 5 -->
+            <div class="form-slide" data-slide="5">
+                <div class="slide-content">
+                    <div class="slide-image-container">
+                        <img src="/static/images/5TheMirror.png" alt="The Mirror" class="slide-image">
+                    </div>
+                    <div class="slide-text">
+                        <h2>Question 5</h2>
+                        <p class="question-text">When do you feel most authentically yourself? And when do you feel like you're wearing a mask?</p>
+                        <div class="form-fields">
+                            <div class="form-field">
+                                <textarea id="question5" name="question5" rows="6" placeholder="Your response..."></textarea>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="form-navigation">
+            <button id="prevButton" class="nav-button prev-button" disabled>Previous</button>
+            <button id="nextButton" class="nav-button next-button">Next</button>
+            <button id="submitButton" class="nav-button submit-button" style="display: none;">Complete</button>
+        </div>
+    </div>
+</div>
+
+<!-- Template for question slides -->
+<div id="questionSlideTemplate" style="display: none;">
+    <div class="form-slide" data-slide="{{questionNumber}}">
+        <div class="slide-content">
+            <div class="slide-image-container">
+                <img src="/static/images/{{imageName}}" alt="{{imageAlt}}" class="slide-image">
+            </div>
+            <div class="slide-text">
+                <h2>Question {{questionNumber}}</h2>
+                <p class="question-text">{{questionText}}</p>
+                <div class="form-fields">
+                    <div class="form-field">
+                        <textarea id="question{{questionNumber}}" name="question{{questionNumber}}" rows="6" placeholder="Your response..."></textarea>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Loading overlay -->
+<div id="loadingOverlay" class="loading-overlay" style="display: none;">
+    <div class="loading-content">
+        <div class="loading-spinner"></div>
+        <p>Processing your responses...</p>
+    </div>
+</div>
+
+<!-- Save URL modal -->
+<div id="saveUrlModal" class="modal" style="display: none;">
+    <div class="modal-content">
+        <span class="close-modal">&times;</span>
+        <h2>Save Your Progress</h2>
+        <p>You can return to this form later using this unique URL:</p>
+        <div class="url-container">
+            <input type="text" id="uniqueUrl" readonly>
+            <button id="copyUrlButton">Copy</button>
+        </div>
+        <p>We've also sent this link to your email for safekeeping.</p>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Questions data
+    const questions = [
+        "What activities make you feel most alive, most \"you,\" like time disappears while you're doing them?",
+        "What did you love doing as a child? What were you drawn to naturally, before anyone told you who to be?",
+        "Think of a moment you felt proud of yourself—not for how it looked on the outside, but how it felt on the inside. What was happening?",
+        "Are there sides of yourself you rarely show others? What are they, and why are they hidden?",
+        "When do you feel most authentically yourself? And when do you feel like you're wearing a mask?",
+        "What do people often come to you for help with? What do they say you're \"really good at\"?",
+        "What skills or talents do you feel come easily to you, that others sometimes struggle with?",
+        "Which skills do you genuinely enjoy using the most?",
+        "What's something you learned really quickly or picked up without much effort?",
+        "If you could magically master a new skill overnight, what would it be and why?",
+        "What are your top 3–5 values in life? What do these values mean to you personally?",
+        "What does a \"good life\" mean to you? What does success actually look like in your heart?",
+        "Can you name a moment when you felt something you were doing had deep meaning?",
+        "What kind of impact do you want to have on others—what do you hope people take away from your work or your presence?",
+        "What's something painful or difficult you've experienced that has shaped what you care about or how you show up in the world?",
+        "Imagine it's 10 years from now and life feels deeply fulfilling. What does a day in that life look like?",
+        "What's a creative dream or passion project you've put on the backburner that still whispers to you?",
+        "If money, time, and fear weren't obstacles, what's one thing you'd start doing tomorrow?",
+        "Who are some people you admire or feel inspired by? What is it about their life or work that resonates with you?",
+        "What part of your current life feels most aligned with who you want to be? What part feels furthest?",
+        "What's a problem in the world that moves you or breaks your heart? What do you wish you could do about it?",
+        "Where do your strengths and passions naturally meet something the world needs?",
+        "Is there a way your gifts could serve others in a healing, hopeful, or perspective-shifting way?",
+        "If you had to describe your role in the world, what word(s) would you use?",
+        "What's one small action you could take this month that would bring you closer to living in alignment with your purpose?"
+    ];
+    
+    // Image names
+    const imageNames = [
+        "1TheSpark.png", "2TheRoot.png", "3TheFlame.png", "4TheVeil.png", "5TheMirror.png",
+        "6TheBeacon.png", "7TheGift.png", "8TheDelight.png", "9TheStream.png", "10TheLonging.png",
+        "11TheCompass.png", "12TheMeasure.png", "13TheThread.png", "14TheImprint.png", "15TheAshes.png",
+        "16TheHorizon.png", "17TheWhisper.png", "18TheGate.png", "19TheMuse.png", "20TheDivide.png",
+        "21TheAche.png", "22TheBridge.png", "23TheVessel.png", "24TheRole.png", "25TheSeed.png"
+    ];
+</script>
+<script src="/static/js/form.js"></script>
+{% endblock %}

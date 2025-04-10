@@ -1,0 +1,112 @@
+{% extends "base.html" %}
+
+{% block title %}Pathlight - Your Life Plan{% endblock %}
+
+{% block styles %}
+<link rel="stylesheet" href="/static/css/results.css">
+{% endblock %}
+
+{% block content %}
+<div class="results-container">
+    <div class="results-header">
+        <h1>Your Pathlight Journey</h1>
+        <p class="results-subtitle">Illuminating your authentic purpose and path forward</p>
+    </div>
+    
+    <div class="results-content">
+        <div class="results-summary">
+            <div class="summary-header">
+                <img src="/static/images/11TheCompass.png" alt="The Compass" class="summary-image">
+                <h2>Your Path Summary</h2>
+            </div>
+            <div class="summary-content" id="summaryContent">
+                <!-- Summary content will be loaded here -->
+                <div class="loading-placeholder">
+                    <div class="loading-spinner"></div>
+                    <p>Loading your insights...</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="results-full" id="fullResultsSection">
+            <div class="full-header">
+                <h2>Your Complete Life Plan</h2>
+                <div class="lock-icon" id="lockedIcon">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
+                        <path fill="none" d="M0 0h24v24H0z"/>
+                        <path d="M19 10h1a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V11a1 1 0 0 1 1-1h1V9a7 7 0 1 1 14 0v1zm-2 0V9A5 5 0 0 0 7 9v1h10zm-6 4v4h2v-4h-2z"/>
+                    </svg>
+                </div>
+            </div>
+            
+            <div class="payment-section" id="paymentSection">
+                <h3>Unlock Your Complete Life Plan</h3>
+                <p>You've taken an important step toward discovering your authentic purpose. To access your complete personalized life plan with practical guidance for the next 30, 90, and 365 days, unlock the full results.</p>
+                
+                <div class="plan-features">
+                    <div class="feature">
+                        <div class="feature-icon">✓</div>
+                        <div class="feature-text">Deep analysis of your core strengths, values, and authentic self</div>
+                    </div>
+                    <div class="feature">
+                        <div class="feature-icon">✓</div>
+                        <div class="feature-text">Clear identification of potential life purposes and meaningful directions</div>
+                    </div>
+                    <div class="feature">
+                        <div class="feature-icon">✓</div>
+                        <div class="feature-text">Practical next steps and actionable guidance</div>
+                    </div>
+                    <div class="feature">
+                        <div class="feature-icon">✓</div>
+                        <div class="feature-text">Reflective exercises and practices</div>
+                    </div>
+                    <div class="feature">
+                        <div class="feature-icon">✓</div>
+                        <div class="feature-text">Suggestions for overcoming potential obstacles</div>
+                    </div>
+                </div>
+                
+                <button id="unlockButton" class="unlock-button">Unlock Full Plan - $29.99</button>
+            </div>
+            
+            <div class="full-content" id="fullContent" style="display: none;">
+                <!-- Full plan content will be loaded here -->
+                <div class="loading-placeholder">
+                    <div class="loading-spinner"></div>
+                    <p>Loading your complete plan...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Payment processing modal -->
+<div id="paymentModal" class="modal" style="display: none;">
+    <div class="modal-content">
+        <span class="close-modal">&times;</span>
+        <h2>Complete Your Purchase</h2>
+        <div id="paymentProcessing">
+            <p>You'll be redirected to our secure payment processor.</p>
+            <div class="loading-spinner"></div>
+        </div>
+    </div>
+</div>
+
+<!-- Success modal -->
+<div id="successModal" class="modal" style="display: none;">
+    <div class="modal-content">
+        <span class="close-modal">&times;</span>
+        <h2>Payment Successful!</h2>
+        <p>Thank you for your purchase. Your full life plan is now available.</p>
+        <button id="viewPlanButton" class="cta-button">View Your Complete Plan</button>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // User ID will be set by the server when rendering the template
+    const userId = "{{ user_id }}";
+</script>
+<script src="/static/js/results.js"></script>
+{% endblock %}

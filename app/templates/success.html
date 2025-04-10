@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+
+{% block title %}Pathlight - Payment Successful{% endblock %}
+
+{% block styles %}
+<link rel="stylesheet" href="/static/css/payment.css">
+{% endblock %}
+
+{% block content %}
+<div class="payment-container">
+    <div class="payment-content success">
+        <img src="/static/images/16TheHorizon.png" alt="The Horizon" class="payment-image">
+        <h1>Payment Successful!</h1>
+        <p>Thank you for your purchase. Your full life plan is now available.</p>
+        <div class="payment-actions">
+            <a href="/results/{{ user_id }}" class="cta-button">View Your Complete Plan</a>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Verify payment on page load
+    document.addEventListener('DOMContentLoaded', async () => {
+        const urlParams = new URLSearchParams(window.location.search);
+        const sessionId = urlParams.get('session_id');
+        const userId = urlParams.get('user_id');
+        
+        if (sessionId && userId) {
+            try {
+                const response = await fetch(`/api/payments/${userId}/verify-payment`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ session_id: sessionId }),
+                });
+                
+                const data = await response.json();
+                
+                if (!data.payment_verified) {
+                    // If payment verification failed, redirect to results page
+                    // The payment section will still be shown there
+                    window.location.href = `/results/${userId}`;
+                }
+            } catch (error) {
+                console.error('Error verifying payment:', error);
+            }
+        }
+    });
+</script>
+{% endblock %}

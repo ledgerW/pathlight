@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+
+{% block title %}Pathlight - Payment Cancelled{% endblock %}
+
+{% block styles %}
+<link rel="stylesheet" href="/static/css/payment.css">
+{% endblock %}
+
+{% block content %}
+<div class="payment-container">
+    <div class="payment-content cancel">
+        <img src="/static/images/4TheVeil.png" alt="The Veil" class="payment-image">
+        <h1>Payment Cancelled</h1>
+        <p>Your payment was not completed. You can still access your summary and try again when you're ready.</p>
+        <div class="payment-actions">
+            <a href="/results/{{ user_id }}" class="cta-button">Return to Results</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

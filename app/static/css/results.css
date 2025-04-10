@@ -1,0 +1,213 @@
+/* Results page styles for Pathlight */
+
+.results-container {
+    max-width: 1200px;
+    margin: var(--spacing-xl) auto;
+    padding: 0 var(--spacing-lg);
+}
+
+.results-header {
+    text-align: center;
+    margin-bottom: var(--spacing-xl);
+}
+
+.results-subtitle {
+    font-size: 1.25rem;
+    color: var(--gold);
+    font-style: italic;
+}
+
+.results-content {
+    display: flex;
+    gap: var(--spacing-xl);
+}
+
+/* Summary section */
+.results-summary {
+    flex: 1;
+    background-color: var(--white);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-lg);
+    overflow: hidden;
+}
+
+.summary-header {
+    background-color: var(--teal);
+    color: var(--cream);
+    padding: var(--spacing-lg);
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-md);
+}
+
+.summary-header h2 {
+    margin-bottom: 0;
+    color: var(--cream);
+}
+
+.summary-image {
+    width: 60px;
+    height: 60px;
+    object-fit: cover;
+    border-radius: 50%;
+    border: 2px solid var(--gold);
+}
+
+.summary-content {
+    padding: var(--spacing-lg);
+    min-height: 300px;
+}
+
+/* Full results section */
+.results-full {
+    flex: 1;
+    background-color: var(--white);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-lg);
+    overflow: hidden;
+}
+
+.full-header {
+    background-color: var(--teal);
+    color: var(--cream);
+    padding: var(--spacing-lg);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.full-header h2 {
+    margin-bottom: 0;
+    color: var(--cream);
+}
+
+.lock-icon {
+    width: 30px;
+    height: 30px;
+    fill: var(--gold);
+}
+
+.payment-section {
+    padding: var(--spacing-lg);
+    text-align: center;
+}
+
+.payment-section h3 {
+    margin-bottom: var(--spacing-md);
+}
+
+.payment-section p {
+    margin-bottom: var(--spacing-lg);
+    max-width: 600px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.plan-features {
+    margin: var(--spacing-xl) 0;
+}
+
+.feature {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-md);
+    margin-bottom: var(--spacing-md);
+    text-align: left;
+}
+
+.feature-icon {
+    width: 24px;
+    height: 24px;
+    background-color: var(--gold);
+    color: var(--teal);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    flex-shrink: 0;
+}
+
+.unlock-button {
+    background-color: var(--gold);
+    color: var(--teal);
+    font-family: var(--font-serif);
+    font-weight: 600;
+    padding: var(--spacing-md) var(--spacing-lg);
+    border-radius: var(--radius-md);
+    border: none;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-size: 1.1rem;
+}
+
+.unlock-button:hover {
+    background-color: var(--teal);
+    color: var(--cream);
+}
+
+.full-content {
+    padding: var(--spacing-lg);
+    min-height: 500px;
+}
+
+/* Loading placeholder */
+.loading-placeholder {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 200px;
+}
+
+.loading-placeholder p {
+    margin-top: var(--spacing-md);
+    color: var(--teal);
+}
+
+/* Payment modal */
+#paymentProcessing {
+    text-align: center;
+}
+
+#paymentProcessing p {
+    margin-bottom: var(--spacing-lg);
+}
+
+/* Success modal */
+#successModal .modal-content {
+    text-align: center;
+}
+
+#viewPlanButton {
+    margin-top: var(--spacing-md);
+}
+
+/* Responsive styles */
+@media (max-width: 992px) {
+    .results-content {
+        flex-direction: column;
+    }
+    
+    .results-summary,
+    .results-full {
+        margin-bottom: var(--spacing-lg);
+    }
+}
+
+@media (max-width: 768px) {
+    .results-container {
+        padding: 0 var(--spacing-md);
+    }
+    
+    .summary-header,
+    .full-header {
+        padding: var(--spacing-md);
+    }
+    
+    .summary-content,
+    .full-content,
+    .payment-section {
+        padding: var(--spacing-md);
+    }
+}

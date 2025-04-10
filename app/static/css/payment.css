@@ -1,0 +1,73 @@
+/* Payment page styles for Pathlight */
+
+.payment-container {
+    max-width: 800px;
+    margin: var(--spacing-xl) auto;
+    padding: 0 var(--spacing-lg);
+}
+
+.payment-content {
+    background-color: var(--white);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-lg);
+    padding: var(--spacing-xl);
+    text-align: center;
+}
+
+.payment-image {
+    width: 150px;
+    height: 150px;
+    object-fit: cover;
+    border-radius: 50%;
+    border: 3px solid var(--gold);
+    margin-bottom: var(--spacing-lg);
+}
+
+.payment-content h1 {
+    margin-bottom: var(--spacing-md);
+}
+
+.payment-content p {
+    margin-bottom: var(--spacing-lg);
+    max-width: 600px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.payment-actions {
+    margin-top: var(--spacing-lg);
+}
+
+/* Success page specific styles */
+.payment-content.success {
+    border-top: 5px solid var(--gold);
+}
+
+.payment-content.success h1 {
+    color: var(--teal);
+}
+
+/* Cancel page specific styles */
+.payment-content.cancel {
+    border-top: 5px solid var(--teal);
+}
+
+.payment-content.cancel h1 {
+    color: var(--teal);
+}
+
+/* Responsive styles */
+@media (max-width: 768px) {
+    .payment-container {
+        padding: 0 var(--spacing-md);
+    }
+    
+    .payment-content {
+        padding: var(--spacing-lg);
+    }
+    
+    .payment-image {
+        width: 120px;
+        height: 120px;
+    }
+}
