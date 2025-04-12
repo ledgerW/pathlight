@@ -17,13 +17,13 @@ async def index(request: Request):
 
 @router.get("/register", response_class=HTMLResponse)
 async def register(request: Request):
-    """Initial registration page to collect name, email, and DOB"""
-    return templates.TemplateResponse("register.html", {"request": request})
+    """Redirect to form page as we're using the form for registration now"""
+    return RedirectResponse(url="/form")
 
 @router.get("/form", response_class=HTMLResponse)
 async def form(request: Request):
-    """Redirect to registration if no user_id is provided"""
-    return RedirectResponse(url="/register")
+    """Show the form page directly for new users"""
+    return templates.TemplateResponse("form.html", {"request": request})
 
 @router.get("/form/{user_id}", response_class=HTMLResponse)
 async def form_with_user(request: Request, user_id: uuid.UUID, session: Session = Depends(get_session)):

@@ -58,7 +58,7 @@
                     const response = await fetch(`/api/users/find-by-email?email=${encodeURIComponent(email)}`);
                     const data = await response.json();
                     
-                    if (data && data.id) {
+                    if (data && data.found) {
                         // User found, show returning user section
                         foundUserId = data.id;
                         returningUserSection.classList.remove('hidden');
