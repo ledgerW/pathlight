@@ -28,36 +28,49 @@
 
 {% block scripts %}
 <script>
-    // Verify payment on page load
+    // Verify payment on page load and immediately redirect to results page
     document.addEventListener('DOMContentLoaded', async () => {
         const urlParams = new URLSearchParams(window.location.search);
         const sessionId = urlParams.get('session_id');
         const userId = urlParams.get('user_id');
         const tier = urlParams.get('tier');
         
-        if (sessionId && userId && tier) {
-            try {
-                const response = await fetch(`/api/payments/${userId}/verify-payment`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({ 
-                        session_id: sessionId,
-                        tier: tier
-                    }),
-                });
-                
-                const data = await response.json();
-                
-                if (!data.payment_verified) {
-                    // If payment verification failed, redirect to results page
-                    // The payment section will still be shown there
-                    window.location.href = `/results/${userId}`;
+        // Show generating message
+        const paymentContent = document.querySelector('.payment-content');
+        if (paymentContent) {
+            paymentContent.innerHTML = `
+                <img src="/static/images/16TheHorizon.png" alt="The Horizon" class="payment-image">
+                <h1>Payment Successful!</h1>
+                <p>Thank you for your purchase. We're now generating your ${tier === 'premium' ? 'complete life plan' : 'personal insights'}...</p>
+                <div class="loading-spinner"></div>
+                <p class="generating-message">This may take a few moments. Please don't refresh the page.</p>
+            `;
+        }
+        
+        try {
+            // Call the appropriate AI endpoint based on tier
+            const endpoint = tier === 'premium' ? 'generate-premium' : 'generate-basic';
+            const response = await fetch(`/api/ai/${userId}/${endpoint}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
                 }
-            } catch (error) {
-                console.error('Error verifying payment:', error);
+            });
+            
+            if (!response.ok) {
+                throw new Error('Failed to generate results');
             }
+            
+            const data = await response.json();
+            console.log('Results generated:', data);
+            
+            // Redirect to results page with payment success parameter
+            window.location.href = `/results/${userId}?payment_success=true&tier=${tier}`;
+        } catch (error) {
+            console.error('Error generating results:', error);
+            
+            // Still redirect to results page, but with error parameter
+            window.location.href = `/results/${userId}?payment_success=true&tier=${tier}&generation_error=true`;
         }
     });
 </script>

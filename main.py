@@ -13,7 +13,8 @@ from app.routers import (
     results_router,
     ai_router,
     payments_router,
-    web_router
+    web_router,
+    auth_router
 )
 
 # Import database functions
@@ -52,6 +53,7 @@ app.include_router(results_router)
 app.include_router(ai_router)
 app.include_router(payments_router)
 app.include_router(web_router)
+app.include_router(auth_router)
 
 # Create database tables on startup
 @app.on_event("startup")

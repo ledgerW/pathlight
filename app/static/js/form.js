@@ -24,7 +24,7 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Get URL parameters
     const urlParams = new URLSearchParams(window.location.search);
-    const userId = urlParams.get('user_id');
+    let userId = urlParams.get('user_id');
     
     // State variables
     let currentSlide = 0;
@@ -190,12 +190,22 @@ document.addEventListener('DOMContentLoaded', function() {
         // Set initial tier badge
         updateTierBadge();
         
-        // Show first slide
-        showSlide(currentSlide);
+        // If user ID exists in URL path (not query parameter), extract it
+        if (!userId) {
+            const pathParts = window.location.pathname.split('/');
+            if (pathParts.length > 2 && pathParts[1] === 'form') {
+                userId = pathParts[2];
+                console.log('Extracted user ID from path:', userId);
+                user.id = userId;
+            }
+        }
         
         // If user ID exists, load saved responses
         if (userId) {
             loadUserData();
+        } else {
+            // Show first slide for new users
+            showSlide(currentSlide);
         }
     }
     
@@ -412,18 +422,23 @@ document.addEventListener('DOMContentLoaded', function() {
             }
             
             // Save user info
-            user.name = nameInput.value.trim();
-            user.email = emailInput.value.trim();
+            const newName = nameInput.value.trim();
+            const newEmail = emailInput.value.trim();
+            const newDob = dobInput.value;
             
             // Check if user exists
-            checkExistingUser(user.email).then(existingUserId => {
+            checkExistingUser(newEmail).then(existingUserId => {
                 if (existingUserId) {
-                    // User exists, load their data
-                    user.id = existingUserId;
-                    loadUserData();
+                    // User exists, redirect to Continue Journey page
+                    showNotification('You already have an account. Redirecting to continue your journey...', 'info');
+                    setTimeout(() => {
+                        window.location.href = `/form/${existingUserId}`;
+                    }, 2000);
                 } else {
                     // Create new user
-                    createUser(dobInput.value);
+                    user.name = newName;
+                    user.email = newEmail;
+                    createUser(newDob);
                 }
             });
             
@@ -490,6 +505,32 @@ document.addEventListener('DOMContentLoaded', function() {
         // Save final question response
         saveCurrentSlideData();
         
+        // Force save the current question response to the server
+        const questionNumber = currentSlide;
+        const responseTextarea = document.getElementById(`question${questionNumber}`);
+        
+        if (responseTextarea && responseTextarea.value.trim() && user.id) {
+            // Save to state
+            userResponses[questionNumber] = responseTextarea.value.trim();
+            
+            // Explicitly save to server before proceeding
+            saveResponse(questionNumber, responseTextarea.value.trim())
+                .then(() => {
+                    console.log(`Explicitly saved question ${questionNumber} response before proceeding`);
+                    continueSubmitProcess();
+                })
+                .catch(error => {
+                    console.error(`Error saving question ${questionNumber} response:`, error);
+                    // Continue anyway to avoid blocking the user
+                    continueSubmitProcess();
+                });
+        } else {
+            continueSubmitProcess();
+        }
+    }
+    
+    // Continue the submit process after saving the response
+    function continueSubmitProcess() {
         // Update submit button state
         updateSubmitButtonState();
         
@@ -548,38 +589,387 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
     
-    // Initiate payment process
-    function initiatePayment(tier) {
-        // Hide payment modals
-        basicPaymentModal.style.display = 'none';
-        premiumPaymentModal.style.display = 'none';
-        
-        // Show loading overlay
-        loadingOverlay.style.display = 'flex';
-        loadingMessage.textContent = 'Preparing payment...';
-        
-        // Call payment API
-        fetch(`/api/payments/${user.id}/create-checkout-session/${tier}`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
+    // Stripe payment elements
+    let stripe;
+    let elements;
+    let paymentElement;
+    let currentTier;
+    let paymentModal;
+    let paymentForm;
+    
+    // Initialize Stripe
+    async function initializeStripe() {
+        return new Promise((resolve, reject) => {
+            try {
+                // Check if Stripe is already loaded
+                if (typeof Stripe === 'undefined') {
+                    // Load Stripe.js dynamically
+                    const script = document.createElement('script');
+                    script.src = 'https://js.stripe.com/v3/';
+                    script.async = true;
+                    script.onload = () => {
+                        try {
+                            stripe = Stripe('pk_test_51RBFMYIJ9UdLUkqAzojvqca8S7Xs4mXzUUN4p1rUMKGWZUOQRS9r6HaHLOGw26N7ko72iJPuoITaHqxGF8GTtfTg007gnFycP7');
+                            console.log('Stripe.js loaded');
+                            resolve(stripe);
+                        } catch (error) {
+                            console.error('Error initializing Stripe object:', error);
+                            reject(error);
+                        }
+                    };
+                    script.onerror = (error) => {
+                        console.error('Error loading Stripe.js:', error);
+                        reject(error);
+                    };
+                    document.head.appendChild(script);
+                } else {
+                    try {
+                        stripe = Stripe('pk_test_51RBFMYIJ9UdLUkqAzojvqca8S7Xs4mXzUUN4p1rUMKGWZUOQRS9r6HaHLOGw26N7ko72iJPuoITaHqxGF8GTtfTg007gnFycP7');
+                        console.log('Stripe.js already loaded');
+                        resolve(stripe);
+                    } catch (error) {
+                        console.error('Error initializing Stripe object:', error);
+                        reject(error);
+                    }
+                }
+            } catch (error) {
+                console.error('Error in initializeStripe:', error);
+                reject(error);
             }
-        })
-        .then(response => {
+        });
+    }
+    
+    // Create payment modal
+    function createPaymentModal(tier, productName, productDescription, amount) {
+        // Create modal container if it doesn't exist
+        if (!document.getElementById('stripePaymentModal')) {
+            const modalContainer = document.createElement('div');
+            modalContainer.id = 'stripePaymentModal';
+            modalContainer.className = 'modal';
+            modalContainer.style.display = 'none';
+            
+            // Create modal content
+            modalContainer.innerHTML = `
+                <div class="modal-content payment-modal-content">
+                    <span class="close-modal" id="closeStripeModal">&times;</span>
+                    <h2 id="paymentModalTitle">Complete Your Purchase</h2>
+                    <p id="paymentModalDescription"></p>
+                    <div id="paymentModalPrice" class="payment-price"></div>
+                    
+                    <form id="payment-form">
+                        <div id="payment-element"></div>
+                        <button id="submit-payment" class="btn-primary payment-button">
+                            <div class="spinner hidden" id="spinner"></div>
+                            <span id="button-text">Pay Now</span>
+                        </button>
+                        <div id="payment-message" class="payment-message"></div>
+                    </form>
+                </div>
+            `;
+            
+            document.body.appendChild(modalContainer);
+            
+            // Add styles
+            const style = document.createElement('style');
+            style.textContent = `
+                .payment-modal-content {
+                    max-width: 500px;
+                }
+                .payment-price {
+                    font-size: 24px;
+                    font-weight: bold;
+                    margin: 20px 0;
+                    color: #4a90e2;
+                }
+                #payment-element {
+                    margin-bottom: 24px;
+                }
+                .payment-button {
+                    background: #4a90e2;
+                    color: white;
+                    border: 0;
+                    padding: 12px 16px;
+                    border-radius: 4px;
+                    margin-top: 16px;
+                    font-weight: 600;
+                    cursor: pointer;
+                    width: 100%;
+                    transition: all 0.2s ease;
+                    display: flex;
+                    justify-content: center;
+                    align-items: center;
+                }
+                .payment-button:hover {
+                    filter: brightness(1.1);
+                }
+                .payment-button:disabled {
+                    opacity: 0.5;
+                    cursor: default;
+                }
+                .spinner {
+                    color: #ffffff;
+                    font-size: 22px;
+                    text-indent: -99999px;
+                    margin: 0px auto;
+                    position: relative;
+                    width: 20px;
+                    height: 20px;
+                    box-shadow: inset 0 0 0 2px;
+                    -webkit-transform: translateZ(0);
+                    -ms-transform: translateZ(0);
+                    transform: translateZ(0);
+                    border-radius: 50%;
+                    margin-right: 10px;
+                }
+                .spinner:before, .spinner:after {
+                    position: absolute;
+                    content: '';
+                }
+                .spinner:before {
+                    width: 10.4px;
+                    height: 20.4px;
+                    background: #4a90e2;
+                    border-radius: 20.4px 0 0 20.4px;
+                    top: -0.2px;
+                    left: -0.2px;
+                    -webkit-transform-origin: 10.4px 10.2px;
+                    transform-origin: 10.4px 10.2px;
+                    -webkit-animation: loading 2s infinite ease 1.5s;
+                    animation: loading 2s infinite ease 1.5s;
+                }
+                .spinner:after {
+                    width: 10.4px;
+                    height: 10.2px;
+                    background: #4a90e2;
+                    border-radius: 0 10.2px 10.2px 0;
+                    top: -0.1px;
+                    left: 10.2px;
+                    -webkit-transform-origin: 0px 10.2px;
+                    transform-origin: 0px 10.2px;
+                    -webkit-animation: loading 2s infinite ease;
+                    animation: loading 2s infinite ease;
+                }
+                .hidden {
+                    display: none;
+                }
+                .payment-message {
+                    color: rgb(105, 115, 134);
+                    font-size: 16px;
+                    line-height: 20px;
+                    padding-top: 12px;
+                    text-align: center;
+                }
+                @keyframes loading {
+                    0% {
+                        -webkit-transform: rotate(0deg);
+                        transform: rotate(0deg);
+                    }
+                    100% {
+                        -webkit-transform: rotate(360deg);
+                        transform: rotate(360deg);
+                    }
+                }
+            `;
+            document.head.appendChild(style);
+            
+            // Add event listener for close button
+            document.getElementById('closeStripeModal').addEventListener('click', () => {
+                document.getElementById('stripePaymentModal').style.display = 'none';
+            });
+        }
+        
+        // Update modal content
+        document.getElementById('paymentModalTitle').textContent = `Purchase ${productName}`;
+        document.getElementById('paymentModalDescription').textContent = productDescription;
+        document.getElementById('paymentModalPrice').textContent = `$${(amount / 100).toFixed(2)}`;
+        
+        // Store reference to modal
+        paymentModal = document.getElementById('stripePaymentModal');
+        paymentForm = document.getElementById('payment-form');
+        
+        // Show the modal
+        paymentModal.style.display = 'flex';
+    }
+    
+    // Initialize payment elements
+    async function initializePaymentElements(clientSecret) {
+        // Make sure elements is not already initialized
+        if (elements) {
+            elements.destroy();
+        }
+        
+        // Create elements instance
+        elements = stripe.elements({
+            clientSecret: clientSecret,
+            appearance: {
+                theme: 'stripe',
+                variables: {
+                    colorPrimary: '#4a90e2',
+                    colorBackground: '#ffffff',
+                    colorText: '#30313d',
+                    colorDanger: '#df1b41',
+                    fontFamily: 'Roboto, Open Sans, Segoe UI, sans-serif',
+                    spacingUnit: '4px',
+                    borderRadius: '4px'
+                }
+            }
+        });
+        
+        // Create and mount the Payment Element
+        paymentElement = elements.create('payment');
+        paymentElement.mount('#payment-element');
+        
+        // Add event listener for form submission
+        paymentForm.addEventListener('submit', handlePaymentSubmission);
+    }
+    
+    // Handle payment submission
+    async function handlePaymentSubmission(e) {
+        e.preventDefault();
+        
+        // Show loading state
+        setLoading(true);
+        
+        // Confirm payment
+        const { error } = await stripe.confirmPayment({
+            elements,
+            confirmParams: {
+                return_url: window.location.origin + '/form/' + user.id,
+            },
+            redirect: 'if_required'
+        });
+        
+        if (error) {
+            // Show error message
+            const messageContainer = document.getElementById('payment-message');
+            messageContainer.textContent = error.message;
+            setLoading(false);
+            return;
+        }
+        
+        // Payment succeeded, get the PaymentIntent ID
+        const paymentIntent = await stripe.retrievePaymentIntent(elements._commonOptions.clientSecret);
+        
+        if (paymentIntent.paymentIntent.status === 'succeeded') {
+            // Confirm payment with our backend
+            confirmPaymentWithBackend(paymentIntent.paymentIntent.id, currentTier);
+        } else {
+            // Show error message
+            const messageContainer = document.getElementById('payment-message');
+            messageContainer.textContent = 'Payment failed. Please try again.';
+            setLoading(false);
+        }
+    }
+    
+    // Confirm payment with backend
+    async function confirmPaymentWithBackend(paymentIntentId, tier) {
+        try {
+            const response = await fetch(`/api/payments/${user.id}/confirm-payment-intent`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    payment_intent_id: paymentIntentId,
+                    tier: tier
+                })
+            });
+            
+            const data = await response.json();
+            
+            if (data.payment_verified) {
+                // Show success message
+                const messageContainer = document.getElementById('payment-message');
+                messageContainer.textContent = 'Payment successful! Generating your results...';
+                
+                // Hide payment modal after a short delay
+                setTimeout(() => {
+                    paymentModal.style.display = 'none';
+                    
+                    // Show loading overlay
+                    loadingOverlay.style.display = 'flex';
+                    loadingMessage.textContent = tier === 'premium' ? 
+                        'Generating your comprehensive life plan...' : 
+                        'Generating your personal insight...';
+                    
+                    // Generate results
+                    if (tier === 'premium') {
+                        generatePremiumResults();
+                    } else {
+                        generateBasicResults();
+                    }
+                }, 2000);
+            } else {
+                // Show error message
+                const messageContainer = document.getElementById('payment-message');
+                messageContainer.textContent = 'Payment verification failed. Please try again.';
+                setLoading(false);
+            }
+        } catch (error) {
+            console.error('Error confirming payment:', error);
+            const messageContainer = document.getElementById('payment-message');
+            messageContainer.textContent = 'Error confirming payment. Please try again.';
+            setLoading(false);
+        }
+    }
+    
+    // Set loading state
+    function setLoading(isLoading) {
+        const submitButton = document.getElementById('submit-payment');
+        const spinner = document.getElementById('spinner');
+        const buttonText = document.getElementById('button-text');
+        
+        if (isLoading) {
+            submitButton.disabled = true;
+            spinner.classList.remove('hidden');
+            buttonText.classList.add('hidden');
+        } else {
+            submitButton.disabled = false;
+            spinner.classList.add('hidden');
+            buttonText.classList.remove('hidden');
+        }
+    }
+    
+    // Initiate payment process
+    async function initiatePayment(tier) {
+        try {
+            // Store current tier
+            currentTier = tier;
+            
+            // Hide payment modals
+            basicPaymentModal.style.display = 'none';
+            premiumPaymentModal.style.display = 'none';
+            
+            // Show loading overlay
+            loadingOverlay.style.display = 'flex';
+            loadingMessage.textContent = 'Preparing payment...';
+            
+            // Call payment API to create checkout session
+            const response = await fetch(`/api/payments/${user.id}/create-checkout-session/${tier}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            });
+            
             if (!response.ok) {
                 throw new Error('Failed to create checkout session');
             }
-            return response.json();
-        })
-        .then(data => {
-            // Redirect to checkout URL
+            
+            const data = await response.json();
+            console.log('Checkout session created:', data);
+            
+            // Hide loading overlay
+            loadingOverlay.style.display = 'none';
+            
+            // Redirect to Stripe Checkout
             window.location.href = data.checkout_url;
-        })
-        .catch(error => {
+            
+        } catch (error) {
             console.error('Error creating checkout session:', error);
             loadingOverlay.style.display = 'none';
             showNotification('Error processing payment. Please try again.', 'error');
-        });
+        }
     }
     
     // Utility function to validate email
@@ -637,6 +1027,33 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
     
+    // Send magic link for authentication
+    async function sendMagicLink(email) {
+        try {
+            const response = await fetch('/auth/login_or_create_user', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ email })
+            });
+            
+            const data = await response.json();
+            
+            if (response.ok) {
+                showNotification('Magic link sent! Please check your email to continue.', 'success');
+                return true;
+            } else {
+                showNotification('Error sending magic link: ' + (data.error || 'Unknown error'), 'error');
+                return false;
+            }
+        } catch (error) {
+            console.error('Error sending magic link:', error);
+            showNotification('Error sending magic link. Please try again.', 'error');
+            return false;
+        }
+    }
+    
     // Create user
     async function createUser(dobValue) {
         try {
@@ -683,10 +1100,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const newUrl = `${window.location.pathname}/${user.id}`;
             window.history.replaceState({}, '', newUrl);
             
-            // Show save URL modal
-            showSaveUrlModal();
-            
-            // Proceed to first question
+            // Proceed to first question without showing the URL modal
             showSlide(1);
             
             showNotification('Your progress will be saved automatically.');
@@ -700,17 +1114,23 @@ document.addEventListener('DOMContentLoaded', function() {
     // Update user
     async function updateUser() {
         try {
+            // Only update fields that have changed
+            const updateData = {
+                progress_state: user.progress_state,
+                payment_tier: user.payment_tier
+            };
+            
+            // Only include name if it has changed
+            if (document.getElementById('userName').value.trim() !== user.name) {
+                updateData.name = document.getElementById('userName').value.trim();
+            }
+            
             const response = await fetch(`/api/users/${user.id}`, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({
-                    name: user.name,
-                    email: user.email,
-                    progress_state: user.progress_state,
-                    payment_tier: user.payment_tier
-                }),
+                body: JSON.stringify(updateData),
             });
             
             if (!response.ok) {
@@ -802,6 +1222,22 @@ document.addEventListener('DOMContentLoaded', function() {
             document.getElementById('userName').value = user.name;
             document.getElementById('userEmail').value = user.email;
             
+            // Make email field read-only for returning users
+            document.getElementById('userEmail').readOnly = true;
+            document.getElementById('userEmail').classList.add('readonly-field');
+            
+            // Format and display DOB
+            if (user.dob) {
+                // Convert ISO date string to YYYY-MM-DD format for date input
+                const dobDate = new Date(user.dob);
+                if (!isNaN(dobDate.getTime())) {
+                    const year = dobDate.getFullYear();
+                    const month = String(dobDate.getMonth() + 1).padStart(2, '0');
+                    const day = String(dobDate.getDate()).padStart(2, '0');
+                    document.getElementById('userDob').value = `${year}-${month}-${day}`;
+                }
+            }
+            
             // Get user responses
             const responsesResponse = await fetch(`/api/form-responses/user/${user.id}`);
             if (!responsesResponse.ok) {
@@ -822,16 +1258,25 @@ document.addEventListener('DOMContentLoaded', function() {
             
             // Go to the next unanswered question
             const progressState = parseInt(user.progress_state);
+            console.log('User progress state:', progressState);
+            
             if (progressState > 0) {
-                showSlide(progressState);
+                // Make sure we're showing the correct slide based on progress
+                // This is critical for returning users
+                console.log('Showing slide based on progress state:', progressState);
                 
-                // If we're at the end of a tier, update submit button state
-                const isEndOfBasicTier = progressState === BASIC_TIER_QUESTIONS && user.payment_tier !== 'premium';
-                const isEndOfPremiumTier = progressState === PREMIUM_TIER_QUESTIONS;
-                
-                if (isEndOfBasicTier || isEndOfPremiumTier) {
-                    updateSubmitButtonState();
-                }
+                // Force the slide to be shown
+                setTimeout(() => {
+                    showSlide(progressState);
+                    
+                    // If we're at the end of a tier, update submit button state
+                    const isEndOfBasicTier = progressState === BASIC_TIER_QUESTIONS && user.payment_tier !== 'premium';
+                    const isEndOfPremiumTier = progressState === PREMIUM_TIER_QUESTIONS;
+                    
+                    if (isEndOfBasicTier || isEndOfPremiumTier) {
+                        updateSubmitButtonState();
+                    }
+                }, 100);
             } else {
                 showSlide(1); // Start at the first question
             }

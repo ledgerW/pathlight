@@ -4,14 +4,44 @@
 
 {% block styles %}
 <link rel="stylesheet" href="/static/css/form.css">
+<style>
+    .login-link-container {
+        text-align: center;
+        margin-bottom: 20px;
+    }
+    
+    .login-link {
+        color: #4a90e2;
+        text-decoration: none;
+        font-size: 16px;
+    }
+    
+    .login-link:hover {
+        text-decoration: underline;
+    }
+</style>
 {% endblock %}
 
 {% block content %}
 <div class="form-container">
+    {% if not user_id %}
+    <div class="login-link-container">
+        <a href="/login" class="login-link">Already started? Login to continue your journey</a>
+    </div>
+    {% endif %}
+    
+    {% if request.query_params.get('error') %}
+    <div class="error-message">
+        {{ request.query_params.get('error') }}
+    </div>
+    {% endif %}
     <div class="form-progress">
+        <div class="start-marker"></div>
         <div class="progress-bar">
             <div class="progress-fill" id="progressFill"></div>
+            <div class="current-marker" id="currentMarker"></div>
         </div>
+        <div class="end-marker"></div>
         <div class="progress-text">
             <span id="progressText">Question <span id="currentQuestion">1</span> of <span id="totalQuestions">5</span></span>
         </div>
@@ -272,5 +302,9 @@
         "21TheAche.png", "22TheBridge.png", "23TheVessel.png", "24TheRole.png", "25TheSeed.png"
     ];
 </script>
-<script src="/static/js/form.js"></script>
+<script src="/static/js/form-core.js"></script>
+<script src="/static/js/form-ui.js"></script>
+<script src="/static/js/form-api.js"></script>
+<script src="/static/js/form-payment.js"></script>
+<script src="/static/js/form-main.js"></script>
 {% endblock %}

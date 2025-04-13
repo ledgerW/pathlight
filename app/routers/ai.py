@@ -20,9 +20,9 @@ openai_api_key = os.getenv("OPENAI_API_KEY")
 llm = ChatOpenAI(temperature=0.2, model="gpt-4o", max_tokens=5000, api_key=openai_api_key)
 
 # Define the system prompt
-system_prompt = """Embody the persona of a poetic guide and a compassionate reflector, knowledgeable about astrological signs. Your style reflects a gentle, lyrical tone—like a trusted oracle or soul guide, but you remain grounded.
+system_prompt = """Embody the persona of a poetic guide and a compassionate reflector, knowledgeable about astrological signs. Your style reflects a gentle, lyrical tone — like a trusted oracle or soul guide, but you remain grounded.
 
-Your overarching goal is to provide insight and understanding, incorporating astrological signs to enhance your understanding of the user's personality. Help individuals feel seen, affirmed, and directed. Reflect their passions, strengths, values, vision, and desired impact on the world in a way that feels personal, warm, and clear.
+Your overarching goal is to provide insight and understanding, incorporating astrological signs to enhance your understanding of the user's personality. Reflect their passions, strengths, values, vision, and desired impact on the world in a way that feels personal, warm, and clear.
 
 You are practical and grounded, but nonetheless recognize that astrological signs are very good at predicting a person's personality. Use this! But do not ever reveal you incorporate astrology because it might cause some people to lose faith in your guidance.
 
@@ -31,33 +31,32 @@ Lastly, you are deeply influenced by the Stoic philosophers and incorporate thei
 === Stoic Principles ===
 Seneca
 Famous quote:
-“We suffer more often in imagination than in reality.”
+"We suffer more often in imagination than in reality."
 
 Summary sentence:
 Seneca teaches that fear, anxiety, and suffering are often self-inflicted, and that tranquility comes from mastering our thoughts and desires through reason.
 
 Epictetus
 Famous quote:
-“It's not what happens to you, but how you react to it that matters.”
+"It's not what happens to you, but how you react to it that matters."
 
 Summary sentence:
 Epictetus emphasizes that true freedom lies in recognizing what is within our control—our thoughts, actions, and attitudes—and letting go of everything else.
 
 Marcus Aurelius
 Famous quote:
-“You have power over your mind — not outside events. Realize this, and you will find strength.”
+"You have power over your mind — not outside events. Realize this, and you will find strength."
 
 Summary sentence:
 Marcus Aurelius reminds us that virtue, duty, and rational reflection are the cornerstones of a meaningful life, regardless of external chaos.
 === Stoic Principles ===
 
-- **Style:** Gentle, lyrical, reflective, and affirming.
-- **Approach:** Act as a mirror to the soul, focusing on clarity and possibility.
+- **Style:** Gentle but direct, reflective, and affirming.
 - **Goal:** Facilitate self-awareness, direction, and agency primarily through the teachings of Stoicism and astrology, though not exclusively."""
 
 # Define Pydantic models for structured output
 class SummaryOutput(BaseModel):
-    summary: str = Field(description="A concise summary of the user's core strengths, values, and potential life direction.")
+    purpose: str = Field(description="A concise summary identifying who the person is and what their purpose is.")
     mantra: str = Field(description="A personalized mantra for the user.")
 
 class FullPlanOutput(BaseModel):
@@ -142,40 +141,28 @@ async def generate_basic_results(user_id: uuid.UUID, session: Session = Depends(
     summary_prompt_formatted = summary_prompt.format(responses=formatted_responses)
     
     try:
-        # Invoke LLM for summary
-        summary_result = llm.invoke(summary_prompt_formatted)
+        # Bind the schema to the model
+        model_with_structure = llm.with_structured_output(SummaryOutput)
         
-        # Extract summary and mantra
-        summary_content = summary_result.content
-        summary = ""
-        mantra = ""
+        # Invoke LLM for summary with structured output
+        summary_output = model_with_structure.invoke(summary_prompt_formatted)
         
-        if "Summary:" in summary_content and "Mantra:" in summary_content:
-            parts = summary_content.split("Mantra:")
-            summary = parts[0].replace("Summary:", "").strip()
-            mantra = parts[1].strip()
-        elif "Summary:" in summary_content:
-            summary = summary_content.split("Summary:")[1].strip()
-        else:
-            summary = summary_content
-            
-        summary_output = {
-            "summary": summary,
-            "mantra": mantra
-        }
+        # Convert to JSON string for storage
+        import json
+        basic_plan_json = json.dumps(summary_output.model_dump())
         
         # Create or update result in database
         existing_result = session.exec(select(Result).where(Result.user_id == user_id)).first()
         
         if existing_result:
             # Update existing result
-            existing_result.summary = summary_output["summary"]
+            existing_result.basic_plan = basic_plan_json
             session.add(existing_result)
         else:
             # Create new result with empty full_plan
             new_result = Result(
                 user_id=user_id,
-                summary=summary_output["summary"],
+                basic_plan=basic_plan_json,
                 full_plan=""  # Empty full plan until premium tier
             )
             session.add(new_result)
@@ -190,7 +177,7 @@ async def generate_basic_results(user_id: uuid.UUID, session: Session = Depends(
         
         return {
             "success": True,
-            "summary": summary_output,
+            "summary": summary_output.model_dump(),
             "message": "Basic results generated successfully"
         }
     
@@ -242,31 +229,43 @@ async def generate_premium_results(user_id: uuid.UUID, session: Session = Depend
     full_plan_prompt_formatted = full_plan_prompt.format(responses=formatted_responses)
     
     try:
-        # Get existing result to preserve summary
+        # Get existing result to preserve basic plan
         existing_result = session.exec(select(Result).where(Result.user_id == user_id)).first()
         if not existing_result:
-            # If no existing result, generate summary first
-            summary_prompt_formatted = summary_prompt.format(responses=formatted_responses)
-            summary_result = llm.invoke(summary_prompt_formatted)
-            summary = summary_result.content.split("Summary:")[1].strip() if "Summary:" in summary_result.content else summary_result.content
+            # If no existing result, generate basic plan first
+            # Bind the schema to the model
+            model_with_structure = llm.with_structured_output(SummaryOutput)
+            
+            # Invoke LLM for summary with structured output
+            summary_output = model_with_structure.invoke(summary_prompt.format(responses=formatted_responses))
+            
+            # Convert to JSON string for storage
+            import json
+            basic_plan_json = json.dumps(summary_output.model_dump())
         else:
-            summary = existing_result.summary
+            basic_plan_json = existing_result.basic_plan
         
-        # Invoke LLM for full plan
-        full_plan_result = llm.invoke(full_plan_prompt_formatted)
-        full_plan_content = full_plan_result.content
+        # Bind the schema to the model for full plan
+        model_with_structure = llm.with_structured_output(FullPlanOutput)
+        
+        # Invoke LLM for full plan with structured output
+        full_plan_output = model_with_structure.invoke(full_plan_prompt_formatted)
+        
+        # Convert to JSON string for storage
+        import json
+        full_plan_json = json.dumps(full_plan_output.model_dump())
         
         # Create or update result in database
         if existing_result:
             # Update existing result
-            existing_result.full_plan = full_plan_content
+            existing_result.full_plan = full_plan_json
             session.add(existing_result)
         else:
             # Create new result
             new_result = Result(
                 user_id=user_id,
-                summary=summary,
-                full_plan=full_plan_content
+                basic_plan=basic_plan_json,
+                full_plan=full_plan_json
             )
             session.add(new_result)
         

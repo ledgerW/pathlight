@@ -63,7 +63,7 @@ class Result(SQLModel, table=True):
     __tablename__ = "results"
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
     user_id: uuid.UUID = Field(foreign_key="users.id", unique=True)
-    summary: str
+    basic_plan: str  # Stores SummaryOutput as JSON
     full_plan: str
     created_at: datetime = Field(default_factory=datetime.utcnow)
     

@@ -34,6 +34,23 @@
     max-width: 600px;
 }
 
+.cta-buttons {
+    display: flex;
+    gap: var(--spacing-md);
+    flex-wrap: wrap;
+}
+
+.cta-button.secondary {
+    background-color: var(--cream);
+    color: var(--teal);
+    border: 2px solid var(--teal);
+}
+
+.cta-button.secondary:hover {
+    background-color: var(--teal);
+    color: var(--cream);
+}
+
 .hero-image {
     flex: 1;
     position: relative;

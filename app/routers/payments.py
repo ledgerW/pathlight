@@ -12,14 +12,25 @@ router = APIRouter(
     tags=["payments"],
 )
 
-# Initialize Stripe
-stripe_secret_key = os.getenv("STRIPE_SECRET_KEY_TEST")
+from clients import is_production
+
+# Initialize Stripe with the appropriate key based on environment
+if is_production():
+    stripe_secret_key = os.getenv("STRIPE_SECRET_KEY")
+    stripe_basic_price_id = os.getenv("STRIPE_BASIC_PRICE_ID")
+    stripe_basic_product_id = os.getenv("STRIPE_BASIC_PRODUCT_ID")
+    stripe_full_price_id = os.getenv("STRIPE_FULL_PRICE_ID")
+    stripe_full_product_id = os.getenv("STRIPE_FULL_PRODUCT_ID")
+else:
+    stripe_secret_key = os.getenv("STRIPE_SECRET_KEY_TEST")
+    stripe_basic_price_id = os.getenv("STRIPE_BASIC_PRICE_ID_TEST")
+    stripe_basic_product_id = os.getenv("STRIPE_BASIC_PRODUCT_ID_TEST")
+    stripe_full_price_id = os.getenv("STRIPE_FULL_PRICE_ID_TEST")
+    stripe_full_product_id = os.getenv("STRIPE_FULL_PRODUCT_ID_TEST")
+
 stripe.api_key = stripe_secret_key
 
-# Define product prices
-BASIC_PLAN_PRICE = 99    # $0.99 in cents
-PREMIUM_PLAN_PRICE = 749  # $7.49 in cents
-
+# Create checkout session endpoint
 @router.post("/{user_id}/create-checkout-session/{tier}", response_model=Dict)
 async def create_checkout_session(
     user_id: uuid.UUID, 
@@ -41,36 +52,18 @@ async def create_checkout_session(
         raise HTTPException(status_code=400, detail=f"User has already paid for {tier} tier")
     
     try:
-        # Set price based on tier
-        price = BASIC_PLAN_PRICE if tier == "basic" else PREMIUM_PLAN_PRICE
-        
-        # Set product name and description based on tier
-        if tier == "basic":
-            product_name = "Pathlight Basic Insight"
-            product_description = "Access to your personalized summary and mantra"
-        else:
-            product_name = "Pathlight Premium Life Plan"
-            product_description = "Complete access to your personalized life plan and practical guide"
-        
         # Create Stripe checkout session
         checkout_session = stripe.checkout.Session.create(
             payment_method_types=["card"],
             line_items=[
                 {
-                    "price_data": {
-                        "currency": "usd",
-                        "product_data": {
-                            "name": product_name,
-                            "description": product_description,
-                        },
-                        "unit_amount": price,
-                    },
+                    "price": stripe_basic_price_id if tier == "basic" else stripe_full_price_id,
                     "quantity": 1,
                 },
             ],
             mode="payment",
-            success_url=f"{os.getenv('BASE_URL', 'http://localhost:8000')}/success?session_id={{CHECKOUT_SESSION_ID}}&user_id={user_id}&tier={tier}",
-            cancel_url=f"{os.getenv('BASE_URL', 'http://localhost:8000')}/cancel?user_id={user_id}",
+            success_url=f"{os.getenv('PROD_DOMAIN') if is_production() else os.getenv('DEV_DOMAIN')}/success?session_id={{CHECKOUT_SESSION_ID}}&user_id={user_id}&tier={tier}",
+            cancel_url=f"{os.getenv('PROD_DOMAIN') if is_production() else os.getenv('DEV_DOMAIN')}/cancel?user_id={user_id}",
             client_reference_id=f"{user_id}:{tier}",  # Include tier in reference ID
             metadata={"tier": tier},  # Add tier to metadata for webhook
         )
@@ -80,40 +73,7 @@ async def create_checkout_session(
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-@router.post("/webhook", status_code=200)
-async def webhook_received(request: Request, session: Session = Depends(get_session)):
-    webhook_secret = os.getenv("STRIPE_WEBHOOK_SECRET")
-    
-    # Get the webhook data
-    payload = await request.body()
-    sig_header = request.headers.get("stripe-signature")
-    
-    try:
-        # Verify the webhook signature
-        event = stripe.Webhook.construct_event(
-            payload, sig_header, webhook_secret
-        )
-        
-        # Handle the checkout.session.completed event
-        if event["type"] == "checkout.session.completed":
-            checkout_session = event["data"]["object"]
-            
-            # Get the user ID and tier from the client_reference_id
-            ref_parts = checkout_session["client_reference_id"].split(":")
-            user_id = uuid.UUID(ref_parts[0])
-            tier = checkout_session.get("metadata", {}).get("tier") or (ref_parts[1] if len(ref_parts) > 1 else "basic")
-            
-            # Update the user's payment tier
-            user = session.get(User, user_id)
-            if user:
-                user.payment_tier = tier
-                session.add(user)
-                session.commit()
-        
-        return {"status": "success"}
-    
-    except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
+# Note: Webhook endpoint removed as we're using the redirect flow for payment verification
 
 @router.get("/{user_id}/payment-status", response_model=Dict)
 async def get_payment_status(user_id: uuid.UUID, session: Session = Depends(get_session)):
@@ -163,3 +123,17 @@ async def verify_payment(
     
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+@router.get("/config", response_model=Dict)
+async def get_stripe_config():
+    """Get Stripe publishable key based on environment"""
+    if is_production():
+        publishable_key = os.getenv("STRIPE_PUBLIC_KEY")
+    else:
+        publishable_key = os.getenv("STRIPE_PUBLIC_KEY_TEST")
+    
+    return {
+        "publishableKey": publishable_key
+    }
+
+# Note: The confirm-payment-intent endpoint has been removed as we've migrated to Stripe Checkout

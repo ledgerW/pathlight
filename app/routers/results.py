@@ -23,7 +23,7 @@ def create_result(result: Result, session: Session = Depends(get_session)):
     
     # If result exists, update it
     if existing_result:
-        existing_result.summary = result.summary
+        existing_result.basic_plan = result.basic_plan
         existing_result.full_plan = result.full_plan
         session.add(existing_result)
         session.commit()
@@ -73,15 +73,18 @@ def get_result_summary(user_id: uuid.UUID, session: Session = Depends(get_sessio
     if not result:
         raise HTTPException(status_code=404, detail="Result not found")
     
-    # Extract mantra if available
-    mantra = ""
-    if "Mantra:" in result.summary:
-        parts = result.summary.split("Mantra:")
-        mantra = parts[1].strip()
+    # Parse the basic plan JSON
+    import json
+    try:
+        basic_plan = json.loads(result.basic_plan)
+    except (json.JSONDecodeError, TypeError):
+        # Handle case where basic_plan is not valid JSON
+        basic_plan = {"purpose": "", "mantra": ""}
     
     return {
-        "summary": result.summary,
-        "mantra": mantra,
+        "summary": basic_plan.get("purpose", ""),
+        "mantra": basic_plan.get("mantra", ""),
+        "basic_plan": basic_plan,
         "payment_tier": user.payment_tier
     }
 
@@ -106,8 +109,18 @@ def get_full_result(user_id: uuid.UUID, session: Session = Depends(get_session))
     if not result:
         raise HTTPException(status_code=404, detail="Result not found")
     
+    # Parse the basic plan JSON
+    import json
+    try:
+        basic_plan = json.loads(result.basic_plan)
+    except (json.JSONDecodeError, TypeError):
+        # Handle case where basic_plan is not valid JSON
+        basic_plan = {"purpose": "", "mantra": ""}
+    
     return {
-        "summary": result.summary,
+        "summary": basic_plan.get("purpose", ""),
+        "mantra": basic_plan.get("mantra", ""),
+        "basic_plan": basic_plan,
         "full_plan": result.full_plan,
         "payment_tier": user.payment_tier
     }

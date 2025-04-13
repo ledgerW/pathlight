@@ -8,73 +8,48 @@
 
 {% block content %}
 <div class="results-container">
-    <div class="results-header">
-        <h1>Your Pathlight Journey</h1>
-        <p class="results-subtitle">Illuminating your authentic purpose and path forward</p>
+    <div class="top-progress-bar" id="topProgressSection">
+        <div class="journey-progress">
+            <div class="start-marker"></div>
+            <div class="progress-bar">
+                <div class="progress-fill" style="width: 20%;"></div>
+                <div class="progress-marker"></div>
+            </div>
+            <div class="end-marker"></div>
+            <div class="progress-text">5/25 questions completed</div>
+        </div>
+        <div class="top-actions">
+            <a href="/form/{{ user_id }}?start=6" class="subtle-continue-button">Continue Journey</a>
+            <div class="info-icon" id="infoIcon">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
+                    <path fill="none" d="M0 0h24v24H0z"/>
+                    <path d="M12 22C6.477 22 2 17.523 2 12S6.477 2 12 2s10 4.477 10 10-4.477 10-10 10zm0-2a8 8 0 1 0 0-16 8 8 0 0 0 0 16zM11 7h2v2h-2V7zm0 4h2v6h-2v-6z"/>
+                </svg>
+                <div class="info-tooltip">
+                    <h4>Complete Your Journey to Unlock:</h4>
+                    <ul>
+                        <li>Deep analysis of your core strengths and values</li>
+                        <li>Clear identification of potential life purposes</li>
+                        <li>Practical next steps for 7, 30, and 180 days</li>
+                        <li>A daily plan to set you up for success</li>
+                        <li>Strategies for overcoming obstacles</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="tier-badge-container">
         <div class="tier-badge {{ payment_tier }}">{{ payment_tier|title }} Tier</div>
     </div>
     
     <div class="results-content">
         <div class="results-summary">
-            <div class="summary-header">
-                <img src="/static/images/11TheCompass.png" alt="The Compass" class="summary-image">
-                <h2>Your Path Summary</h2>
-            </div>
             <div class="summary-content" id="summaryContent">
                 <!-- Summary content will be loaded here -->
                 <div class="loading-placeholder">
                     <div class="loading-spinner"></div>
                     <p>Loading your insights...</p>
-                </div>
-            </div>
-        </div>
-        
-        <div class="results-full" id="fullResultsSection">
-            <div class="full-header">
-                <h2>Your Complete Life Plan</h2>
-                <div class="lock-icon" id="lockedIcon">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
-                        <path fill="none" d="M0 0h24v24H0z"/>
-                        <path d="M19 10h1a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V11a1 1 0 0 1 1-1h1V9a7 7 0 1 1 14 0v1zm-2 0V9A5 5 0 0 0 7 9v1h10zm-6 4v4h2v-4h-2z"/>
-                    </svg>
-                </div>
-            </div>
-            
-            <div class="payment-section" id="paymentSection">
-                <h3>Unlock Your Complete Life Plan</h3>
-                <p>You've taken an important step toward discovering your authentic purpose. To access your complete personalized life plan with practical guidance for the next 7, 30, and 180 days, unlock the full results.</p>
-                
-                <div class="plan-features">
-                    <div class="feature">
-                        <div class="feature-icon">✓</div>
-                        <div class="feature-text">Deep analysis of your core strengths, values, and authentic self</div>
-                    </div>
-                    <div class="feature">
-                        <div class="feature-icon">✓</div>
-                        <div class="feature-text">Clear identification of potential life purposes and meaningful directions</div>
-                    </div>
-                    <div class="feature">
-                        <div class="feature-icon">✓</div>
-                        <div class="feature-text">Practical next steps and actionable guidance</div>
-                    </div>
-                    <div class="feature">
-                        <div class="feature-icon">✓</div>
-                        <div class="feature-text">A daily plan to set you up for success</div>
-                    </div>
-                    <div class="feature">
-                        <div class="feature-icon">✓</div>
-                        <div class="feature-text">Suggestions for overcoming potential obstacles</div>
-                    </div>
-                </div>
-                
-                <button id="unlockButton" class="unlock-button">Unlock Full Plan - $7.49</button>
-            </div>
-            
-            <div class="full-content" id="fullContent" style="display: none;">
-                <!-- Full plan content will be loaded here -->
-                <div class="loading-placeholder">
-                    <div class="loading-spinner"></div>
-                    <p>Loading your complete plan...</p>
                 </div>
             </div>
         </div>
@@ -109,5 +84,9 @@
     // User ID will be set by the server when rendering the template
     const userId = "{{ user_id }}";
 </script>
-<script src="/static/js/results.js"></script>
+<script src="/static/js/results-core.js"></script>
+<script src="/static/js/results-ui.js"></script>
+<script src="/static/js/results-api.js"></script>
+<script src="/static/js/results-payment.js"></script>
+<script src="/static/js/results-main.js"></script>
 {% endblock %}

@@ -6,6 +6,8 @@ from app.models import User, Result, get_session
 import uuid
 import os
 
+from app.routers.auth import get_authenticated_user
+
 router = APIRouter(tags=["web"])
 
 # Set up templates
@@ -20,9 +22,51 @@ async def register(request: Request):
     """Redirect to form page as we're using the form for registration now"""
     return RedirectResponse(url="/form")
 
+@router.get("/login", response_class=HTMLResponse)
+async def login(request: Request):
+    """Show the login page with magic link form"""
+    return templates.TemplateResponse("login.html", {"request": request})
+
 @router.get("/form", response_class=HTMLResponse)
 async def form(request: Request):
-    """Show the form page directly for new users"""
+    """
+    Show the form page for new users or authenticated users
+    
+    If the user is authenticated via Stytch, try to find their account
+    and redirect to their form with progress
+    """
+    # Check if user is authenticated
+    stytch_user = await get_authenticated_user(request)
+    
+    if stytch_user and hasattr(stytch_user, 'emails') and stytch_user.emails:
+        # User is authenticated, check if they exist in our database
+        db = next(get_session())
+        user_email = stytch_user.emails[0].email
+        
+        statement = select(User).where(User.email == user_email)
+        db_user = db.exec(statement).first()
+        
+        if db_user:
+            # Check if user has results
+            results_statement = select(Result).where(Result.user_id == db_user.id)
+            user_results = db.exec(results_statement).first()
+            
+            if user_results:
+                # If user has results, redirect to results page
+                print(f"[DEBUG] User has results, redirecting to results page")
+                return RedirectResponse(url=f"/results/{db_user.id}", status_code=303)
+            
+            # Get progress state
+            progress_state = int(db_user.progress_state)
+            
+            if progress_state > 0:
+                # User exists with progress, redirect to their form with progress
+                return RedirectResponse(url=f"/form/{db_user.id}", status_code=303)
+            else:
+                # User exists but has no progress, redirect to their form
+                return RedirectResponse(url=f"/form/{db_user.id}", status_code=303)
+    
+    # If not authenticated or user not found, show the form for new users
     return templates.TemplateResponse("form.html", {"request": request})
 
 @router.get("/form/{user_id}", response_class=HTMLResponse)
@@ -31,6 +75,27 @@ async def form_with_user(request: Request, user_id: uuid.UUID, session: Session 
     user = session.get(User, user_id)
     if not user:
         return RedirectResponse(url="/register")
+    
+    # Check if user is authenticated
+    stytch_user = await get_authenticated_user(request)
+    
+    # If user is not authenticated, redirect to login
+    if not stytch_user:
+        return RedirectResponse(url=f"/login?redirect=/form/{user_id}", status_code=303)
+    
+    # If user is authenticated, check if the email matches
+    if stytch_user and hasattr(stytch_user, 'emails') and stytch_user.emails:
+        stytch_email = stytch_user.emails[0].email
+        
+        # If the authenticated user's email doesn't match the requested user's email,
+        # redirect to their own form
+        if stytch_email != user.email:
+            # Find the user with the authenticated email
+            statement = select(User).where(User.email == stytch_email)
+            auth_user = session.exec(statement).first()
+            
+            if auth_user:
+                return RedirectResponse(url=f"/form/{auth_user.id}", status_code=303)
     
     # Get current progress
     progress = int(user.progress_state)
@@ -58,11 +123,56 @@ async def form_with_user(request: Request, user_id: uuid.UUID, session: Session 
     )
 
 @router.get("/results/{user_id}", response_class=HTMLResponse)
-async def results(request: Request, user_id: uuid.UUID, session: Session = Depends(get_session)):
+async def results(
+    request: Request, 
+    user_id: uuid.UUID, 
+    payment_success: bool = False,
+    tier: str = None,
+    session: Session = Depends(get_session)
+):
     # Check if user exists
     user = session.get(User, user_id)
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
+    
+    # Check if user is authenticated
+    stytch_user = await get_authenticated_user(request)
+    
+    # If user is not authenticated, redirect to login
+    if not stytch_user:
+        return RedirectResponse(url=f"/login?redirect=/results/{user_id}", status_code=303)
+    
+    # If user is authenticated, check if the email matches
+    if stytch_user and hasattr(stytch_user, 'emails') and stytch_user.emails:
+        stytch_email = stytch_user.emails[0].email
+        
+        # If the authenticated user's email doesn't match the requested user's email,
+        # redirect to their own results or form
+        if stytch_email != user.email:
+            # Find the user with the authenticated email
+            statement = select(User).where(User.email == stytch_email)
+            auth_user = session.exec(statement).first()
+            
+            if auth_user:
+                # Check if authenticated user has results
+                auth_results_statement = select(Result).where(Result.user_id == auth_user.id)
+                auth_results = session.exec(auth_results_statement).first()
+                
+                if auth_results:
+                    return RedirectResponse(url=f"/results/{auth_user.id}", status_code=303)
+                else:
+                    return RedirectResponse(url=f"/form/{auth_user.id}", status_code=303)
+    
+    # If payment was successful, update the user's payment tier
+    if payment_success and tier and tier in ["basic", "premium"]:
+        # Only update if the new tier is higher than the current tier
+        if (tier == "premium" or user.payment_tier == "none"):
+            user.payment_tier = tier
+            session.add(user)
+            session.commit()
+            
+            # Log the payment success
+            print(f"[DEBUG] Payment successful for user {user_id}, tier: {tier}")
     
     # Check if results exist
     statement = select(Result).where(Result.user_id == user_id)
