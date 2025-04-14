@@ -98,6 +98,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 saveUrlModal.style.display = 'none';
                 basicPaymentModal.style.display = 'none';
                 premiumPaymentModal.style.display = 'none';
+                document.getElementById('regenerationPaymentModal').style.display = 'none';
             });
         });
         
@@ -127,6 +128,16 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('saveAndExitPremium').addEventListener('click', () => {
             premiumPaymentModal.style.display = 'none';
             showSaveUrlModal();
+        });
+        
+        // Regeneration payment modal buttons
+        document.getElementById('proceedToRegenerationPayment').addEventListener('click', () => {
+            initiatePayment('basic');
+            document.getElementById('regenerationPaymentModal').style.display = 'none';
+        });
+        
+        document.getElementById('cancelRegeneration').addEventListener('click', () => {
+            document.getElementById('regenerationPaymentModal').style.display = 'none';
         });
         
         // Set initial tier badge
@@ -188,7 +199,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     // Continue the submit process after saving the response
-    function continueSubmitProcess() {
+    async function continueSubmitProcess() {
         // Update submit button state
         updateSubmitButtonState();
         
@@ -212,11 +223,23 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
         
-        // Check if we're at the end of basic tier and need to show payment modal
-        if (currentSlide === BASIC_TIER_QUESTIONS && user.payment_tier === 'none') {
-            // Show basic payment modal
-            basicPaymentModal.style.display = 'flex';
-            return;
+        // Check if we're at the end of basic tier
+        if (currentSlide === BASIC_TIER_QUESTIONS) {
+            // Check if results already exist
+            const resultsData = await checkExistingResults();
+            
+            if (resultsData.has_results && user.payment_tier === 'basic') {
+                // Show regeneration payment modal
+                showRegenerationPaymentModal(resultsData.last_generated_at);
+                return;
+            }
+            
+            // If no existing results or user hasn't paid yet, show basic payment modal
+            if (user.payment_tier === 'none') {
+                // Show basic payment modal
+                basicPaymentModal.style.display = 'flex';
+                return;
+            }
         }
         
         // Check if we're at the end of premium tier and need to show payment modal

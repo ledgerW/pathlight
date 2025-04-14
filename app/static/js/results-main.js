@@ -7,6 +7,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const paymentSuccess = urlParams.get('payment_success');
     const tier = urlParams.get('tier');
     const generationError = urlParams.get('generation_error');
+    const section = urlParams.get('section');
     
     // If payment was successful, update the UI to show the appropriate content
     if (paymentSuccess === 'true' && tier && userId) {
@@ -34,6 +35,14 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Initialize the info icon functionality
     initializeInfoIcon();
+    
+    // Initialize tab functionality
+    initializeTabs();
+    
+    // If section parameter is set to 'plan', show the plan tab
+    if (section === 'plan') {
+        showTab('plan');
+    }
     
     // Clean URL parameters
     const url = new URL(window.location.href);
@@ -68,5 +77,51 @@ function initializeInfoIcon() {
                 tooltip.style.display = 'none';
             }
         });
+    }
+}
+
+// Initialize tab functionality
+function initializeTabs() {
+    const purposeTab = document.getElementById('purposeTab');
+    const planTab = document.getElementById('planTab');
+    
+    if (purposeTab && planTab) {
+        // Add click handlers for tabs
+        purposeTab.addEventListener('click', function() {
+            showTab('purpose');
+        });
+        
+        planTab.addEventListener('click', function() {
+            showTab('plan');
+        });
+    }
+}
+
+// Show the specified tab
+function showTab(tabName) {
+    // Get tab buttons
+    const purposeTab = document.getElementById('purposeTab');
+    const planTab = document.getElementById('planTab');
+    
+    // Get tab sections
+    const purposeSection = document.getElementById('purposeSection');
+    const planSection = document.getElementById('planSection');
+    
+    // Remove active class from all tabs and sections
+    purposeTab.classList.remove('active');
+    planTab.classList.remove('active');
+    purposeSection.classList.remove('active');
+    planSection.classList.remove('active');
+    
+    // Add active class to selected tab and section
+    if (tabName === 'purpose') {
+        purposeTab.classList.add('active');
+        purposeSection.classList.add('active');
+    } else if (tabName === 'plan') {
+        planTab.classList.add('active');
+        planSection.classList.add('active');
+        
+        // Load full plan content if not already loaded
+        loadFullPlan();
     }
 }

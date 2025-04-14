@@ -15,115 +15,16 @@
     width: 100%;
 }
 
-.journey-progress {
-    flex: 1;
-    max-width: 800px;
-    margin: 0 auto;
-    position: relative;
-}
-
-.journey-progress .progress-bar {
-    height: 14px;
-    background-color: var(--dark-cream);
-    border-radius: 7px;
-    overflow: visible;
-    margin-bottom: 12px;
-    position: relative;
-    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
-}
-
-.journey-progress .progress-bar::before,
-.journey-progress .progress-bar::after,
-.journey-progress .progress-bar .progress-marker {
-    content: "";
-    position: absolute;
-    width: 40px;
-    height: 40px;
-    background-size: contain;
-    background-repeat: no-repeat;
-    background-position: center;
-    top: 50%;
-    transform: translateY(-50%);
-    z-index: 2;
-    border: none;
-    border-radius: 0;
-    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
-    transition: transform 0.3s ease;
-}
-
-.journey-progress .progress-bar::before {
-    left: -10px;
-    background-image: url('/static/images/1TheSpark.png');
-}
-
-.journey-progress .progress-bar::after {
-    right: -10px;
-    background-image: url('/static/images/25TheSeed.png');
-}
-
+/* Results-specific progress marker */
 .journey-progress .progress-bar .progress-marker {
     left: 20%;
     background-image: url('/static/images/5TheMirror.png');
-}
-
-/* Make the start and end markers actual elements instead of pseudo-elements */
-.journey-progress .start-marker,
-.journey-progress .end-marker,
-.journey-progress .progress-bar .progress-marker {
-    position: absolute;
-    width: 40px;
-    height: 40px;
-    background-size: contain;
-    background-repeat: no-repeat;
-    background-position: center;
-    top: 50%;
-    transform: translateY(-50%);
-    z-index: 5;
-    cursor: pointer;
-    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
-    transition: transform 0.3s ease;
-}
-
-.journey-progress .start-marker {
-    left: -10px;
-    background-image: url('/static/images/1TheSpark.png');
-}
-
-.journey-progress .end-marker {
-    right: -10px;
-    background-image: url('/static/images/25TheSeed.png');
-}
-
-.journey-progress .progress-bar .progress-marker {
-    left: 20%;
-    background-image: url('/static/images/5TheMirror.png');
-}
-
-/* Individual hover effects */
-.journey-progress .start-marker:hover,
-.journey-progress .end-marker:hover,
-.journey-progress .progress-bar .progress-marker:hover {
-    transform: translateY(-50%) scale(2);
-    z-index: 10;
 }
 
 /* Hide the pseudo-elements since we're using actual elements now */
 .journey-progress .progress-bar::before,
 .journey-progress .progress-bar::after {
     display: none;
-}
-
-.journey-progress .progress-fill {
-    height: 100%;
-    background-color: var(--gold);
-    border-radius: 6px;
-}
-
-.journey-progress .progress-text {
-    font-size: 14px;
-    color: var(--teal);
-    font-weight: 500;
-    text-align: center;
 }
 
 .top-actions {
@@ -260,6 +161,54 @@
     display: flex;
     flex-direction: column;
     gap: 3rem;
+}
+
+/* Results tabs */
+.results-tabs {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 2rem;
+    border-bottom: 1px solid var(--dark-cream);
+}
+
+.tab-button {
+    padding: 1rem 2rem;
+    background: none;
+    border: none;
+    font-family: var(--font-serif);
+    font-size: 1.2rem;
+    color: var(--teal);
+    cursor: pointer;
+    position: relative;
+    transition: all 0.3s ease;
+}
+
+.tab-button:hover {
+    color: var(--gold);
+}
+
+.tab-button.active {
+    color: var(--gold);
+    font-weight: 600;
+}
+
+.tab-button.active::after {
+    content: '';
+    position: absolute;
+    bottom: -1px;
+    left: 0;
+    width: 100%;
+    height: 3px;
+    background-color: var(--gold);
+}
+
+/* Results sections */
+.results-section {
+    display: none;
+}
+
+.results-section.active {
+    display: block;
 }
 
 /* Results summary */

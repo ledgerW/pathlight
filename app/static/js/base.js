@@ -129,6 +129,51 @@ function addCelestialDecorations() {
     document.body.appendChild(container);
 }
 
+// Set active navigation item based on current page
+function setActiveNavItem() {
+    const path = window.location.pathname;
+    const searchParams = new URLSearchParams(window.location.search);
+    const section = searchParams.get('section');
+    const slide = searchParams.get('slide');
+    
+    // Get all nav items
+    const navItems = document.querySelectorAll('.nav-item');
+    
+    // Remove active class from all items
+    navItems.forEach(item => {
+        item.classList.remove('active');
+    });
+    
+    // Set active class based on current path
+    if (path.includes('/form')) {
+        // If we're on the form page
+        if (slide === '0') {
+            // If we're on the account slide
+            document.querySelectorAll('.nav-item[data-section="account"]').forEach(item => {
+                item.classList.add('active');
+            });
+        } else {
+            // Otherwise we're on questions
+            document.querySelectorAll('.nav-item[data-section="questions"]').forEach(item => {
+                item.classList.add('active');
+            });
+        }
+    } else if (path.includes('/results')) {
+        // If we're on the results page
+        if (section === 'plan') {
+            // If we're viewing the full plan
+            document.querySelectorAll('.nav-item[data-section="plan"]').forEach(item => {
+                item.classList.add('active');
+            });
+        } else {
+            // Otherwise we're viewing the basic purpose
+            document.querySelectorAll('.nav-item[data-section="purpose"]').forEach(item => {
+                item.classList.add('active');
+            });
+        }
+    }
+}
+
 // Initialize on DOM content loaded
 document.addEventListener('DOMContentLoaded', function() {
     // Add celestial decorations
@@ -139,4 +184,7 @@ document.addEventListener('DOMContentLoaded', function() {
     if (currentYearElement) {
         currentYearElement.textContent = new Date().getFullYear();
     }
+    
+    // Set active navigation item
+    setActiveNavItem();
 });

@@ -157,13 +157,15 @@ async def generate_basic_results(user_id: uuid.UUID, session: Session = Depends(
         if existing_result:
             # Update existing result
             existing_result.basic_plan = basic_plan_json
+            existing_result.last_generated_at = datetime.utcnow()
             session.add(existing_result)
         else:
             # Create new result with empty full_plan
             new_result = Result(
                 user_id=user_id,
                 basic_plan=basic_plan_json,
-                full_plan=""  # Empty full plan until premium tier
+                full_plan="",  # Empty full plan until premium tier
+                last_generated_at=datetime.utcnow()
             )
             session.add(new_result)
         
@@ -259,13 +261,15 @@ async def generate_premium_results(user_id: uuid.UUID, session: Session = Depend
         if existing_result:
             # Update existing result
             existing_result.full_plan = full_plan_json
+            existing_result.last_generated_at = datetime.utcnow()
             session.add(existing_result)
         else:
             # Create new result
             new_result = Result(
                 user_id=user_id,
                 basic_plan=basic_plan_json,
-                full_plan=full_plan_json
+                full_plan=full_plan_json,
+                last_generated_at=datetime.utcnow()
             )
             session.add(new_result)
         

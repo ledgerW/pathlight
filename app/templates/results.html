@@ -3,6 +3,7 @@
 {% block title %}Pathlight - Your Life Plan{% endblock %}
 
 {% block styles %}
+<link rel="stylesheet" href="/static/css/progress-bar.css">
 <link rel="stylesheet" href="/static/css/results.css">
 {% endblock %}
 
@@ -44,12 +45,45 @@
     </div>
     
     <div class="results-content">
-        <div class="results-summary">
-            <div class="summary-content" id="summaryContent">
-                <!-- Summary content will be loaded here -->
-                <div class="loading-placeholder">
-                    <div class="loading-spinner"></div>
-                    <p>Loading your insights...</p>
+        <div class="results-tabs">
+            <button id="purposeTab" class="tab-button active">Purpose</button>
+            <button id="planTab" class="tab-button">Full Plan</button>
+        </div>
+        
+        <div id="purposeSection" class="results-section active">
+            <div class="results-summary">
+                <div class="summary-content" id="summaryContent">
+                    <!-- Summary content will be loaded here -->
+                    <div class="loading-placeholder">
+                        <div class="loading-spinner"></div>
+                        <p>Loading your insights...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div id="planSection" class="results-section">
+            <div class="results-full-plan">
+                <div class="full-plan-content" id="fullContent">
+                    <!-- Full plan content will be loaded here -->
+                    <div class="loading-placeholder">
+                        <div class="loading-spinner"></div>
+                        <p>Loading your full plan...</p>
+                    </div>
+                </div>
+                
+                <div id="paymentSection" class="payment-section">
+                    <div class="locked-content">
+                        <div id="lockedIcon" class="locked-icon">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="48" height="48">
+                                <path fill="none" d="M0 0h24v24H0z"/>
+                                <path d="M19 10h1a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V11a1 1 0 0 1 1-1h1V9a7 7 0 1 1 14 0v1zm-2 0V9A5 5 0 0 0 7 9v1h10zm-6 4v4h2v-4h-2z"/>
+                            </svg>
+                        </div>
+                        <h3>Unlock Your Full Life Plan</h3>
+                        <p>Discover your complete life path and purpose with our premium plan.</p>
+                        <button id="unlockButton" class="cta-button">Unlock Full Plan ($7.49)</button>
+                    </div>
                 </div>
             </div>
         </div>

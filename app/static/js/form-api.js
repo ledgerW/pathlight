@@ -353,3 +353,28 @@ async function generatePremiumResults() {
         showNotification('Error generating your results. Please try again.', 'error');
     }
 }
+
+// Check if results already exist
+async function checkExistingResults() {
+    try {
+        const response = await fetch(`/api/results/${user.id}/check-results`);
+        if (!response.ok) {
+            throw new Error('Failed to check results status');
+        }
+        
+        const data = await response.json();
+        return data;
+    } catch (error) {
+        console.error('Error checking results status:', error);
+        return { has_results: false };
+    }
+}
+
+// Show regeneration payment modal
+function showRegenerationPaymentModal(lastGeneratedAt) {
+    // Update the last generated date in the modal
+    document.getElementById('lastGeneratedDate').textContent = lastGeneratedAt || 'an earlier date';
+    
+    // Show the modal
+    document.getElementById('regenerationPaymentModal').style.display = 'flex';
+}

@@ -1,4 +1,4 @@
-from typing import List, Optional
+from typing import List, Optional, Dict
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlmodel import Session, select
 from app.models import Result, User, FormResponse, get_session
@@ -123,4 +123,32 @@ def get_full_result(user_id: uuid.UUID, session: Session = Depends(get_session))
         "basic_plan": basic_plan,
         "full_plan": result.full_plan,
         "payment_tier": user.payment_tier
+    }
+
+@router.get("/{user_id}/check-results", response_model=Dict)
+def check_results(user_id: uuid.UUID, session: Session = Depends(get_session)):
+    """Check if results exist for a user and when they were last generated"""
+    # Check if user exists
+    user = session.get(User, user_id)
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    # Check if results exist for this user
+    statement = select(Result).where(Result.user_id == user_id)
+    result = session.exec(statement).first()
+    
+    if result and result.basic_plan:
+        # Format the last generated timestamp
+        last_generated = result.last_generated_at.strftime("%Y-%m-%d %H:%M:%S")
+        
+        return {
+            "has_results": True,
+            "payment_tier": user.payment_tier,
+            "last_generated_at": last_generated
+        }
+    
+    return {
+        "has_results": False,
+        "payment_tier": user.payment_tier,
+        "last_generated_at": None
     }

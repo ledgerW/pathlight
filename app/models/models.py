@@ -66,6 +66,7 @@ class Result(SQLModel, table=True):
     basic_plan: str  # Stores SummaryOutput as JSON
     full_plan: str
     created_at: datetime = Field(default_factory=datetime.utcnow)
+    last_generated_at: datetime = Field(default_factory=datetime.utcnow)
     
     # Relationships
     user: User = Relationship(back_populates="result")

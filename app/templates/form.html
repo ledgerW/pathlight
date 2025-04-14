@@ -3,6 +3,7 @@
 {% block title %}Pathlight - Your Reflective Journey{% endblock %}
 
 {% block styles %}
+<link rel="stylesheet" href="/static/css/progress-bar.css">
 <link rel="stylesheet" href="/static/css/form.css">
 <style>
     .login-link-container {
@@ -257,6 +258,21 @@
         <div class="payment-buttons">
             <button id="proceedToPremiumPayment" class="btn-primary">Continue ($7.49)</button>
             <button id="saveAndExitPremium" class="btn-secondary">Save & Exit</button>
+        </div>
+    </div>
+</div>
+
+<!-- Regeneration Payment Modal -->
+<div id="regenerationPaymentModal" class="modal" style="display: none;">
+    <div class="modal-content">
+        <span class="close-modal">&times;</span>
+        <h2>Regenerate Your Personal Insight</h2>
+        <p>You've already generated results for these responses.</p>
+        <p>Your last results were generated on <span id="lastGeneratedDate">...</span></p>
+        <p>To generate new results with your current responses, you'll need to pay $0.99 again.</p>
+        <div class="payment-buttons">
+            <button id="proceedToRegenerationPayment" class="btn-primary">Regenerate ($0.99)</button>
+            <button id="cancelRegeneration" class="btn-secondary">Cancel</button>
         </div>
     </div>
 </div>

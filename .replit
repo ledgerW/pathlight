@@ -1,4 +1,4 @@
-run = ["uvicorn", "main:app", "--host", "0.0.0.0", "--reload"]
+run = ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8080", "--reload"]
 modules = ["python-3.11", "postgresql-16"]
 
 hidden = [".pythonlibs"]
@@ -13,3 +13,7 @@ deploymentTarget = "cloudrun"
 [[ports]]
 localPort = 8000
 externalPort = 80
+
+[[ports]]
+localPort = 8080
+externalPort = 8080
