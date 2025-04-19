@@ -132,7 +132,7 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Regeneration payment modal buttons
         document.getElementById('proceedToRegenerationPayment').addEventListener('click', () => {
-            initiatePayment('basic');
+            initiatePayment('basic', true); // Pass true for regeneration
             document.getElementById('regenerationPaymentModal').style.display = 'none';
         });
         
@@ -223,6 +223,34 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
         
+        // Check if we're at question 5 with basic results and the submit button says "Update Purpose"
+        const isAtBasicTier = currentSlide === BASIC_TIER_QUESTIONS;
+        const hasBasicResults = user.payment_tier === 'basic' || user.payment_tier === 'premium';
+        const submitButton = document.getElementById('submitButton');
+        
+        if (isAtBasicTier && hasBasicResults && submitButton.textContent === 'Update Purpose') {
+            // User wants to update their basic results
+            // Check if results already exist
+            checkExistingResults().then(resultsData => {
+            if (resultsData.has_results) {
+                // Show regeneration payment modal
+                showRegenerationPaymentModal(resultsData.last_generated_at, resultsData.regeneration_count);
+                } else {
+                    // Show loading overlay
+                    loadingOverlay.style.display = 'flex';
+                    loadingMessage.textContent = 'Updating your personal insight...';
+                    generateBasicResults();
+                }
+            }).catch(error => {
+                console.error('Error checking existing results:', error);
+                // Fallback to direct generation
+                loadingOverlay.style.display = 'flex';
+                loadingMessage.textContent = 'Updating your personal insight...';
+                generateBasicResults();
+            });
+            return;
+        }
+        
         // Check if we're at the end of basic tier
         if (currentSlide === BASIC_TIER_QUESTIONS) {
             // Check if results already exist
@@ -230,7 +258,7 @@ document.addEventListener('DOMContentLoaded', function() {
             
             if (resultsData.has_results && user.payment_tier === 'basic') {
                 // Show regeneration payment modal
-                showRegenerationPaymentModal(resultsData.last_generated_at);
+                showRegenerationPaymentModal(resultsData.last_generated_at, resultsData.regeneration_count);
                 return;
             }
             

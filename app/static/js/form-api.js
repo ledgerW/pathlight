@@ -14,7 +14,8 @@ async function checkExistingUser(email) {
         const data = await response.json();
         
         if (data && data.found) {
-            return data.id;
+            // If user exists, return the full data object
+            return data;
         }
         
         return null;
@@ -380,9 +381,12 @@ async function checkExistingResults() {
 }
 
 // Show regeneration payment modal
-function showRegenerationPaymentModal(lastGeneratedAt) {
+function showRegenerationPaymentModal(lastGeneratedAt, regenerationCount = 0) {
     // Update the last generated date in the modal
     document.getElementById('lastGeneratedDate').textContent = lastGeneratedAt || 'an earlier date';
+    
+    // Update the regeneration count in the modal
+    document.getElementById('regenerationCount').textContent = regenerationCount;
     
     // Show the modal
     document.getElementById('regenerationPaymentModal').style.display = 'flex';

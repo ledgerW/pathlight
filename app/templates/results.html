@@ -47,7 +47,7 @@
     <div class="results-content">
         <div class="results-tabs">
             <button id="purposeTab" class="tab-button active">Purpose</button>
-            <button id="planTab" class="tab-button">Full Plan</button>
+            <button id="planTab" class="tab-button">Plan</button>
         </div>
         
         <div id="purposeSection" class="results-section active">
@@ -68,8 +68,46 @@
                     <!-- Full plan content will be loaded here -->
                     <div class="loading-placeholder">
                         <div class="loading-spinner"></div>
-                        <p>Loading your full plan...</p>
+                        <p>Loading your plan...</p>
                     </div>
+                </div>
+                
+                <!-- Structured plan sections will be added here by JavaScript -->
+                <div id="nextStepsSection" class="plan-section next-steps-section" style="display: none;">
+                    <h2 class="section-title">Next Steps</h2>
+                    <div class="timeline-container">
+                        <div class="timeline-item">
+                            <div class="timeline-header">
+                                <div class="timeline-icon">7</div>
+                                <h3>Next 7 Days</h3>
+                            </div>
+                            <div class="timeline-content" id="next7Days"></div>
+                        </div>
+                        <div class="timeline-item">
+                            <div class="timeline-header">
+                                <div class="timeline-icon">30</div>
+                                <h3>Next 30 Days</h3>
+                            </div>
+                            <div class="timeline-content" id="next30Days"></div>
+                        </div>
+                        <div class="timeline-item">
+                            <div class="timeline-header">
+                                <div class="timeline-icon">180</div>
+                                <h3>Next 180 Days</h3>
+                            </div>
+                            <div class="timeline-content" id="next180Days"></div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div id="dailyPlanSection" class="plan-section daily-plan-section" style="display: none;">
+                    <h2 class="section-title">Daily Plan</h2>
+                    <div class="daily-plan-container" id="dailyPlanContainer"></div>
+                </div>
+                
+                <div id="obstaclesSection" class="plan-section obstacles-section" style="display: none;">
+                    <h2 class="section-title">Obstacles & Solutions</h2>
+                    <div class="obstacles-container" id="obstaclesContainer"></div>
                 </div>
                 
                 <div id="paymentSection" class="payment-section">
@@ -80,9 +118,9 @@
                                 <path d="M19 10h1a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V11a1 1 0 0 1 1-1h1V9a7 7 0 1 1 14 0v1zm-2 0V9A5 5 0 0 0 7 9v1h10zm-6 4v4h2v-4h-2z"/>
                             </svg>
                         </div>
-                        <h3>Unlock Your Full Life Plan</h3>
+                        <h3>Unlock Your Complete Life Plan</h3>
                         <p>Discover your complete life path and purpose with our premium plan.</p>
-                        <button id="unlockButton" class="cta-button">Unlock Full Plan ($7.49)</button>
+                        <button id="unlockButton" class="cta-button">Unlock Complete Plan ($7.49)</button>
                     </div>
                 </div>
             </div>

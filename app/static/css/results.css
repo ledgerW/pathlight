@@ -366,36 +366,238 @@
     border-left: 6px solid var(--teal);
 }
 
-/* Results full */
-.results-full {
+/* Results full plan */
+.results-full-plan {
     background-color: var(--white);
     border-radius: 8px;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
     overflow: hidden;
 }
 
-.full-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 1.5rem;
-    border-bottom: 1px solid var(--dark-cream);
-}
-
-.full-header h2 {
-    margin: 0;
-    color: var(--teal);
-}
-
-.lock-icon {
-    width: 24px;
-    height: 24px;
-    color: var(--teal);
-}
-
 .full-content {
     padding: 2rem;
     line-height: 1.6;
+    color: var(--teal);
+}
+
+/* Plan sections */
+.plan-section {
+    background: linear-gradient(135deg, var(--cream) 0%, var(--dark-cream) 100%);
+    border-radius: 16px;
+    padding: 2rem;
+    margin-bottom: 2rem;
+    box-shadow: 0 10px 30px rgba(42, 74, 74, 0.15);
+    position: relative;
+    overflow: hidden;
+}
+
+.plan-section::after {
+    content: "";
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 5px;
+    background: linear-gradient(90deg, var(--gold), var(--teal));
+}
+
+.section-title {
+    font-size: 1.8rem;
+    color: var(--teal);
+    margin-bottom: 2rem;
+    font-weight: 700;
+    position: relative;
+    display: inline-block;
+    text-align: center;
+    width: 100%;
+}
+
+.section-title::after {
+    content: "";
+    position: absolute;
+    bottom: -10px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 60px;
+    height: 3px;
+    background-color: var(--gold);
+    border-radius: 3px;
+}
+
+/* Next Steps Timeline */
+.timeline-container {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+}
+
+.timeline-item {
+    background-color: var(--white);
+    border-radius: 12px;
+    padding: 1.5rem;
+    box-shadow: 0 5px 15px rgba(42, 74, 74, 0.1);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.timeline-item:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 25px rgba(42, 74, 74, 0.2);
+}
+
+.timeline-header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 1rem;
+    gap: 1rem;
+}
+
+.timeline-icon {
+    width: 50px;
+    height: 50px;
+    background-color: var(--teal);
+    color: var(--white);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+    font-weight: bold;
+}
+
+.timeline-header h3 {
+    margin: 0;
+    color: var(--teal);
+    font-size: 1.4rem;
+}
+
+.timeline-content {
+    padding-left: 1rem;
+    border-left: 3px solid var(--gold);
+}
+
+.timeline-content ul {
+    margin: 0;
+    padding-left: 1.5rem;
+}
+
+.timeline-content li {
+    margin-bottom: 0.75rem;
+    position: relative;
+}
+
+.timeline-content li::before {
+    content: "•";
+    color: var(--gold);
+    font-weight: bold;
+    position: absolute;
+    left: -1.5rem;
+}
+
+/* Daily Plan */
+.daily-plan-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1.5rem;
+}
+
+.daily-plan-card {
+    background-color: var(--white);
+    border-radius: 12px;
+    padding: 1.5rem;
+    box-shadow: 0 5px 15px rgba(42, 74, 74, 0.1);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.daily-plan-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 25px rgba(42, 74, 74, 0.2);
+}
+
+.daily-plan-header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 1rem;
+    gap: 1rem;
+}
+
+.daily-plan-icon {
+    width: 40px;
+    height: 40px;
+    background-color: var(--gold);
+    color: var(--teal);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+}
+
+.daily-plan-header h3 {
+    margin: 0;
+    color: var(--teal);
+    font-size: 1.4rem;
+}
+
+.daily-plan-content ul {
+    margin: 0;
+    padding-left: 1.5rem;
+}
+
+.daily-plan-content li {
+    margin-bottom: 0.75rem;
+}
+
+/* Obstacles */
+.obstacles-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 1.5rem;
+}
+
+.obstacle-card {
+    background-color: var(--white);
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 5px 15px rgba(42, 74, 74, 0.1);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.obstacle-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 25px rgba(42, 74, 74, 0.2);
+}
+
+.obstacle-header {
+    background-color: var(--teal);
+    color: var(--white);
+    padding: 1rem 1.5rem;
+    font-weight: bold;
+    font-size: 1.2rem;
+}
+
+.obstacle-content {
+    padding: 1.5rem;
+    color: var(--teal);
+}
+
+.solution-header {
+    background-color: var(--gold);
+    color: var(--teal);
+    padding: 1rem 1.5rem;
+    font-weight: bold;
+    font-size: 1.2rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.solution-icon {
+    width: 24px;
+    height: 24px;
+}
+
+.solution-content {
+    padding: 1.5rem;
     color: var(--teal);
 }
 

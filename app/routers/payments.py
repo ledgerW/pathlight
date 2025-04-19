@@ -35,8 +35,15 @@ stripe.api_key = stripe_secret_key
 async def create_checkout_session(
     user_id: uuid.UUID, 
     tier: str,
-    session: Session = Depends(get_session)
+    is_regeneration: bool = False,
+    session: Session = Depends(get_session),
+    request: Request = None
 ):
+    # Check if is_regeneration was passed as a query parameter
+    if request and not is_regeneration:
+        query_params = request.query_params
+        is_regeneration_str = query_params.get('is_regeneration', 'false').lower()
+        is_regeneration = is_regeneration_str == 'true'
     # Check if user exists
     user = session.get(User, user_id)
     if not user:
@@ -47,8 +54,9 @@ async def create_checkout_session(
         raise HTTPException(status_code=400, detail="Invalid tier. Must be 'basic' or 'premium'")
     
     # Check if user has already paid for this tier or higher
-    if (tier == "basic" and user.payment_tier in ["basic", "premium"]) or \
-       (tier == "premium" and user.payment_tier == "premium"):
+    # Skip this check if it's a regeneration payment
+    if not is_regeneration and ((tier == "basic" and user.payment_tier in ["basic", "premium"]) or \
+       (tier == "premium" and user.payment_tier == "premium")):
         raise HTTPException(status_code=400, detail=f"User has already paid for {tier} tier")
     
     try:
@@ -65,7 +73,10 @@ async def create_checkout_session(
             success_url=f"{os.getenv('PROD_DOMAIN') if is_production() else os.getenv('DEV_DOMAIN')}/success?session_id={{CHECKOUT_SESSION_ID}}&user_id={user_id}&tier={tier}",
             cancel_url=f"{os.getenv('PROD_DOMAIN') if is_production() else os.getenv('DEV_DOMAIN')}/cancel?user_id={user_id}",
             client_reference_id=f"{user_id}:{tier}",  # Include tier in reference ID
-            metadata={"tier": tier},  # Add tier to metadata for webhook
+            metadata={
+                "tier": tier,
+                "is_regeneration": str(is_regeneration)
+            },  # Add tier and regeneration flag to metadata for webhook
         )
         
         return {"checkout_url": checkout_session.url}

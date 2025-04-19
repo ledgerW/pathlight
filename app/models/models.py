@@ -67,6 +67,7 @@ class Result(SQLModel, table=True):
     full_plan: str
     created_at: datetime = Field(default_factory=datetime.utcnow)
     last_generated_at: datetime = Field(default_factory=datetime.utcnow)
+    regeneration_count: int = Field(default=0)  # Track number of regenerations
     
     # Relationships
     user: User = Relationship(back_populates="result")

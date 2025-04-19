@@ -225,8 +225,32 @@ function showSlide(slideIndex) {
     const isEndOfPremiumTier = slideIndex === PREMIUM_TIER_QUESTIONS;
     
     if (isEndOfBasicTier || isEndOfPremiumTier) {
-        nextButton.style.display = 'none';
-        submitButton.style.display = 'block';
+        // Special handling for question 5 when user already has basic results
+        const hasBasicResults = user.payment_tier === 'basic' || user.payment_tier === 'premium';
+        
+        if (slideIndex === BASIC_TIER_QUESTIONS && hasBasicResults) {
+            // Show both Next and Complete buttons for users with basic results
+            nextButton.style.display = 'block';
+            submitButton.style.display = 'block';
+            
+            // Update button text to "Update Purpose"
+            submitButton.textContent = 'Update Purpose';
+        } else if (slideIndex === PREMIUM_TIER_QUESTIONS && user.payment_tier === 'premium') {
+            // Show only the Complete button for premium tier with text "Update Plan"
+            nextButton.style.display = 'none';
+            submitButton.style.display = 'block';
+            submitButton.textContent = 'Update Plan';
+        } else if (slideIndex === PREMIUM_TIER_QUESTIONS) {
+            // Show only the Complete button for premium tier with text "Get Plan"
+            nextButton.style.display = 'none';
+            submitButton.style.display = 'block';
+            submitButton.textContent = 'Get Plan';
+        } else {
+            // Default case for question 5 without basic results
+            nextButton.style.display = 'none';
+            submitButton.style.display = 'block';
+            submitButton.textContent = 'Get Purpose';
+        }
         
         // Update submit button state
         updateSubmitButtonState();

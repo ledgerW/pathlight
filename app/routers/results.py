@@ -81,10 +81,28 @@ def get_result_summary(user_id: uuid.UUID, session: Session = Depends(get_sessio
         # Handle case where basic_plan is not valid JSON
         basic_plan = {"purpose": "", "mantra": ""}
     
+    # If user has premium tier and full plan is available, use the purpose and mantra from there
+    full_plan = {}
+    if user.payment_tier == "premium" and result.full_plan:
+        try:
+            full_plan = json.loads(result.full_plan)
+            # Use premium content if available
+            purpose = full_plan.get("purpose", basic_plan.get("purpose", ""))
+            mantra = full_plan.get("mantra", basic_plan.get("mantra", ""))
+        except (json.JSONDecodeError, TypeError):
+            # Fall back to basic plan if full plan parsing fails
+            purpose = basic_plan.get("purpose", "")
+            mantra = basic_plan.get("mantra", "")
+    else:
+        # Use basic plan content
+        purpose = basic_plan.get("purpose", "")
+        mantra = basic_plan.get("mantra", "")
+    
     return {
-        "summary": basic_plan.get("purpose", ""),
-        "mantra": basic_plan.get("mantra", ""),
+        "summary": purpose,
+        "mantra": mantra,
         "basic_plan": basic_plan,
+        "full_plan": full_plan if full_plan else {},
         "payment_tier": user.payment_tier
     }
 
@@ -109,7 +127,7 @@ def get_full_result(user_id: uuid.UUID, session: Session = Depends(get_session))
     if not result:
         raise HTTPException(status_code=404, detail="Result not found")
     
-    # Parse the basic plan JSON
+    # Parse the basic and full plan JSON
     import json
     try:
         basic_plan = json.loads(result.basic_plan)
@@ -117,11 +135,26 @@ def get_full_result(user_id: uuid.UUID, session: Session = Depends(get_session))
         # Handle case where basic_plan is not valid JSON
         basic_plan = {"purpose": "", "mantra": ""}
     
+    try:
+        full_plan_json = json.loads(result.full_plan)
+    except (json.JSONDecodeError, TypeError):
+        # Handle case where full_plan is not valid JSON
+        full_plan_json = {}
+    
+    # Structure the full plan data for better frontend display
+    structured_full_plan = {
+        "purpose": full_plan_json.get("purpose", ""),
+        "mantra": full_plan_json.get("mantra", ""),
+        "next_steps": full_plan_json.get("next_steps", ""),
+        "daily_plan": full_plan_json.get("daily_plan", ""),
+        "obstacles": full_plan_json.get("obstacles", "")
+    }
+    
     return {
-        "summary": basic_plan.get("purpose", ""),
-        "mantra": basic_plan.get("mantra", ""),
+        "summary": structured_full_plan.get("purpose", basic_plan.get("purpose", "")),
+        "mantra": structured_full_plan.get("mantra", basic_plan.get("mantra", "")),
         "basic_plan": basic_plan,
-        "full_plan": result.full_plan,
+        "full_plan": structured_full_plan,
         "payment_tier": user.payment_tier
     }
 
@@ -144,11 +177,13 @@ def check_results(user_id: uuid.UUID, session: Session = Depends(get_session)):
         return {
             "has_results": True,
             "payment_tier": user.payment_tier,
-            "last_generated_at": last_generated
+            "last_generated_at": last_generated,
+            "regeneration_count": result.regeneration_count
         }
     
     return {
         "has_results": False,
         "payment_tier": user.payment_tier,
-        "last_generated_at": None
+        "last_generated_at": None,
+        "regeneration_count": 0
     }

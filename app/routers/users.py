@@ -168,6 +168,15 @@ def find_user_by_email(email: str, session: Session = Depends(get_session)):
             print(f"User not found with email: {email}")
             return {"found": False}
         
+        # Check if user has responses
+        from app.models.models import FormResponse, Result
+        responses_statement = select(FormResponse).where(FormResponse.user_id == user.id)
+        has_responses = session.exec(responses_statement).first() is not None
+        
+        # Check if user has results
+        results_statement = select(Result).where(Result.user_id == user.id)
+        has_results = session.exec(results_statement).first() is not None
+        
         # Return a simplified user object to avoid serialization issues
         result = {
             "found": True,
@@ -175,7 +184,9 @@ def find_user_by_email(email: str, session: Session = Depends(get_session)):
             "name": user.name,
             "email": user.email,
             "progress_state": user.progress_state,
-            "payment_tier": user.payment_tier
+            "payment_tier": user.payment_tier,
+            "has_responses": has_responses,
+            "has_results": has_results
         }
         print(f"User found: {result}")
         return result

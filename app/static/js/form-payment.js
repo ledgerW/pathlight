@@ -17,7 +17,7 @@ async function getStripePublishableKey() {
 }
 
 // Initiate payment process
-async function initiatePayment(tier) {
+async function initiatePayment(tier, isRegeneration = false) {
     try {
         // Store current tier
         currentTier = tier;
@@ -33,7 +33,12 @@ async function initiatePayment(tier) {
         loadingMessage.textContent = 'Preparing payment...';
         
         // Call payment API to create checkout session
-        const response = await fetch(`/api/payments/${user.id}/create-checkout-session/${tier}`, {
+        // Add is_regeneration parameter if needed
+        const url = isRegeneration 
+            ? `/api/payments/${user.id}/create-checkout-session/${tier}?is_regeneration=true`
+            : `/api/payments/${user.id}/create-checkout-session/${tier}`;
+            
+        const response = await fetch(url, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',

@@ -350,8 +350,32 @@ document.addEventListener('DOMContentLoaded', function() {
         const isEndOfPremiumTier = slideIndex === PREMIUM_TIER_QUESTIONS;
         
         if (isEndOfBasicTier || isEndOfPremiumTier) {
-            nextButton.style.display = 'none';
-            submitButton.style.display = 'block';
+            // Special handling for question 5 when user already has basic results
+            const hasBasicResults = user.payment_tier === 'basic' || user.payment_tier === 'premium';
+            
+            if (slideIndex === BASIC_TIER_QUESTIONS && hasBasicResults) {
+                // Show both Next and Complete buttons for users with basic results
+                nextButton.style.display = 'block';
+                submitButton.style.display = 'block';
+                
+                // Update button text to "Update Purpose"
+                submitButton.textContent = 'Update Purpose';
+            } else if (slideIndex === PREMIUM_TIER_QUESTIONS && user.payment_tier === 'premium') {
+                // Show only the Complete button for premium tier with text "Update Plan"
+                nextButton.style.display = 'none';
+                submitButton.style.display = 'block';
+                submitButton.textContent = 'Update Plan';
+            } else if (slideIndex === PREMIUM_TIER_QUESTIONS) {
+                // Show only the Complete button for premium tier with text "Get Plan"
+                nextButton.style.display = 'none';
+                submitButton.style.display = 'block';
+                submitButton.textContent = 'Get Plan';
+            } else {
+                // Default case for question 5 without basic results
+                nextButton.style.display = 'none';
+                submitButton.style.display = 'block';
+                submitButton.textContent = 'Get Purpose';
+            }
             
             // Update submit button state
             updateSubmitButtonState();
@@ -427,13 +451,33 @@ document.addEventListener('DOMContentLoaded', function() {
             const newDob = dobInput.value;
             
             // Check if user exists
-            checkExistingUser(newEmail).then(existingUserId => {
-                if (existingUserId) {
-                    // User exists, redirect to Continue Journey page
-                    showNotification('You already have an account. Redirecting to continue your journey...', 'info');
-                    setTimeout(() => {
-                        window.location.href = `/form/${existingUserId}`;
-                    }, 2000);
+            checkExistingUser(newEmail).then(existingUserData => {
+                if (existingUserData) {
+                    // User exists
+                    const existingUserId = existingUserData.id;
+                    
+                    // Check if user has responses or results
+                    if (existingUserData.has_responses || existingUserData.has_results) {
+                        // User has existing data, send magic link for authentication
+                        showNotification('You already have an account with saved responses. Sending a magic link to your email...', 'info');
+                        
+                        // Send magic link
+                        sendMagicLink(newEmail).then(success => {
+                            if (success) {
+                                // Show message about checking email
+                                showNotification('Please check your email to continue your journey.', 'success');
+                            } else {
+                                // Show error message
+                                showNotification('Failed to send magic link. Please try again.', 'error');
+                            }
+                        });
+                    } else {
+                        // User exists but has no responses, redirect to their form
+                        showNotification('You already have an account. Redirecting to continue your journey...', 'info');
+                        setTimeout(() => {
+                            window.location.href = `/form/${existingUserId}`;
+                        }, 2000);
+                    }
                 } else {
                     // Create new user
                     user.name = newName;
@@ -505,6 +549,13 @@ document.addEventListener('DOMContentLoaded', function() {
         // Save final question response
         saveCurrentSlideData();
         
+        // Check if we're at question 5 with basic results and the user wants to continue without updating
+        const isAtBasicTier = currentSlide === BASIC_TIER_QUESTIONS;
+        const hasBasicResults = user.payment_tier === 'basic' || user.payment_tier === 'premium';
+        
+        // If the button text is "Update Purpose" or "Update Plan", proceed with result generation
+        // Otherwise, if we're at question 5 with basic results, we'll handle this in continueSubmitProcess
+        
         // Force save the current question response to the server
         const questionNumber = currentSlide;
         const responseTextarea = document.getElementById(`question${questionNumber}`);
@@ -551,6 +602,19 @@ document.addEventListener('DOMContentLoaded', function() {
         // If not all questions are answered, show error and don't proceed
         if (!allQuestionsAnswered) {
             showNotification(`Please answer all questions. You've completed ${answeredQuestions} of ${targetQuestions}.`, 'error');
+            return;
+        }
+        
+        // Check if we're at question 5 with basic results and the submit button says "Update Purpose"
+        const isAtBasicTier = currentSlide === BASIC_TIER_QUESTIONS;
+        const hasBasicResults = user.payment_tier === 'basic' || user.payment_tier === 'premium';
+        
+        if (isAtBasicTier && hasBasicResults && submitButton.textContent === 'Update Purpose') {
+            // User wants to update their basic results
+            // Show loading overlay
+            loadingOverlay.style.display = 'flex';
+            loadingMessage.textContent = 'Updating your personal insight...';
+            generateBasicResults();
             return;
         }
         
@@ -1017,7 +1081,8 @@ document.addEventListener('DOMContentLoaded', function() {
             const data = await response.json();
             
             if (data && data.found) {
-                return data.id;
+                // Return the full user data object
+                return data;
             }
             
             return null;

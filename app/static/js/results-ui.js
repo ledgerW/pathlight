@@ -52,8 +52,12 @@ async function showFullPlan() {
     // Hide payment section
     const paymentSection = document.getElementById('paymentSection');
     const fullContent = document.getElementById('fullContent');
+    const nextStepsSection = document.getElementById('nextStepsSection');
+    const dailyPlanSection = document.getElementById('dailyPlanSection');
+    const obstaclesSection = document.getElementById('obstaclesSection');
     const lockedIcon = document.getElementById('lockedIcon');
     
+    // Hide payment section
     paymentSection.style.display = 'none';
     
     // Update lock icon
@@ -64,8 +68,13 @@ async function showFullPlan() {
         </svg>
     `;
     
-    // Show full content
+    // Show loading spinner
     fullContent.style.display = 'block';
+    
+    // Hide plan sections until they're loaded
+    nextStepsSection.style.display = 'none';
+    dailyPlanSection.style.display = 'none';
+    obstaclesSection.style.display = 'none';
     
     // Load full plan content if not already loaded
     const loaded = await loadFullPlan();
@@ -74,6 +83,9 @@ async function showFullPlan() {
         // If loading failed due to payment required, show payment section
         paymentSection.style.display = 'block';
         fullContent.style.display = 'none';
+        nextStepsSection.style.display = 'none';
+        dailyPlanSection.style.display = 'none';
+        obstaclesSection.style.display = 'none';
     }
 }
 

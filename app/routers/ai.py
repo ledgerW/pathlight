@@ -4,6 +4,7 @@ from sqlmodel import Session, select
 from app.models import User, FormResponse, Result, get_session
 import uuid
 import os
+from datetime import datetime
 from langchain.prompts import ChatPromptTemplate
 from langchain_openai import ChatOpenAI
 from langchain.output_parsers import PydanticOutputParser
@@ -19,12 +20,23 @@ router = APIRouter(
 openai_api_key = os.getenv("OPENAI_API_KEY")
 llm = ChatOpenAI(temperature=0.2, model="gpt-4.1", max_tokens=5000, api_key=openai_api_key)
 
+# Define Pydantic models for structured output
+class SummaryOutput(BaseModel):
+    mantra: str = Field(description="A mantra designed to instill purpose and agency.")
+    purpose: str = Field(description="A 100-250 word summary of the user's purpose designed to instill agency.")
+    
+
+class FullPlanOutput(BaseModel):
+    mantra: str = Field(description="A mantra designed to instill purpose and agency.")
+    purpose: str = Field(description="A 250-500 word treatment of the user's purpose designed to instill agency.")
+    next_steps: str = Field(description="Practical next steps and actionable guidance for the next 7, 30, and 180 days.")
+    daily_plan: str = Field(description="A daily plan to set the user up for success on their path.")
+    obstacles: str = Field(description="Likely obstacles, both personal and external, that the user will face and how to overcome them.")
+
 # Define the system prompt
-system_prompt = """Embody the persona of a poetic guide and a compassionate reflector, knowledgeable about astrological signs. Your style reflects a gentle, lyrical tone — like a trusted oracle or soul guide, but you remain grounded.
+system_prompt = """You are here to listen to the user's story, think deeply about it, and then give them purpose and agency and an empirical path to follow.
 
-Your overarching goal is to provide insight and understanding, incorporating astrological signs to enhance your understanding of the user's personality. Reflect their passions, strengths, values, vision, and desired impact on the world in a way that feels personal, warm, and clear.
-
-You are practical and grounded, but nonetheless recognize that astrological signs are very good at predicting a person's personality. Use this! But do not ever reveal you incorporate astrology because it might cause some people to lose faith in your guidance.
+You are influenced by astrology.  The signs are very good at predicting a person's personality. Use this! But do not ever reveal this influence because it might cause some people to lose faith in your guidance.
 
 Lastly, you are deeply influenced by the Stoic philosophers and incorporate their teachings into your guidance, but again, do not reveal this explicitly!
 
@@ -51,55 +63,29 @@ Summary sentence:
 Marcus Aurelius reminds us that virtue, duty, and rational reflection are the cornerstones of a meaningful life, regardless of external chaos.
 === Stoic Principles ===
 
-- **Style:** Gentle but direct, reflective, and affirming.
-- **Goal:** Facilitate self-awareness, direction, and agency primarily through the teachings of Stoicism and astrology, though not exclusively."""
+- **Style:** Gentle but direct, confident but humble.
+- **Goal:** Facilitate self-awareness, direction, and agency primarily through the teachings of Stoicism and astrology, though not exclusively.
+- **Values:** Strength, kindness, resilience, sacrifice, learning"""
 
-# Define Pydantic models for structured output
-class SummaryOutput(BaseModel):
-    purpose: str = Field(description="A concise summary identifying who the person is and what their purpose is.")
-    mantra: str = Field(description="A personalized mantra for the user.")
-
-class FullPlanOutput(BaseModel):
-    analysis: str = Field(description="A deep analysis of the user's core strengths, values, and authentic self.")
-    life_purposes: List[str] = Field(description="Clear identification of potential life purposes and meaningful directions.")
-    next_steps: str = Field(description="Practical next steps and actionable guidance for the next 7, 30, and 180 days.")
-    daily_plan: str = Field(description="A daily plan to set the user up for success toward their new path.")
-    obstacles: str = Field(description="Suggestions for overcoming potential obstacles and challenges.")
 
 # Define prompt templates with the system message
 summary_prompt = ChatPromptTemplate.from_messages([
     ("system", system_prompt),
     ("user", """
-Based on the user's responses to the reflective questions below, create a concise summary (100-250 words) of their core strengths, values, and potential life direction. This is a preview of their full life plan.
-
-The summary should be inspiring, insightful, and personal. Focus on identifying patterns in their responses that reveal their authentic self and potential paths forward.
-
-Also include a mantra.
+Based on the user's responses to the reflective questions below, create their purpose and a mantra.
 
 USER RESPONSES:
 {responses}
-
-SUMMARY:
 """)
 ])
 
 full_plan_prompt = ChatPromptTemplate.from_messages([
     ("system", system_prompt),
     ("user", """
-Based on the user's responses to the reflective questions below, create a comprehensive life plan and practical guide (1000-1500 words). This should include:
-
-1. A deep analysis of their core strengths, values, and authentic self
-2. Clear identification of potential life purposes and meaningful directions
-3. Practical next steps and actionable guidance for the next 7, 30, and 180 days
-4. A daily plan to set them up for success toward their new path
-5. Suggestions for overcoming potential obstacles and challenges
-
-The plan should be divided into clear sections with headings. The tone should be insightful, compassionate, and practical.
+Based on the user's responses to the reflective questions below, create their mantra, purpose, next steps, daily plan, and obstacles.
 
 USER RESPONSES:
 {responses}
-
-FULL LIFE PLAN:
 """)
 ])
 
@@ -158,6 +144,9 @@ async def generate_basic_results(user_id: uuid.UUID, session: Session = Depends(
             # Update existing result
             existing_result.basic_plan = basic_plan_json
             existing_result.last_generated_at = datetime.utcnow()
+            # Increment regeneration count if this is not the first generation
+            if existing_result.basic_plan:
+                existing_result.regeneration_count += 1
             session.add(existing_result)
         else:
             # Create new result with empty full_plan
@@ -262,6 +251,9 @@ async def generate_premium_results(user_id: uuid.UUID, session: Session = Depend
             # Update existing result
             existing_result.full_plan = full_plan_json
             existing_result.last_generated_at = datetime.utcnow()
+            # Increment regeneration count if this is not the first generation
+            if existing_result.full_plan:
+                existing_result.regeneration_count += 1
             session.add(existing_result)
         else:
             # Create new result
