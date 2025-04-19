@@ -1256,29 +1256,50 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             });
             
-            // Go to the next unanswered question
-            const progressState = parseInt(user.progress_state);
-            console.log('User progress state:', progressState);
-            
-            if (progressState > 0) {
-                // Make sure we're showing the correct slide based on progress
-                // This is critical for returning users
-                console.log('Showing slide based on progress state:', progressState);
+            // Check if we have a specific slide to start at
+            if (window.startAtSlide !== undefined) {
+                console.log('Starting at specific slide:', window.startAtSlide);
+                // Force the slide to be shown immediately
+                showSlide(window.startAtSlide);
                 
-                // Force the slide to be shown
+                // Also force it again after a short delay to ensure it takes effect
                 setTimeout(() => {
-                    showSlide(progressState);
-                    
-                    // If we're at the end of a tier, update submit button state
-                    const isEndOfBasicTier = progressState === BASIC_TIER_QUESTIONS && user.payment_tier !== 'premium';
-                    const isEndOfPremiumTier = progressState === PREMIUM_TIER_QUESTIONS;
-                    
-                    if (isEndOfBasicTier || isEndOfPremiumTier) {
-                        updateSubmitButtonState();
-                    }
+                    showSlide(window.startAtSlide);
+                    console.log('Forced slide again:', window.startAtSlide);
                 }, 100);
-            } else {
-                showSlide(1); // Start at the first question
+            }
+            // Check if we have a specific question to start at
+            else if (window.startAtQuestion !== undefined) {
+                console.log('Starting at specific question:', window.startAtQuestion);
+                setTimeout(() => {
+                    showSlide(window.startAtQuestion);
+                }, 100);
+            }
+            // Otherwise, go to the next unanswered question based on progress
+            else {
+                const progressState = parseInt(user.progress_state);
+                console.log('User progress state:', progressState);
+                
+                if (progressState > 0) {
+                    // Make sure we're showing the correct slide based on progress
+                    // This is critical for returning users
+                    console.log('Showing slide based on progress state:', progressState);
+                    
+                    // Force the slide to be shown
+                    setTimeout(() => {
+                        showSlide(progressState);
+                        
+                        // If we're at the end of a tier, update submit button state
+                        const isEndOfBasicTier = progressState === BASIC_TIER_QUESTIONS && user.payment_tier !== 'premium';
+                        const isEndOfPremiumTier = progressState === PREMIUM_TIER_QUESTIONS;
+                        
+                        if (isEndOfBasicTier || isEndOfPremiumTier) {
+                            updateSubmitButtonState();
+                        }
+                    }, 100);
+                } else {
+                    showSlide(1); // Start at the first question
+                }
             }
             
             showNotification('Your saved responses have been loaded.');

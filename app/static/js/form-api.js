@@ -257,8 +257,17 @@ async function loadUserData() {
         const progressState = parseInt(user.progress_state);
         console.log('User progress state:', progressState);
         
+        // Check if we have a specific slide to start at (for profile page)
+        if (window.startAtSlide === 0) {
+            console.log('Starting at profile slide (slide 0)');
+            
+            // Force the slide to be shown
+            setTimeout(() => {
+                showSlide(0);
+            }, 100);
+        }
         // Check if we have a specific starting question from URL parameter
-        if (window.startAtQuestion && window.startAtQuestion > 0 && window.startAtQuestion <= PREMIUM_TIER_QUESTIONS) {
+        else if (window.startAtQuestion && window.startAtQuestion > 0 && window.startAtQuestion <= PREMIUM_TIER_QUESTIONS) {
             console.log('Starting at specified question:', window.startAtQuestion);
             
             // Force the slide to be shown

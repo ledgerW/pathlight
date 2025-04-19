@@ -17,7 +17,7 @@ router = APIRouter(
 
 # Initialize OpenAI client
 openai_api_key = os.getenv("OPENAI_API_KEY")
-llm = ChatOpenAI(temperature=0.2, model="gpt-4o", max_tokens=5000, api_key=openai_api_key)
+llm = ChatOpenAI(temperature=0.2, model="gpt-4.1", max_tokens=5000, api_key=openai_api_key)
 
 # Define the system prompt
 system_prompt = """Embody the persona of a poetic guide and a compassionate reflector, knowledgeable about astrological signs. Your style reflects a gentle, lyrical tone — like a trusted oracle or soul guide, but you remain grounded.

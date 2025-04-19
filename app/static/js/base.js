@@ -148,26 +148,26 @@ function setActiveNavItem() {
     if (path.includes('/form')) {
         // If we're on the form page
         if (slide === '0') {
-            // If we're on the account slide
-            document.querySelectorAll('.nav-item[data-section="account"]').forEach(item => {
+            // If we're on the profile slide
+            document.querySelectorAll('.nav-item[data-section="profile"]').forEach(item => {
                 item.classList.add('active');
             });
         } else {
-            // Otherwise we're on questions
-            document.querySelectorAll('.nav-item[data-section="questions"]').forEach(item => {
+            // Otherwise we're on reflection
+            document.querySelectorAll('.nav-item[data-section="reflection"]').forEach(item => {
                 item.classList.add('active');
             });
         }
     } else if (path.includes('/results')) {
         // If we're on the results page
         if (section === 'plan') {
-            // If we're viewing the full plan
-            document.querySelectorAll('.nav-item[data-section="plan"]').forEach(item => {
+            // If we're viewing the guidance
+            document.querySelectorAll('.nav-item[data-section="guidance"]').forEach(item => {
                 item.classList.add('active');
             });
         } else {
-            // Otherwise we're viewing the basic purpose
-            document.querySelectorAll('.nav-item[data-section="purpose"]').forEach(item => {
+            // Otherwise we're viewing the insights
+            document.querySelectorAll('.nav-item[data-section="insights"]').forEach(item => {
                 item.classList.add('active');
             });
         }

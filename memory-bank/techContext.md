@@ -4,11 +4,15 @@
 
 ### Backend
 - **Framework**: FastAPI (Python)
-- **Database**: SQL database (specific type to be determined, likely PostgreSQL or SQLite)
+- **Database**: SQL database (supports both PostgreSQL in production and SQLite for development)
 - **ORM**: SQLModel (Python)
 - **Authentication**: Stytch (Python) with email Magic Links instead of passwords
-- **Payment**: Stripe (Python)
-- **AI Integration**: Langchain and Langgraph (details in `app/prompts.py` and `app/routers/ai.py`)
+- **Payment**: Stripe (Python) with two tiers ($0.99 for basic, $4.99 for premium)
+- **AI Integration**: 
+  - Langchain for prompt templates and structured output
+  - OpenAI GPT-4o model for generating insights
+  - Pydantic models for structured output parsing
+  - Astrological sign determination based on birth date
 
 ### Frontend
 - **Templates**: HTML with Jinja2 templating
@@ -24,15 +28,17 @@
 
 ## Dependencies
 - Python packages managed through Poetry
-- Potential external services for:
-  - AI processing
-  - Payment processing
-  - Authentication
+- External services:
+  - OpenAI API for AI processing
+  - Stripe for payment processing
+  - Stytch for authentication
 
 ## Technical Constraints
 - Web-based application architecture
 - Database schema evolution managed through migrations
 - Separation of concerns through modular code organization
+- Structured JSON data for storing AI-generated results
+- Support for both PostgreSQL and SQLite databases
 
 ## File Organization
 
@@ -56,7 +62,10 @@
 - `app/templates/`: HTML templates
 
 ### Database Migrations
-- Various migration scripts for database schema evolution
+- Various migration scripts for database schema evolution:
+  - `alter_results_table.py`: Migrates from text-based summary to structured JSON basic_plan
+  - `alter_results_last_generated.py`: Adds last_generated_at column to track result generation time
+  - `db_migration_basic_plan.py`: Related to basic plan implementation
 
 ## Development Workflow
 - Database migrations for schema changes

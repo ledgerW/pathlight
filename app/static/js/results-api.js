@@ -128,6 +128,25 @@ function updateContinueJourneySection(data) {
 // Load full plan content
 async function loadFullPlan() {
     try {
+        // First check if the user has a premium tier
+        const statusResponse = await fetch(`/api/payments/${userId}/payment-status`);
+        if (!statusResponse.ok) {
+            throw new Error('Failed to check payment status');
+        }
+        
+        const statusData = await statusResponse.json();
+        
+        // If user doesn't have premium tier, don't show loading spinner
+        if (statusData.payment_tier !== 'premium') {
+            // Hide loading spinner
+            const loadingPlaceholder = document.querySelector('#fullContent .loading-placeholder');
+            if (loadingPlaceholder) {
+                loadingPlaceholder.style.display = 'none';
+            }
+            return false;
+        }
+        
+        // User has premium tier, proceed to load full plan
         const response = await fetch(`/api/results/${userId}/full`);
         
         if (!response.ok) {
