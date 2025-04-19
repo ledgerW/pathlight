@@ -1,4 +1,4 @@
-from typing import List, Dict
+from typing import List, Dict, Optional
 from fastapi import APIRouter, Depends, HTTPException
 from sqlmodel import Session, select
 from app.models import User, FormResponse, Result, get_session
@@ -26,12 +26,32 @@ class SummaryOutput(BaseModel):
     purpose: str = Field(description="A 100-250 word summary of the user's purpose designed to instill agency.")
     
 
+class Obstacle(BaseModel):
+    challenge: str = Field(description="The obstacle or challenge the user will face")
+    solution: str = Field(description="How to overcome this obstacle")
+    type: str = Field(description="Type of obstacle: 'personal' or 'external'")
+
+class DailyPlanTimeframe(BaseModel):
+    morning: List[str] = Field(description="Morning activities and routines as a list of bullet points")
+    afternoon: List[str] = Field(description="Afternoon activities and routines as a list of bullet points")
+    evening: List[str] = Field(description="Evening activities and routines as a list of bullet points")
+
+class DailyPlan(BaseModel):
+    weekdays: DailyPlanTimeframe = Field(description="Daily plan for weekdays (Monday-Friday)")
+    weekends: DailyPlanTimeframe = Field(description="Daily plan for weekends (Saturday-Sunday)")
+
+class NextSteps(BaseModel):
+    today: List[str] = Field(description="Immediate actions to take today, as a list of bullet points")
+    next_7_days: List[str] = Field(description="Actions to take in the next 7 days, as a list of bullet points")
+    next_30_days: List[str] = Field(description="Actions to take in the next 30 days, as a list of bullet points")
+    next_180_days: List[str] = Field(description="Actions to take in the next 180 days, as a list of bullet points")
+
 class FullPlanOutput(BaseModel):
     mantra: str = Field(description="A mantra designed to instill purpose and agency.")
     purpose: str = Field(description="A 250-500 word treatment of the user's purpose designed to instill agency.")
-    next_steps: str = Field(description="Practical next steps and actionable guidance for the next 7, 30, and 180 days.")
-    daily_plan: str = Field(description="A daily plan to set the user up for success on their path.")
-    obstacles: str = Field(description="Likely obstacles, both personal and external, that the user will face and how to overcome them.")
+    next_steps: NextSteps = Field(description="Practical next steps and actionable guidance structured by timeframe")
+    daily_plan: DailyPlan = Field(description="A structured daily plan to set the user up for success on their path, organized by weekdays/weekends and time of day.")
+    obstacles: List[Obstacle] = Field(description="Likely obstacles, both personal and external, that the user will face and how to overcome them.")
 
 # Define the system prompt
 system_prompt = """You are here to listen to the user's story, think deeply about it, and then give them purpose and agency and an empirical path to follow.
@@ -83,6 +103,24 @@ full_plan_prompt = ChatPromptTemplate.from_messages([
     ("system", system_prompt),
     ("user", """
 Based on the user's responses to the reflective questions below, create their mantra, purpose, next steps, daily plan, and obstacles.
+
+For the daily plan section, create a structured routine that distinguishes between:
+1. Weekdays (Monday-Friday) and weekends (Saturday-Sunday)
+2. For each of those, provide specific guidance for:
+   - Morning activities and routines (as a list of bullet points)
+   - Afternoon activities and routines (as a list of bullet points)
+   - Evening activities and routines (as a list of bullet points)
+
+For the next steps section, organize actions into these timeframes:
+1. Today: Immediate actions to take today (as a list of bullet points)
+2. Next 7 Days: Actions to take in the next week (as a list of bullet points)
+3. Next 30 Days: Actions to take in the next month (as a list of bullet points)
+4. Next 180 Days: Actions to take in the next six months (as a list of bullet points)
+
+For the obstacles section, identify both personal and external challenges the user might face. For each obstacle:
+1. Clearly describe the challenge
+2. Provide a practical solution to overcome it
+3. Classify it as either 'personal' (internal, psychological, habit-based) or 'external' (environmental, social, circumstantial)
 
 USER RESPONSES:
 {responses}

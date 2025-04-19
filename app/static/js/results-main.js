@@ -39,6 +39,9 @@ document.addEventListener('DOMContentLoaded', function() {
     // Initialize tab functionality
     initializeTabs();
     
+    // Initialize update plan button
+    initializeUpdatePlanButton();
+    
     // If section parameter is set to 'plan', show the plan tab
     if (section === 'plan') {
         showTab('plan');
@@ -76,6 +79,16 @@ function initializeInfoIcon() {
             if (tooltip && tooltip.style.display === 'block') {
                 tooltip.style.display = 'none';
             }
+        });
+    }
+}
+
+// Initialize update plan button
+function initializeUpdatePlanButton() {
+    const updatePlanButton = document.getElementById('updatePlanButton');
+    if (updatePlanButton) {
+        updatePlanButton.addEventListener('click', function() {
+            showRegenerationModal();
         });
     }
 }

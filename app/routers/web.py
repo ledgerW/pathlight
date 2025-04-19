@@ -15,6 +15,42 @@ templates = Jinja2Templates(directory="app/templates")
 
 @router.get("/", response_class=HTMLResponse)
 async def index(request: Request):
+    """
+    Show the home page or redirect to user's results/form if authenticated
+    
+    If the user is authenticated via Stytch, try to find their account
+    and redirect to their results or form page
+    """
+    # Check if user is authenticated
+    stytch_user = await get_authenticated_user(request)
+    
+    if stytch_user and hasattr(stytch_user, 'emails') and stytch_user.emails:
+        # User is authenticated, check if they exist in our database
+        db = next(get_session())
+        user_email = stytch_user.emails[0].email
+        
+        statement = select(User).where(User.email == user_email)
+        db_user = db.exec(statement).first()
+        
+        if db_user:
+            # Check if user has results
+            results_statement = select(Result).where(Result.user_id == db_user.id)
+            user_results = db.exec(results_statement).first()
+            
+            if user_results:
+                # If user has results, redirect to results page
+                print(f"[DEBUG] User has results, redirecting to results page")
+                return RedirectResponse(url=f"/results/{db_user.id}", status_code=303)
+            
+            # Get progress state
+            progress_state = int(db_user.progress_state)
+            
+            if progress_state > 0:
+                # User exists with progress, redirect to their form with progress
+                print(f"[DEBUG] User has progress, redirecting to form page")
+                return RedirectResponse(url=f"/form/{db_user.id}", status_code=303)
+    
+    # If not authenticated or user not found, show the home page
     return templates.TemplateResponse("index.html", {"request": request})
 
 @router.get("/register", response_class=HTMLResponse)
@@ -23,9 +59,48 @@ async def register(request: Request):
     return RedirectResponse(url="/form")
 
 @router.get("/login", response_class=HTMLResponse)
-async def login(request: Request):
-    """Show the login page with magic link form"""
-    return templates.TemplateResponse("login.html", {"request": request})
+async def login(request: Request, redirect: str = None):
+    """
+    Show the login page with magic link form or redirect if already authenticated
+    
+    If the user is already authenticated, redirect to their results or form page
+    """
+    # Check if user is authenticated
+    stytch_user = await get_authenticated_user(request)
+    
+    if stytch_user and hasattr(stytch_user, 'emails') and stytch_user.emails:
+        # User is authenticated, check if they exist in our database
+        db = next(get_session())
+        user_email = stytch_user.emails[0].email
+        
+        statement = select(User).where(User.email == user_email)
+        db_user = db.exec(statement).first()
+        
+        if db_user:
+            # If redirect URL is provided, use it
+            if redirect:
+                print(f"[DEBUG] Redirecting to: {redirect}")
+                return RedirectResponse(url=redirect, status_code=303)
+            
+            # Check if user has results
+            results_statement = select(Result).where(Result.user_id == db_user.id)
+            user_results = db.exec(results_statement).first()
+            
+            if user_results:
+                # If user has results, redirect to results page
+                print(f"[DEBUG] User has results, redirecting to results page")
+                return RedirectResponse(url=f"/results/{db_user.id}", status_code=303)
+            
+            # Get progress state
+            progress_state = int(db_user.progress_state)
+            
+            if progress_state > 0:
+                # User exists with progress, redirect to their form with progress
+                print(f"[DEBUG] User has progress, redirecting to form page")
+                return RedirectResponse(url=f"/form/{db_user.id}", status_code=303)
+    
+    # If not authenticated or user not found, show the login page
+    return templates.TemplateResponse("login.html", {"request": request, "redirect": redirect})
 
 @router.get("/form", response_class=HTMLResponse)
 async def form(request: Request):

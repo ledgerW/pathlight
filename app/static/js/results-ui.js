@@ -55,10 +55,16 @@ async function showFullPlan() {
     const nextStepsSection = document.getElementById('nextStepsSection');
     const dailyPlanSection = document.getElementById('dailyPlanSection');
     const obstaclesSection = document.getElementById('obstaclesSection');
+    const updatePlanSection = document.getElementById('updatePlanSection');
     const lockedIcon = document.getElementById('lockedIcon');
     
     // Hide payment section
     paymentSection.style.display = 'none';
+    
+    // Show update plan section for premium users
+    if (updatePlanSection) {
+        updatePlanSection.style.display = 'block';
+    }
     
     // Update lock icon
     lockedIcon.innerHTML = `
@@ -86,6 +92,11 @@ async function showFullPlan() {
         nextStepsSection.style.display = 'none';
         dailyPlanSection.style.display = 'none';
         obstaclesSection.style.display = 'none';
+        
+        // Hide update plan section
+        if (updatePlanSection) {
+            updatePlanSection.style.display = 'none';
+        }
     }
 }
 
@@ -107,12 +118,27 @@ function formatContent(content) {
     // Replace italic
     formatted = formatted.replace(/\*(.*?)\*/g, '<em>$1</em>');
     
-    // Replace lists
-    formatted = formatted.replace(/- (.*?)(<br>|$)/g, '<li>$1</li>');
+    // Identify bullet points (both - and •)
+    const hasBulletPoints = /(^|\<br\>)[\s]*[-•][\s]+(.*?)($|\<br\>)/g.test(formatted);
     
-    // Wrap lists in <ul>
-    if (formatted.includes('<li>')) {
-        formatted = formatted.replace(/(<li>.*?<\/li>)+/g, '<ul>$&</ul>');
+    if (hasBulletPoints) {
+        // Create a temporary div to manipulate the HTML
+        const tempDiv = document.createElement('div');
+        tempDiv.innerHTML = formatted;
+        
+        // Convert text to HTML nodes
+        const textNodes = tempDiv.childNodes;
+        const bulletPattern = /(^|\<br\>)[\s]*[-•][\s]+(.*?)($|\<br\>)/g;
+        
+        // Replace bullet points with proper list items
+        formatted = formatted.replace(bulletPattern, function(match, p1, p2, p3) {
+            return `<li class="icon-bullet-item"><span class="bullet-icon">•</span> ${p2}</li>`;
+        });
+        
+        // Wrap lists in <ul>
+        if (formatted.includes('<li')) {
+            formatted = formatted.replace(/(<li.*?<\/li>)+/g, '<ul class="icon-bullet-list">$&</ul>');
+        }
     }
     
     return formatted;
@@ -132,6 +158,60 @@ function setLoading(isLoading) {
         submitButton.disabled = false;
         spinner.classList.add('hidden');
         buttonText.classList.remove('hidden');
+    }
+}
+
+// Show regeneration modal
+function showRegenerationModal() {
+    const regenerationModal = document.getElementById('regenerationModal');
+    if (regenerationModal) {
+        regenerationModal.style.display = 'flex';
+        
+        // Add event listeners for close buttons
+        const closeButtons = regenerationModal.querySelectorAll('.close-modal');
+        closeButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                regenerationModal.style.display = 'none';
+            });
+        });
+        
+        // Add event listener for confirm button
+        const confirmButton = document.getElementById('confirmRegenerationButton');
+        if (confirmButton) {
+            confirmButton.addEventListener('click', initiateRegenerationPayment);
+        }
+    }
+}
+
+// Initiate regeneration payment
+async function initiateRegenerationPayment() {
+    try {
+        // Show payment modal
+        document.getElementById('paymentModal').style.display = 'flex';
+        document.getElementById('regenerationModal').style.display = 'none';
+        
+        // Create checkout session for premium tier with regeneration flag
+        const response = await fetch(`/api/payments/${userId}/create-checkout-session/premium?is_regeneration=true`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        });
+        
+        if (!response.ok) {
+            throw new Error('Failed to create checkout session');
+        }
+        
+        const data = await response.json();
+        console.log('Checkout session created:', data);
+        
+        // Redirect to Stripe Checkout
+        window.location.href = data.checkout_url;
+        
+    } catch (error) {
+        console.error('Error initiating regeneration payment:', error);
+        document.getElementById('paymentModal').style.display = 'none';
+        showNotification('Error processing payment. Please try again.', 'error');
     }
 }
 

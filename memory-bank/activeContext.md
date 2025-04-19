@@ -21,11 +21,16 @@ Implementing and refining the database schema, AI integration, and user authenti
 - Improved handling of basic vs premium results to prioritize premium content when available
 - Added intelligent content parsing to extract and organize AI-generated content into meaningful sections
 - Implemented visual timeline for Next Steps, card-based layout for Daily Plan, and paired cards for Obstacles & Solutions
+- Restructured daily plan items as bullet points with content-specific icons for better readability
+- Restructured next steps as Today, Next 7, 30, 180 days with bullet points and descriptive icons
+- Fixed issue with Today actions displaying twice in the timeline
+- Implemented a smart icon selection system that analyzes content and assigns appropriate icons from a set of 20 topic-specific icons
 
 ## Next Steps
 - Test the updated form navigation to ensure it works correctly in all scenarios
 - Test the result regeneration functionality in all scenarios
 - Test the enhanced results display with various AI-generated content formats
+- Test the new content-specific icon system with various types of plan items
 - Refine the user experience for the payment flow
 - Implement additional error handling and edge cases
 - Optimize AI prompt templates for better insights
@@ -41,6 +46,8 @@ Implementing and refining the database schema, AI integration, and user authenti
 - Sending magic links to users with existing data to ensure secure access
 - Using intelligent content parsing to extract structured information from AI-generated text
 - Implementing visually distinct sections for different parts of the life plan
+- Using content-specific icons for bullet points to improve visual comprehension
+- Structuring daily plan and next steps as bullet lists for better readability
 
 ## Important Patterns and Preferences
 - Modular code organization (separate files for different concerns)
@@ -52,6 +59,8 @@ Implementing and refining the database schema, AI integration, and user authenti
 - Using Poetry for Python dependency management and virtual environments
 - Visual design patterns with cards, timelines, and color-coded sections
 - Intelligent content parsing to extract structured information from AI text
+- Content-specific icons for bullet points based on keyword analysis
+- Bullet list format for structured content like daily plans and next steps
 
 ## Learnings and Insights
 - The application is an AI-powered life purpose guidance system
@@ -67,5 +76,8 @@ Implementing and refining the database schema, AI integration, and user authenti
 - Payment systems need to be flexible to allow for scenarios like result regeneration
 - AI-generated content needs intelligent parsing to create structured, user-friendly displays
 - Visual organization of information significantly improves user experience and comprehension
+- Content-specific icons provide immediate visual cues that help users quickly understand the nature of each item
+- Bullet list format makes structured content more scannable and digestible for users
+- Keyword analysis can be used to intelligently assign relevant icons to content items
 
 This document will be continuously updated as work progresses and new insights are gained.

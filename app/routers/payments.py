@@ -120,6 +120,11 @@ async def verify_payment(
         
         # Check if the payment was successful
         if checkout_session.payment_status == "paid":
+            # Check if this is a regeneration payment
+            is_regeneration = False
+            if checkout_session.metadata and "is_regeneration" in checkout_session.metadata:
+                is_regeneration = checkout_session.metadata["is_regeneration"].lower() == "true"
+            
             # Update the user's payment tier
             # If upgrading from basic to premium, set to premium
             # If paying for basic, set to basic
@@ -128,7 +133,24 @@ async def verify_payment(
                 session.add(user)
                 session.commit()
             
-            return {"payment_verified": True, "tier": user.payment_tier}
+            # If this is a regeneration payment, update the regeneration count
+            if is_regeneration:
+                from app.models.models import Result
+                from sqlmodel import select
+                
+                # Get the user's result
+                statement = select(Result).where(Result.user_id == user_id)
+                result = session.exec(statement).first()
+                
+                if result:
+                    # Increment regeneration count
+                    result.regeneration_count += 1
+                    # Update last generated timestamp
+                    result.last_generated_at = datetime.utcnow()
+                    session.add(result)
+                    session.commit()
+            
+            return {"payment_verified": True, "tier": user.payment_tier, "is_regeneration": is_regeneration}
         else:
             return {"payment_verified": False}
     
