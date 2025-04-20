@@ -25,8 +25,20 @@ The core functionality of the application has been implemented:
   - Visual timeline for Next Steps and card-based layouts
   - Content-specific icons based on keyword analysis
   - "Update Plan" button with confirmation modal
+  - Mobile-responsive design with optimized typography and spacing
+  - Collapsible sections for better mobile experience
 
 ## Latest Improvements
+- Improved mobile responsiveness for the results page:
+  - Added media queries for different screen sizes (tablets and phones)
+  - Adjusted font sizes, padding, and margins for better readability on small screens
+  - Optimized layout for narrow screens to prevent cramped text
+- Implemented collapsible sections in the Plan view:
+  - Added toggle functionality to section headers (Next Steps, Daily Plan, Obstacles & Solutions)
+  - Ensured only one section is open at a time (accordion-style)
+  - Set the first section to be open by default
+  - Added visual indicators (arrow icons) to show which sections are expandable
+  - Implemented smooth transitions for a polished user experience
 - Fixed the "Update My Plan" button functionality for users with premium plans:
   - Made the form page use the exact same modal as the results page
   - Removed the large Cancel button, leaving just an "X" in the corner
@@ -50,13 +62,16 @@ The core functionality of the application has been implemented:
 - Progress tracking for completed plan items
 
 ## Current Status
-The application is functional with the core features implemented. Recent work has focused on fixing the "Update My Plan" button functionality for users with premium plans and improving modal handling across the application. These changes have significantly improved the user experience by ensuring consistency between different parts of the application and fixing issues with loading spinners.
+The application is functional with the core features implemented. Recent work has focused on improving the mobile experience with responsive design and collapsible sections, as well as fixing the "Update My Plan" button functionality for users with premium plans and improving modal handling across the application. These changes have significantly improved the user experience by making the application more usable on mobile devices, ensuring consistency between different parts of the application, and fixing issues with loading spinners.
 
 ## Known Issues
 - Database migrations should only use PostgreSQL (not SQLite)
 - Error handling for AI generation could be improved
 - The payment flow UX could be enhanced for better conversion
 - AI content parsing may need refinement for edge cases where content doesn't follow expected patterns
+- Mobile responsiveness improvements are currently limited to the results page
+- Collapsible sections might need additional testing on older mobile browsers
+- Some UI elements may need further size adjustments for very small screens
 
 ## Evolution of Project Decisions
 - **Database Schema**: Evolved from simple text storage to structured JSON for results
@@ -69,5 +84,8 @@ The application is functional with the core features implemented. Recent work ha
 - **User Experience**: Enhanced with consistent UI patterns and smart redirects
 - **Modal Design**: Standardized across the application for consistency
 - **Loading States**: Refined to only show spinners when actually loading content
+- **Mobile Responsiveness**: Evolved from desktop-focused to fully responsive with mobile-specific optimizations
+- **Content Organization**: Evolved to use collapsible sections for better space utilization and focus
+- **Interactive Elements**: Enhanced with visual indicators and smooth transitions
 
 This document will be continuously updated as work progresses and new insights are gained.

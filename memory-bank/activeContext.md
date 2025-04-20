@@ -4,6 +4,16 @@
 Implementing and refining the database schema, AI integration, and user authentication flow for the life purpose application. The focus is on supporting the two-tier payment model, improving result generation, enhancing the user experience, and streamlining the authentication process.
 
 ## Recent Changes
+- Improved mobile responsiveness for the results page:
+  - Added media queries for different screen sizes (tablets and phones)
+  - Adjusted font sizes, padding, and margins for better readability on small screens
+  - Optimized layout for narrow screens to prevent cramped text
+- Implemented collapsible sections in the Plan view:
+  - Added toggle functionality to section headers (Next Steps, Daily Plan, Obstacles & Solutions)
+  - Ensured only one section is open at a time (accordion-style)
+  - Set the first section to be open by default
+  - Added visual indicators (arrow icons) to show which sections are expandable
+  - Implemented smooth transitions for a polished user experience
 - Fixed the "Update My Plan" button functionality for users with premium plans:
   - Made the form page use the exact same modal as the results page
   - Removed the large Cancel button, leaving just an "X" in the corner
@@ -16,6 +26,8 @@ Implementing and refining the database schema, AI integration, and user authenti
   - Improved loading state management to only show spinners when appropriate
 
 ## Next Steps
+- Continue improving mobile responsiveness across the entire application
+- Consider adding tablet-specific optimizations for mid-size screens
 - Refine the user experience for the payment flow
 - Implement additional error handling and edge cases
 - Optimize AI prompt templates for better insights
@@ -36,6 +48,9 @@ Implementing and refining the database schema, AI integration, and user authenti
 - Providing plan regeneration option for premium users
 - Implementing automatic session checking for seamless user experience
 - Using consistent modal design patterns across the application
+- Using responsive design with media queries for mobile optimization
+- Implementing collapsible sections for better mobile experience
+- Using accordion-style UI pattern for plan sections to save vertical space
 
 ## Important Patterns and Preferences
 - Modular code organization (separate files for different concerns)
@@ -52,6 +67,10 @@ Implementing and refining the database schema, AI integration, and user authenti
 - Modal confirmation dialogs for important user actions
 - Automatic session validation and smart redirects
 - Consistent UI patterns between form and results pages
+- Responsive design with breakpoints at 768px (tablet) and 480px (mobile)
+- Collapsible sections with accordion behavior for better space utilization
+- Visual indicators (arrows) for interactive elements
+- Smooth transitions for UI state changes
 
 ## Learnings and Insights
 - The application is an AI-powered life purpose guidance system
@@ -74,5 +93,10 @@ Implementing and refining the database schema, AI integration, and user authenti
 - Confirmation modals for paid actions help users make informed decisions
 - Consistent UI patterns between different parts of the application improve user experience
 - Loading spinners should only be shown when actually loading content, not during confirmation steps
+- Mobile responsiveness is critical for modern web applications, requiring specific optimizations
+- Collapsible sections significantly improve mobile experience by reducing scrolling and focusing attention
+- Accordion-style UI patterns are effective for presenting multiple content sections in limited space
+- Visual indicators (like arrows) help users understand interactive elements
+- Smooth transitions improve perceived performance and provide a more polished user experience
 
 This document will be continuously updated as work progresses and new insights are gained.

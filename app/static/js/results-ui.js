@@ -1,5 +1,44 @@
 // Results UI functionality for Pathlight
 
+// Initialize collapsible sections
+function initializeCollapsibleSections() {
+    // Get all section headers
+    const sectionHeaders = document.querySelectorAll('.section-header');
+    
+    // Add click event to each header
+    sectionHeaders.forEach(header => {
+        // Remove any existing event listeners
+        const newHeader = header.cloneNode(true);
+        header.parentNode.replaceChild(newHeader, header);
+        
+        // Add new event listener
+        newHeader.addEventListener('click', function() {
+            // Get the section this header belongs to
+            const section = this.closest('.plan-section');
+            const sectionName = this.getAttribute('data-section');
+            
+            // Toggle active class
+            if (section.classList.contains('active')) {
+                section.classList.remove('active');
+            } else {
+                // Close all sections first
+                document.querySelectorAll('.plan-section').forEach(s => {
+                    s.classList.remove('active');
+                });
+                
+                // Open this section
+                section.classList.add('active');
+            }
+        });
+    });
+    
+    // Open the first section by default (Next Steps)
+    const firstSection = document.getElementById('nextStepsSection');
+    if (firstSection && firstSection.style.display !== 'none') {
+        firstSection.classList.add('active');
+    }
+}
+
 // Show generating results message
 function showGeneratingResultsMessage() {
     // Create a message element
@@ -97,6 +136,9 @@ async function showFullPlan() {
         if (updatePlanSection) {
             updatePlanSection.style.display = 'none';
         }
+    } else {
+        // Initialize collapsible sections
+        initializeCollapsibleSections();
     }
 }
 

@@ -2,6 +2,11 @@
 
 // Set userId from the global variable passed from the template
 document.addEventListener('DOMContentLoaded', function() {
+    // Initialize collapsible sections
+    if (typeof initializeCollapsibleSections === 'function') {
+        initializeCollapsibleSections();
+    }
+    
     // Check URL parameters for payment verification
     const urlParams = new URLSearchParams(window.location.search);
     const paymentSuccess = urlParams.get('payment_success');
@@ -33,8 +38,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
     
-    // Initialize the info icon functionality
-    initializeInfoIcon();
+    // Info icon functionality removed as requested
     
     // Initialize tab functionality
     initializeTabs();
@@ -54,34 +58,6 @@ document.addEventListener('DOMContentLoaded', function() {
     url.searchParams.delete('generation_error');
     window.history.replaceState({}, '', url);
 });
-
-// Initialize the info icon functionality
-function initializeInfoIcon() {
-    const infoIcon = document.getElementById('infoIcon');
-    if (infoIcon) {
-        // Add click handler for mobile devices
-        infoIcon.addEventListener('click', function(e) {
-            const tooltip = this.querySelector('.info-tooltip');
-            if (tooltip) {
-                // Toggle tooltip visibility
-                if (tooltip.style.display === 'block') {
-                    tooltip.style.display = 'none';
-                } else {
-                    tooltip.style.display = 'block';
-                }
-                e.stopPropagation();
-            }
-        });
-        
-        // Add document click handler to close tooltip when clicking elsewhere
-        document.addEventListener('click', function() {
-            const tooltip = infoIcon.querySelector('.info-tooltip');
-            if (tooltip && tooltip.style.display === 'block') {
-                tooltip.style.display = 'none';
-            }
-        });
-    }
-}
 
 // Initialize update plan button
 function initializeUpdatePlanButton() {

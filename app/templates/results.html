@@ -20,23 +20,7 @@
             <div class="progress-text">5/25 questions completed</div>
         </div>
         <div class="top-actions">
-            <a href="/form/{{ user_id }}?start=6" class="subtle-continue-button">Continue Journey</a>
-            <div class="info-icon" id="infoIcon">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
-                    <path fill="none" d="M0 0h24v24H0z"/>
-                    <path d="M12 22C6.477 22 2 17.523 2 12S6.477 2 12 2s10 4.477 10 10-4.477 10-10 10zm0-2a8 8 0 1 0 0-16 8 8 0 0 0 0 16zM11 7h2v2h-2V7zm0 4h2v6h-2v-6z"/>
-                </svg>
-                <div class="info-tooltip">
-                    <h4>Complete Your Journey to Unlock:</h4>
-                    <ul>
-                        <li>Deep analysis of your core strengths and values</li>
-                        <li>Clear identification of potential life purposes</li>
-                        <li>Practical next steps for 7, 30, and 180 days</li>
-                        <li>A daily plan to set you up for success</li>
-                        <li>Strategies for overcoming obstacles</li>
-                    </ul>
-                </div>
-            </div>
+            <!-- Continue Journey button and info icon removed as requested -->
         </div>
     </div>
 
@@ -71,48 +55,81 @@
                 
                 <!-- Structured plan sections will be added here by JavaScript -->
                 <div id="nextStepsSection" class="plan-section next-steps-section" style="display: none;">
-                    <h2 class="section-title">Next Steps</h2>
-                    <div class="timeline-container">
-                        <div class="timeline-item">
-                            <div class="timeline-header">
-                                <div class="timeline-icon">7</div>
-                                <h3>Next 7 Days</h3>
+                    <div class="section-header" data-section="nextSteps">
+                        <h2 class="section-title">Next Steps</h2>
+                        <svg class="section-toggle" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
+                            <path fill="none" d="M0 0h24v24H0z"/>
+                            <path d="M12 13.172l4.95-4.95 1.414 1.414L12 16 5.636 9.636 7.05 8.222z" fill="currentColor"/>
+                        </svg>
+                    </div>
+                    <div class="section-content">
+                        <div class="timeline-container">
+                            <div class="timeline-item">
+                                <div class="timeline-header">
+                                    <div class="timeline-icon">7</div>
+                                    <h3>Next 7 Days</h3>
+                                </div>
+                                <div class="timeline-content" id="next7Days"></div>
                             </div>
-                            <div class="timeline-content" id="next7Days"></div>
-                        </div>
-                        <div class="timeline-item">
-                            <div class="timeline-header">
-                                <div class="timeline-icon">30</div>
-                                <h3>Next 30 Days</h3>
+                            <div class="timeline-item">
+                                <div class="timeline-header">
+                                    <div class="timeline-icon">30</div>
+                                    <h3>Next 30 Days</h3>
+                                </div>
+                                <div class="timeline-content" id="next30Days"></div>
                             </div>
-                            <div class="timeline-content" id="next30Days"></div>
-                        </div>
-                        <div class="timeline-item">
-                            <div class="timeline-header">
-                                <div class="timeline-icon">180</div>
-                                <h3>Next 180 Days</h3>
+                            <div class="timeline-item">
+                                <div class="timeline-header">
+                                    <div class="timeline-icon">180</div>
+                                    <h3>Next 180 Days</h3>
+                                </div>
+                                <div class="timeline-content" id="next180Days"></div>
                             </div>
-                            <div class="timeline-content" id="next180Days"></div>
                         </div>
                     </div>
                 </div>
                 
                 <div id="dailyPlanSection" class="plan-section daily-plan-section" style="display: none;">
-                    <h2 class="section-title">Daily Plan</h2>
-                    <div class="daily-plan-container" id="dailyPlanContainer"></div>
+                    <div class="section-header" data-section="dailyPlan">
+                        <h2 class="section-title">Daily Plan</h2>
+                        <svg class="section-toggle" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
+                            <path fill="none" d="M0 0h24v24H0z"/>
+                            <path d="M12 13.172l4.95-4.95 1.414 1.414L12 16 5.636 9.636 7.05 8.222z" fill="currentColor"/>
+                        </svg>
+                    </div>
+                    <div class="section-content">
+                        <div class="daily-plan-container" id="dailyPlanContainer"></div>
+                    </div>
                 </div>
                 
                 <div id="obstaclesSection" class="plan-section obstacles-section" style="display: none;">
-                    <h2 class="section-title">Obstacles & Solutions</h2>
-                    <div class="obstacles-container" id="obstaclesContainer"></div>
+                    <div class="section-header" data-section="obstacles">
+                        <h2 class="section-title">Obstacles & Solutions</h2>
+                        <svg class="section-toggle" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
+                            <path fill="none" d="M0 0h24v24H0z"/>
+                            <path d="M12 13.172l4.95-4.95 1.414 1.414L12 16 5.636 9.636 7.05 8.222z" fill="currentColor"/>
+                        </svg>
+                    </div>
+                    <div class="section-content">
+                        <div class="obstacles-container" id="obstaclesContainer"></div>
+                    </div>
                 </div>
                 
                 <!-- Update Plan button for premium users -->
                 <div id="updatePlanSection" class="plan-section update-plan-section" style="display: none;">
-                    <div class="update-plan-container">
-                        <h3>Want a fresh perspective?</h3>
-                        <p>Update your life plan to get new insights based on your responses.</p>
-                        <button id="updatePlanButton" class="cta-button secondary">Update My Plan</button>
+                    <div class="section-header" data-section="updatePlan">
+                        <h2 class="section-title">Update Your Plan</h2>
+                        <svg class="section-toggle" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
+                            <path fill="none" d="M0 0h24v24H0z"/>
+                            <path d="M12 13.172l4.95-4.95 1.414 1.414L12 16 5.636 9.636 7.05 8.222z" fill="currentColor"/>
+                        </svg>
+                    </div>
+                    <div class="section-content">
+                        <div class="update-plan-container">
+                            <h3>Want a fresh perspective?</h3>
+                            <p>Update your life plan to get new insights based on your responses.</p>
+                            <button id="updatePlanButton" class="cta-button secondary">Update My Plan</button>
+                        </div>
                     </div>
                 </div>
                 
@@ -181,6 +198,9 @@
     const userId = "{{ user_id }}";
 </script>
 <script src="/static/js/results-core.js"></script>
+<script src="/static/js/results-formatting.js"></script>
+<script src="/static/js/results-content.js"></script>
+<script src="/static/js/results-plan.js"></script>
 <script src="/static/js/results-ui.js"></script>
 <script src="/static/js/results-api.js"></script>
 <script src="/static/js/results-payment.js"></script>

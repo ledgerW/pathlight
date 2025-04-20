@@ -368,9 +368,7 @@
 
 /* Results full plan */
 .results-full-plan {
-    background-color: var(--white);
     border-radius: 8px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
     overflow: hidden;
 }
 
@@ -992,10 +990,57 @@
     margin-bottom: 0.5rem;
 }
 
+/* Collapsible sections */
+.section-header {
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1rem;
+    background-color: var(--cream);
+    border-radius: 8px 8px 0 0;
+    transition: background-color 0.3s ease;
+}
+
+.section-header:hover {
+    background-color: var(--dark-cream);
+}
+
+.section-header h2 {
+    margin: 0;
+    font-size: 1.5rem;
+    color: var(--teal);
+}
+
+.section-toggle {
+    width: 24px;
+    height: 24px;
+    transition: transform 0.3s ease;
+}
+
+.section-content {
+    overflow: hidden;
+    max-height: 0;
+    transition: max-height 0.5s ease;
+}
+
+.plan-section.active .section-content {
+    max-height: 5000px; /* Increased from 2000px to accommodate more content */
+}
+
+.plan-section.active .section-toggle {
+    transform: rotate(180deg);
+}
+
 /* Responsive styles */
 @media (max-width: 768px) {
+    .results-container {
+        padding: 1rem;
+    }
+    
     .results-content {
         grid-template-columns: 1fr;
+        gap: 1.5rem;
     }
     
     .results-header h1 {
@@ -1005,5 +1050,111 @@
     .tier-badge {
         position: static;
         margin-top: 1rem;
+    }
+    
+    .tab-button {
+        padding: 0.75rem 1rem;
+        font-size: 1rem;
+    }
+    
+    .mantra-section, 
+    .purpose-section {
+        padding: 2rem 1rem;
+    }
+    
+    .mantra-title, 
+    .purpose-title {
+        font-size: 1.5rem;
+    }
+    
+    .mantra {
+        font-size: 1.5rem;
+        padding: 1.5rem;
+    }
+    
+    .purpose-content {
+        font-size: 1.2rem;
+        padding: 1.5rem 1rem;
+    }
+    
+    .timeline-item,
+    .daily-plan-card,
+    .obstacle-card {
+        padding: 1rem;
+    }
+    
+    .timeline-header h3,
+    .daily-plan-header h3 {
+        font-size: 1.2rem;
+    }
+}
+
+/* Mobile-specific styles */
+@media (max-width: 480px) {
+    .results-container {
+        padding: 0.75rem;
+    }
+    
+    .results-header h1 {
+        font-size: 1.75rem;
+    }
+    
+    .results-subtitle {
+        font-size: 1rem;
+    }
+    
+    .tab-button {
+        padding: 0.5rem 0.75rem;
+        font-size: 0.9rem;
+    }
+    
+    .mantra-section, 
+    .purpose-section {
+        padding: 1.5rem 0.75rem;
+        margin-bottom: 2rem;
+    }
+    
+    .mantra-title, 
+    .purpose-title {
+        font-size: 1.3rem;
+    }
+    
+    .mantra {
+        font-size: 1.2rem;
+        padding: 1.25rem 0.75rem;
+        line-height: 1.4;
+    }
+    
+    .purpose-content {
+        font-size: 1.1rem;
+        line-height: 1.5;
+        padding: 1.25rem 0.75rem;
+    }
+    
+    .section-title {
+        font-size: 1.3rem;
+    }
+    
+    .timeline-icon,
+    .daily-plan-icon {
+        width: 36px;
+        height: 36px;
+    }
+    
+    .timeline-content,
+    .daily-plan-content {
+        font-size: 0.95rem;
+    }
+    
+    .icon-bullet-item {
+        margin-bottom: 0.5rem;
+    }
+    
+    .daily-plan-timeframes {
+        grid-template-columns: 1fr;
+    }
+    
+    .obstacles-container {
+        grid-template-columns: 1fr;
     }
 }
