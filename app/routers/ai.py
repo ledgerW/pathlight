@@ -4,12 +4,13 @@ from sqlmodel import Session, select
 from app.models import User, FormResponse, Result, get_session
 import uuid
 import os
+import json
 from datetime import datetime
 from langchain.prompts import ChatPromptTemplate
 from langchain_openai import ChatOpenAI
-from langchain.output_parsers import PydanticOutputParser
 from pydantic import BaseModel, Field
 from app.prompts import get_question_text, get_zodiac_sign
+from langsmith import traceable
 
 router = APIRouter(
     prefix="/api/ai",
@@ -127,6 +128,40 @@ USER RESPONSES:
 """)
 ])
 
+@traceable
+def generate_purpose(user: User, zodiac_info: Dict[str, str], responses: List[FormResponse]) -> SummaryOutput:
+    """
+    Generate basic results (purpose and mantra) based on user responses.
+    This function is traced in LangSmith for observability.
+    
+    Args:
+        user: User object containing name and other user data
+        zodiac_info: Dictionary containing zodiac sign information
+        responses: List of FormResponse objects for the first 5 questions
+        
+    Returns:
+        SummaryOutput object containing purpose and mantra
+    """
+    # Format responses for the prompt
+    formatted_responses = f"User's Name: {user.name}\n"
+    formatted_responses += f"User's Astrological Sign: {zodiac_info['sign']} ({zodiac_info['element']} element)\n"
+    formatted_responses += f"Typical {zodiac_info['sign']} Traits: {zodiac_info['traits']}\n\n"
+    formatted_responses += "\n".join(
+        f"Question {response.question_number}: {get_question_text(response.question_number)}\nResponse: {response.response}\n"
+        for response in responses
+    )
+    
+    # Generate summary only
+    summary_prompt_formatted = summary_prompt.format(responses=formatted_responses)
+    
+    # Bind the schema to the model
+    model_with_structure = llm.with_structured_output(SummaryOutput)
+    
+    # Invoke LLM for summary with structured output
+    summary_output = model_with_structure.invoke(summary_prompt_formatted)
+    
+    return summary_output
+
 @router.post("/{user_id}/generate-basic", response_model=dict)
 async def generate_basic_results(user_id: uuid.UUID, session: Session = Depends(get_session)):
     """Generate basic results (summary and mantra) after answering the first 5 questions"""
@@ -152,27 +187,11 @@ async def generate_basic_results(user_id: uuid.UUID, session: Session = Depends(
     # Get user's zodiac sign
     zodiac_info = get_zodiac_sign(user.dob)
     
-    # Format responses for the prompt
-    formatted_responses = f"User's Name: {user.name}\n"
-    formatted_responses += f"User's Astrological Sign: {zodiac_info['sign']} ({zodiac_info['element']} element)\n"
-    formatted_responses += f"Typical {zodiac_info['sign']} Traits: {zodiac_info['traits']}\n\n"
-    formatted_responses += "\n".join(
-        f"Question {response.question_number}: {get_question_text(response.question_number)}\nResponse: {response.response}\n"
-        for response in first_five_responses
-    )
-    
-    # Generate summary only
-    summary_prompt_formatted = summary_prompt.format(responses=formatted_responses)
-    
     try:
-        # Bind the schema to the model
-        model_with_structure = llm.with_structured_output(SummaryOutput)
-        
-        # Invoke LLM for summary with structured output
-        summary_output = model_with_structure.invoke(summary_prompt_formatted)
+        # Generate purpose using the traceable function
+        summary_output = generate_purpose(user, zodiac_info, first_five_responses)
         
         # Convert to JSON string for storage
-        import json
         basic_plan_json = json.dumps(summary_output.model_dump())
         
         # Create or update result in database
@@ -216,6 +235,61 @@ async def generate_basic_results(user_id: uuid.UUID, session: Session = Depends(
             detail=f"Error generating basic results: {str(e)}"
         )
 
+@traceable
+def generate_plan(
+    user: User, 
+    zodiac_info: Dict[str, str], 
+    responses: List[FormResponse], 
+    existing_basic_plan: Optional[str] = None
+) -> tuple[str, FullPlanOutput]:
+    """
+    Generate premium results (full plan) based on user responses.
+    This function is traced in LangSmith for observability.
+    
+    Args:
+        user: User object containing name and other user data
+        zodiac_info: Dictionary containing zodiac sign information
+        responses: List of FormResponse objects for all 25 questions
+        existing_basic_plan: Optional existing basic plan JSON string
+        
+    Returns:
+        Tuple of (basic_plan_json, full_plan_output) where:
+            - basic_plan_json is the JSON string of the basic plan
+            - full_plan_output is the FullPlanOutput object
+    """
+    # Format responses for the prompt
+    formatted_responses = f"User's Name: {user.name}\n"
+    formatted_responses += f"User's Astrological Sign: {zodiac_info['sign']} ({zodiac_info['element']} element)\n"
+    formatted_responses += f"Typical {zodiac_info['sign']} Traits: {zodiac_info['traits']}\n\n"
+    formatted_responses += "\n".join(
+        f"Question {response.question_number}: {get_question_text(response.question_number)}\nResponse: {response.response}\n"
+        for response in responses
+    )
+    
+    # If no existing basic plan, generate one
+    if not existing_basic_plan:
+        # Bind the schema to the model
+        model_with_structure = llm.with_structured_output(SummaryOutput)
+        
+        # Invoke LLM for summary with structured output
+        summary_output = model_with_structure.invoke(summary_prompt.format(responses=formatted_responses))
+        
+        # Convert to JSON string for storage
+        basic_plan_json = json.dumps(summary_output.model_dump())
+    else:
+        basic_plan_json = existing_basic_plan
+    
+    # Generate full plan
+    full_plan_prompt_formatted = full_plan_prompt.format(responses=formatted_responses)
+    
+    # Bind the schema to the model for full plan
+    model_with_structure = llm.with_structured_output(FullPlanOutput)
+    
+    # Invoke LLM for full plan with structured output
+    full_plan_output = model_with_structure.invoke(full_plan_prompt_formatted)
+    
+    return basic_plan_json, full_plan_output
+
 @router.post("/{user_id}/generate-premium", response_model=dict)
 async def generate_premium_results(user_id: uuid.UUID, session: Session = Depends(get_session)):
     """Generate premium results (full path and plan) after answering all 25 questions"""
@@ -245,43 +319,15 @@ async def generate_premium_results(user_id: uuid.UUID, session: Session = Depend
     # Get user's zodiac sign
     zodiac_info = get_zodiac_sign(user.dob)
     
-    # Format responses for the prompt
-    formatted_responses = f"User's Name: {user.name}\n"
-    formatted_responses += f"User's Astrological Sign: {zodiac_info['sign']} ({zodiac_info['element']} element)\n"
-    formatted_responses += f"Typical {zodiac_info['sign']} Traits: {zodiac_info['traits']}\n\n"
-    formatted_responses += "\n".join(
-        f"Question {response.question_number}: {get_question_text(response.question_number)}\nResponse: {response.response}\n"
-        for response in responses
-    )
-    
-    # Generate full plan
-    full_plan_prompt_formatted = full_plan_prompt.format(responses=formatted_responses)
-    
     try:
         # Get existing result to preserve basic plan
         existing_result = session.exec(select(Result).where(Result.user_id == user_id)).first()
-        if not existing_result:
-            # If no existing result, generate basic plan first
-            # Bind the schema to the model
-            model_with_structure = llm.with_structured_output(SummaryOutput)
-            
-            # Invoke LLM for summary with structured output
-            summary_output = model_with_structure.invoke(summary_prompt.format(responses=formatted_responses))
-            
-            # Convert to JSON string for storage
-            import json
-            basic_plan_json = json.dumps(summary_output.model_dump())
-        else:
-            basic_plan_json = existing_result.basic_plan
+        existing_basic_plan = existing_result.basic_plan if existing_result else None
         
-        # Bind the schema to the model for full plan
-        model_with_structure = llm.with_structured_output(FullPlanOutput)
-        
-        # Invoke LLM for full plan with structured output
-        full_plan_output = model_with_structure.invoke(full_plan_prompt_formatted)
+        # Generate plan using the traceable function
+        basic_plan_json, full_plan_output = generate_plan(user, zodiac_info, responses, existing_basic_plan)
         
         # Convert to JSON string for storage
-        import json
         full_plan_json = json.dumps(full_plan_output.model_dump())
         
         # Create or update result in database

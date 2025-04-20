@@ -3,10 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}Pathlight - A reflective experience{% endblock %}</title>
+    <title>{% block title %}Pathlight{% endblock %}</title>
     
     <!-- Favicon -->
-    <link rel="icon" href="/static/images/1TheSpark.png" type="image/png">
+    <link rel="icon" href="/static/images/pathlight_favicon.png" type="image/png">
     
     <!-- Google Fonts - Serif font similar to the style guide -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -21,14 +21,14 @@
 </head>
 <body>
     <header>
-        <div class="logo-container">
-            <a href="/">
-                <h1 class="logo">Pathlight</h1>
-                <p class="tagline">A reflective experience</p>
-            </a>
-        </div>
-        
-        {% if user_id %}
+        <div class="header-content">
+            <div class="logo-container">
+                <a href="/">
+                    <img src="/static/images/pathlight_logo.png" alt="Pathlight" class="logo-image">
+                </a>
+            </div>
+            
+            {% if user_id %}
         <nav class="main-nav">
             <ul class="nav-menu">
                 <li class="nav-item" data-section="reflection">
@@ -126,6 +126,16 @@
                 </li>
             </ul>
         </nav>
+        
+        <div class="tier-badge-container">
+            <span id="tierBadge" class="tier-badge {% if payment_tier %}{{ payment_tier }}{% endif %}">
+                {% if payment_tier %}
+                    {{ payment_tier|title }} Tier
+                {% else %}
+                    Basic Tier
+                {% endif %}
+            </span>
+        </div>
         {% endif %}
     </header>
     

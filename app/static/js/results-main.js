@@ -13,8 +13,8 @@ document.addEventListener('DOMContentLoaded', function() {
     if (paymentSuccess === 'true' && tier && userId) {
         console.log(`Payment successful for tier: ${tier}`);
         
-        // Update the tier badge
-        const tierBadge = document.querySelector('.tier-badge');
+        // Update the tier badge in the header
+        const tierBadge = document.getElementById('tierBadge');
         if (tierBadge) {
             tierBadge.className = `tier-badge ${tier}`;
             tierBadge.textContent = `${tier.charAt(0).toUpperCase() + tier.slice(1)} Tier`;

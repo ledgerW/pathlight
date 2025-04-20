@@ -67,18 +67,23 @@ function updateTierBadge() {
     const tierBadge = document.getElementById('tierBadge');
     const totalQuestionsSpan = document.getElementById('totalQuestions');
     
+    if (!tierBadge) {
+        console.error('Tier badge element not found');
+        return;
+    }
+    
     if (user.payment_tier === 'premium') {
         tierBadge.textContent = 'Premium Tier';
         tierBadge.className = 'tier-badge premium';
-        totalQuestionsSpan.textContent = PREMIUM_TIER_QUESTIONS;
+        if (totalQuestionsSpan) totalQuestionsSpan.textContent = PREMIUM_TIER_QUESTIONS;
     } else if (user.payment_tier === 'basic' || progress >= BASIC_TIER_QUESTIONS) {
         tierBadge.textContent = 'Basic Tier';
         tierBadge.className = 'tier-badge basic';
-        totalQuestionsSpan.textContent = BASIC_TIER_QUESTIONS;
+        if (totalQuestionsSpan) totalQuestionsSpan.textContent = BASIC_TIER_QUESTIONS;
     } else {
         tierBadge.textContent = 'Free Tier';
         tierBadge.className = 'tier-badge free';
-        totalQuestionsSpan.textContent = BASIC_TIER_QUESTIONS;
+        if (totalQuestionsSpan) totalQuestionsSpan.textContent = BASIC_TIER_QUESTIONS;
     }
 }
 
