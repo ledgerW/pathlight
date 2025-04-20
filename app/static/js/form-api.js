@@ -407,14 +407,28 @@ async function checkExistingResults() {
     }
 }
 
-// Show regeneration payment modal
+// Show regeneration modal
 function showRegenerationPaymentModal(lastGeneratedAt, regenerationCount = 0) {
-    // Update the last generated date in the modal
-    document.getElementById('lastGeneratedDate').textContent = lastGeneratedAt || 'an earlier date';
+    // Hide loading overlay if it's visible
+    const loadingOverlay = document.getElementById('loadingOverlay');
+    if (loadingOverlay) {
+        loadingOverlay.style.display = 'none';
+    }
     
-    // Update the regeneration count in the modal
-    document.getElementById('regenerationCount').textContent = regenerationCount;
+    // Update the price text based on user's tier
+    const isPremiumTier = user.payment_tier === 'premium';
+    const priceText = isPremiumTier ? '$4.99' : '$0.99';
+    const modalTitle = isPremiumTier ? 'Update Your Life Plan' : 'Update Your Personal Insight';
+    
+    // Update modal title
+    document.querySelector('#regenerationModal h2').textContent = modalTitle;
+    
+    // Update button text with correct price
+    const buttonElement = document.getElementById('confirmRegenerationButton');
+    if (buttonElement) {
+        buttonElement.textContent = `Update My Plan (${priceText})`;
+    }
     
     // Show the modal
-    document.getElementById('regenerationPaymentModal').style.display = 'flex';
+    document.getElementById('regenerationModal').style.display = 'flex';
 }

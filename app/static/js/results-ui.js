@@ -172,6 +172,11 @@ function showRegenerationModal() {
         closeButtons.forEach(button => {
             button.addEventListener('click', () => {
                 regenerationModal.style.display = 'none';
+                // Also hide payment modal if it's visible
+                const paymentModal = document.getElementById('paymentModal');
+                if (paymentModal) {
+                    paymentModal.style.display = 'none';
+                }
             });
         });
         

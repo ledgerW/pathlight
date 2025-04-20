@@ -50,4 +50,21 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     window.history.replaceState({}, '', url);
+    
+    // Add event listener for logout button
+    const logoutButton = document.getElementById('logoutButton');
+    if (logoutButton) {
+        logoutButton.addEventListener('click', function() {
+            // Redirect to the logout endpoint
+            window.location.href = '/auth/logout';
+        });
+        
+        // Only show the logout button if the user is logged in
+        if (!user.id) {
+            const logoutButtonContainer = document.getElementById('logoutButtonContainer');
+            if (logoutButtonContainer) {
+                logoutButtonContainer.style.display = 'none';
+            }
+        }
+    }
 });

@@ -98,7 +98,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 saveUrlModal.style.display = 'none';
                 basicPaymentModal.style.display = 'none';
                 premiumPaymentModal.style.display = 'none';
-                document.getElementById('regenerationPaymentModal').style.display = 'none';
+                document.getElementById('regenerationModal').style.display = 'none';
             });
         });
         
@@ -130,14 +130,12 @@ document.addEventListener('DOMContentLoaded', function() {
             showSaveUrlModal();
         });
         
-        // Regeneration payment modal buttons
-        document.getElementById('proceedToRegenerationPayment').addEventListener('click', () => {
-            initiatePayment('basic', true); // Pass true for regeneration
-            document.getElementById('regenerationPaymentModal').style.display = 'none';
-        });
-        
-        document.getElementById('cancelRegeneration').addEventListener('click', () => {
-            document.getElementById('regenerationPaymentModal').style.display = 'none';
+        // Regeneration payment modal button
+        document.getElementById('confirmRegenerationButton').addEventListener('click', () => {
+            // Check if user is premium tier to determine which tier to regenerate
+            const tier = user.payment_tier === 'premium' ? 'premium' : 'basic';
+            initiatePayment(tier, true); // Pass true for regeneration
+            document.getElementById('regenerationModal').style.display = 'none';
         });
         
         // Set initial tier badge
@@ -277,10 +275,37 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
         
-        // Show loading overlay
+        // Check if we're at the end of premium tier and the submit button says "Update Plan"
+        const isAtPremiumTier = currentSlide === PREMIUM_TIER_QUESTIONS;
+        const hasPremiumResults = user.payment_tier === 'premium';
+        
+        if (isAtPremiumTier && hasPremiumResults && submitButton.textContent === 'Update Plan') {
+            // User wants to update their premium results
+            // Check if results already exist
+            checkExistingResults().then(resultsData => {
+                if (resultsData.has_results) {
+                    // Show regeneration payment modal
+                    showRegenerationPaymentModal(resultsData.last_generated_at, resultsData.regeneration_count);
+                } else {
+                    // Show loading overlay
+                    loadingOverlay.style.display = 'flex';
+                    loadingMessage.textContent = 'Generating your comprehensive life plan...';
+                    generatePremiumResults();
+                }
+            }).catch(error => {
+                console.error('Error checking existing results:', error);
+                // Fallback to direct generation
+                loadingOverlay.style.display = 'flex';
+                loadingMessage.textContent = 'Generating your comprehensive life plan...';
+                generatePremiumResults();
+            });
+            return;
+        }
+        
+        // Show loading overlay for other cases
         loadingOverlay.style.display = 'flex';
         
-        // Generate results based on tier
+        // Generate results based on tier for other cases
         if (user.payment_tier === 'premium') {
             loadingMessage.textContent = 'Generating your comprehensive life plan...';
             generatePremiumResults();

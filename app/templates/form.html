@@ -75,6 +75,9 @@
                                 <label for="userDob">Date of Birth</label>
                                 <input type="date" id="userDob" name="userDob" required>
                             </div>
+                            <div class="form-field" id="logoutButtonContainer" style="margin-top: 20px; text-align: center;">
+                                <button id="logoutButton" class="btn-secondary" style="background-color: var(--teal); color: var(--cream); padding: 10px 20px; border: none; border-radius: var(--radius-md); cursor: pointer;">Logout</button>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -262,18 +265,20 @@
     </div>
 </div>
 
-<!-- Regeneration Payment Modal -->
-<div id="regenerationPaymentModal" class="modal" style="display: none;">
+<!-- Regeneration confirmation modal -->
+<div id="regenerationModal" class="modal" style="display: none;">
     <div class="modal-content">
         <span class="close-modal">&times;</span>
-        <h2>Regenerate Your Personal Insight</h2>
-        <p>You've already generated results for these responses.</p>
-        <p>Your last results were generated on <span id="lastGeneratedDate">...</span></p>
-        <p>You have regenerated your results <span id="regenerationCount">0</span> times so far.</p>
-        <p>To generate new results with your current responses, you'll need to pay $0.99 again.</p>
-        <div class="payment-buttons">
-            <button id="proceedToRegenerationPayment" class="btn-primary">Regenerate ($0.99)</button>
-            <button id="cancelRegeneration" class="btn-secondary">Cancel</button>
+        <h2>Update Your Life Plan</h2>
+        <p>Regenerating your plan will provide fresh insights and guidance based on your responses.</p>
+        <div class="regeneration-details">
+            <div class="regeneration-info">
+                <p><strong>Cost:</strong> $4.99</p>
+                <p><strong>What you'll get:</strong> A completely new life plan with updated insights, next steps, daily plan, and strategies.</p>
+            </div>
+        </div>
+        <div class="regeneration-actions">
+            <button id="confirmRegenerationButton" class="cta-button">Update My Plan ($4.99)</button>
         </div>
     </div>
 </div>
