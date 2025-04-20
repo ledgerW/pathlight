@@ -176,15 +176,23 @@ async def authenticate(
         )
         print(f"[DEBUG] Authentication successful, got session token: {resp.session_token[:10]}...")
         
-        # Store session token in a cookie
-        response.set_cookie(
-            key="stytch_session_token", 
-            value=resp.session_token,
-            httponly=True,
-            max_age=43200 * 60,  # 30 days in seconds
-            path="/"
-        )
-        print(f"[DEBUG] Stored session token in cookie: {resp.session_token[:10]}...")
+        # Store session token in a cookie with appropriate security settings
+        cookie_settings = {
+            "key": "stytch_session_token", 
+            "value": resp.session_token,
+            "httponly": True,
+            "max_age": 43200 * 60,  # 30 days in seconds
+            "path": "/"
+        }
+        
+        # Add secure and samesite attributes in production
+        if is_production():
+            cookie_settings["secure"] = True
+            cookie_settings["samesite"] = "lax"
+            print("[DEBUG] Setting production cookie with secure=True and samesite=lax")
+        
+        response.set_cookie(**cookie_settings)
+        print(f"[DEBUG] Stored session token in cookie: {resp.session_token[:10]}... with settings: {cookie_settings}")
         
         # In development mode, save the token to a file for persistence
         if not is_production():
@@ -245,13 +253,23 @@ async def authenticate(
                 saved_token = load_auth_token()
                 if saved_token:
                     print(f"[DEBUG] Found saved token, using it: {saved_token[:10]}...")
-                    response.set_cookie(
-                        key="stytch_session_token", 
-                        value=saved_token,
-                        httponly=True,
-                        max_age=43200 * 60,  # 30 days in seconds
-                        path="/"
-                    )
+                    # Use the same cookie settings as above for consistency
+                    cookie_settings = {
+                        "key": "stytch_session_token", 
+                        "value": saved_token,
+                        "httponly": True,
+                        "max_age": 43200 * 60,  # 30 days in seconds
+                        "path": "/"
+                    }
+                    
+                    # Add secure and samesite attributes in production
+                    if is_production():
+                        cookie_settings["secure"] = True
+                        cookie_settings["samesite"] = "lax"
+                        print("[DEBUG] Setting production cookie with secure=True and samesite=lax for recovered token")
+                    
+                    response.set_cookie(**cookie_settings)
+                    print(f"[DEBUG] Stored recovered session token in cookie: {saved_token[:10]}... with settings: {cookie_settings}")
                     return RedirectResponse(url="/form", status_code=303)
             
             # If we couldn't recover, redirect to form or the specified redirect URL with a message
@@ -276,8 +294,20 @@ async def authenticate(
 
 @router.get("/logout")
 async def logout(response: Response) -> RedirectResponse:
+    # Clear cookie with appropriate settings
+    cookie_clear_settings = {
+        "key": "stytch_session_token",
+        "path": "/"
+    }
+    
+    # Add domain and secure settings in production
+    if is_production():
+        cookie_clear_settings["secure"] = True
+        print("[DEBUG] Clearing production cookie with secure=True")
+    
     # Clear cookie
-    response.delete_cookie(key="stytch_session_token", path="/")
+    response.delete_cookie(**cookie_clear_settings)
+    print(f"[DEBUG] Cleared session cookie with settings: {cookie_clear_settings}")
     
     # In development mode, also clear the saved token file
     if not is_production():
