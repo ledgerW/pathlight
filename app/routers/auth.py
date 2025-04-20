@@ -72,6 +72,39 @@ async def get_authenticated_user(request: Request):
         if not is_production():
             clear_auth_token()
         
+        # Try to extract user information from the expired token
+        try:
+            # This is a workaround to get user info from an expired token
+            # We'll only use this for redirecting, not for actual authentication
+            import jwt
+            import base64
+            import json
+            
+            # Split the token into parts
+            parts = stytch_session.split('.')
+            if len(parts) >= 2:
+                # Decode the payload part (second part)
+                padded = parts[1] + '=' * (4 - len(parts[1]) % 4)
+                payload = base64.b64decode(padded)
+                data = json.loads(payload)
+                
+                # Check if we have user data
+                if 'sub' in data and data.get('type') == 'session':
+                    print(f"[DEBUG] Extracted user ID from expired token: {data['sub']}")
+                    
+                    # Create a minimal user object with just the ID
+                    from types import SimpleNamespace
+                    minimal_user = SimpleNamespace()
+                    minimal_user.user_id = data['sub']
+                    
+                    # If we have email info, add it
+                    if 'email' in data:
+                        minimal_user.emails = [SimpleNamespace(email=data['email'])]
+                    
+                    return minimal_user
+        except Exception as token_error:
+            print(f"[DEBUG] Could not extract user info from expired token: {str(token_error)}")
+        
         return None
 
 

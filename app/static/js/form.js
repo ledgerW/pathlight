@@ -450,22 +450,37 @@ document.addEventListener('DOMContentLoaded', function() {
             const newEmail = emailInput.value.trim();
             const newDob = dobInput.value;
             
+            // Show loading overlay while checking user
+            document.getElementById('loadingOverlay').style.display = 'flex';
+            document.getElementById('loadingMessage').textContent = 'Checking account status...';
+            
             // Check if user exists
             checkExistingUser(newEmail).then(existingUserData => {
+                // Hide loading overlay
+                document.getElementById('loadingOverlay').style.display = 'none';
+                
                 if (existingUserData) {
+                    console.log('Found existing user data:', existingUserData);
                     // User exists
                     const existingUserId = existingUserData.id;
                     
                     // Check if user has responses or results
                     if (existingUserData.has_responses || existingUserData.has_results) {
                         // User has existing data, send magic link for authentication
-                        showNotification('You already have an account with saved responses. Sending a magic link to your email...', 'info');
+                        showNotification('Welcome back! Sending a magic link to your email to securely access your account...', 'info');
+                        
+                        // Show loading overlay while sending magic link
+                        document.getElementById('loadingOverlay').style.display = 'flex';
+                        document.getElementById('loadingMessage').textContent = 'Sending magic link...';
                         
                         // Send magic link
                         sendMagicLink(newEmail).then(success => {
+                            // Hide loading overlay
+                            document.getElementById('loadingOverlay').style.display = 'none';
+                            
                             if (success) {
                                 // Show message about checking email
-                                showNotification('Please check your email to continue your journey.', 'success');
+                                showNotification('Please check your email to continue your journey. The link will take you directly to your saved progress.', 'success');
                             } else {
                                 // Show error message
                                 showNotification('Failed to send magic link. Please try again.', 'error');
@@ -473,10 +488,28 @@ document.addEventListener('DOMContentLoaded', function() {
                         });
                     } else {
                         // User exists but has no responses, redirect to their form
-                        showNotification('You already have an account. Redirecting to continue your journey...', 'info');
+                        showNotification('Welcome back! Redirecting to continue your journey...', 'info');
+                        
+                        // Pre-fill user data if available
+                        if (existingUserData.name) {
+                            user.name = existingUserData.name;
+                        }
+                        
+                        if (existingUserData.dob) {
+                            user.dob = existingUserData.dob;
+                        }
+                        
+                        if (existingUserData.progress_state) {
+                            user.progress_state = existingUserData.progress_state;
+                        }
+                        
+                        if (existingUserData.payment_tier) {
+                            user.payment_tier = existingUserData.payment_tier;
+                        }
+                        
                         setTimeout(() => {
                             window.location.href = `/form/${existingUserId}`;
-                        }, 2000);
+                        }, 1500);
                     }
                 } else {
                     // Create new user
@@ -484,6 +517,11 @@ document.addEventListener('DOMContentLoaded', function() {
                     user.email = newEmail;
                     createUser(newDob);
                 }
+            }).catch(error => {
+                // Hide loading overlay
+                document.getElementById('loadingOverlay').style.display = 'none';
+                console.error('Error checking existing user:', error);
+                showNotification('Error checking account status. Please try again.', 'error');
             });
             
             return;

@@ -49,6 +49,9 @@ async def index(request: Request):
                 # User exists with progress, redirect to their form with progress
                 print(f"[DEBUG] User has progress, redirecting to form page")
                 return RedirectResponse(url=f"/form/{db_user.id}", status_code=303)
+            
+            # User exists but has no progress or results, redirect to their form
+            return RedirectResponse(url=f"/form/{db_user.id}", status_code=303)
     
     # If not authenticated or user not found, show the home page
     return templates.TemplateResponse("index.html", {"request": request})

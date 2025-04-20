@@ -3,11 +3,37 @@
 // Check if user exists by email
 async function checkExistingUser(email) {
     try {
+        // First try with query parameter
         const response = await fetch(`/api/users/find-by-email?email=${encodeURIComponent(email)}`);
         
         // Check if response is ok before trying to parse JSON
         if (!response.ok) {
             console.error('Error response from find-by-email:', response.status, response.statusText);
+            
+            // If we get a 422 error, try with request body instead
+            if (response.status === 422) {
+                console.log('Trying with request body instead of query parameter');
+                const bodyResponse = await fetch('/api/users/find-by-email', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ email })
+                });
+                
+                if (!bodyResponse.ok) {
+                    console.error('Error response from find-by-email with body:', bodyResponse.status, bodyResponse.statusText);
+                    return null;
+                }
+                
+                const bodyData = await bodyResponse.json();
+                
+                if (bodyData && bodyData.found) {
+                    console.log('User found with request body method:', bodyData);
+                    return bodyData;
+                }
+            }
+            
             return null;
         }
         
@@ -15,6 +41,7 @@ async function checkExistingUser(email) {
         
         if (data && data.found) {
             // If user exists, return the full data object
+            console.log('User found with query parameter method:', data);
             return data;
         }
         

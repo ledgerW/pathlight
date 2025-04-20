@@ -156,42 +156,76 @@ def update_payment_tier(
             detail=f"Error updating payment tier: {str(e)}"
         )
 
+from pydantic import BaseModel, EmailStr
+
+class EmailRequest(BaseModel):
+    email: EmailStr
+
 @router.get("/find-by-email")
-def find_user_by_email(email: str, session: Session = Depends(get_session)):
+def find_user_by_email(email: str = None, email_obj: EmailRequest = None, session: Session = Depends(get_session)):
     """Find a user by email address to allow returning users to continue"""
     try:
-        print(f"Finding user by email: {email}")
-        statement = select(User).where(User.email == email)
+        # Get email from either query param or request body
+        user_email = email
+        if email_obj:
+            user_email = email_obj.email
+            
+        if not user_email:
+            return {"found": False, "error": "Email is required"}
+            
+        print(f"Finding user by email: {user_email}")
+        statement = select(User).where(User.email == user_email)
         user = session.exec(statement).first()
         
         if not user:
-            print(f"User not found with email: {email}")
+            print(f"User not found with email: {user_email}")
             return {"found": False}
         
         # Check if user has responses
         from app.models.models import FormResponse, Result
         responses_statement = select(FormResponse).where(FormResponse.user_id == user.id)
-        has_responses = session.exec(responses_statement).first() is not None
+        responses = session.exec(responses_statement).all()
+        has_responses = len(responses) > 0
+        
+        # Get response count
+        response_count = len(responses)
         
         # Check if user has results
         results_statement = select(Result).where(Result.user_id == user.id)
-        has_results = session.exec(results_statement).first() is not None
+        result_obj = session.exec(results_statement).first()
+        has_results = result_obj is not None
         
-        # Return a simplified user object to avoid serialization issues
+        # Get formatted DOB
+        dob_formatted = None
+        if user.dob:
+            try:
+                dob_formatted = user.dob.strftime("%Y-%m-%d")
+            except:
+                pass
+        
+        # Return a detailed user object with all necessary information
         result = {
             "found": True,
             "id": str(user.id),
             "name": user.name,
             "email": user.email,
+            "dob": dob_formatted,
             "progress_state": user.progress_state,
             "payment_tier": user.payment_tier,
             "has_responses": has_responses,
+            "response_count": response_count,
             "has_results": has_results
         }
+        
+        # Add result details if available
+        if result_obj:
+            result["last_generated_at"] = result_obj.last_generated_at.isoformat() if result_obj.last_generated_at else None
+            result["regeneration_count"] = result_obj.regeneration_count
+        
         print(f"User found: {result}")
         return result
     except Exception as e:
         # Log the error for debugging
         print(f"Error finding user by email: {str(e)}")
-        # Return a not found response instead of an error
-        return {"found": False, "error": str(e)}
+        # Return a detailed error response
+        return {"found": False, "error": str(e), "error_type": type(e).__name__}
