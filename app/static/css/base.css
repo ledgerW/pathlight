@@ -119,7 +119,7 @@ header {
 }
 
 .logo-image {
-    max-height: 50px;
+    max-height: 70px;
     width: auto;
 }
 
@@ -358,7 +358,7 @@ footer {
     }
     
     .logo-image {
-        max-height: 40px;
+        max-height: 55px;
     }
     
     .tier-badge {
