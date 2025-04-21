@@ -1,10 +1,11 @@
 from fastapi import APIRouter, Request, Depends, HTTPException
-from fastapi.responses import HTMLResponse, RedirectResponse
+from fastapi.responses import HTMLResponse, RedirectResponse, FileResponse
 from fastapi.templating import Jinja2Templates
 from sqlmodel import Session, select
 from app.models import User, Result, get_session
 import uuid
 import os
+import pathlib
 
 from app.routers.auth import get_authenticated_user
 
@@ -12,6 +13,22 @@ router = APIRouter(tags=["web"])
 
 # Set up templates
 templates = Jinja2Templates(directory="app/templates")
+
+# SEO routes
+@router.get("/robots.txt", response_class=FileResponse)
+async def get_robots_txt():
+    """Serve robots.txt file"""
+    return FileResponse("app/static/robots.txt", media_type="text/plain")
+
+@router.get("/sitemap.xml", response_class=FileResponse)
+async def get_sitemap_xml():
+    """Serve sitemap.xml file"""
+    return FileResponse("app/static/sitemap.xml", media_type="application/xml")
+
+@router.get("/favicon.ico", response_class=FileResponse)
+async def get_favicon():
+    """Serve favicon.ico file (using the existing PNG favicon)"""
+    return FileResponse("app/static/images/pathlight_favicon.png", media_type="image/x-icon")
 
 @router.get("/", response_class=HTMLResponse)
 async def index(request: Request):

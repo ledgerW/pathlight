@@ -1,6 +1,55 @@
 {% extends "base.html" %}
 
-{% block title %}Pathlight - Discover Your Life's Purpose{% endblock %}
+{% block title %}Pathlight - Discover Your Purpose & Reclaim Your Agency{% endblock %}
+
+{% block meta %}
+<meta name="description" content="Transform self-reflection into clarity and direction with Pathlight's AI-powered purpose discovery tool. Gain personalized guidance in just minutes.">
+<meta name="keywords" content="life purpose, find my purpose, purpose discovery, personal agency, self-reflection, meaningful life, intentional living, clarity, direction, authentic self">
+
+<!-- Open Graph / Facebook -->
+<meta property="og:type" content="website">
+<meta property="og:url" content="{{ request.url }}">
+<meta property="og:title" content="Pathlight | Discover Your Purpose & Reclaim Your Agency">
+<meta property="og:description" content="Transform self-reflection into clarity and direction with Pathlight's AI-powered purpose discovery tool.">
+<meta property="og:image" content="/static/images/pathlight_logo.png">
+
+<!-- Twitter -->
+<meta property="twitter:card" content="summary_large_image">
+<meta property="twitter:url" content="{{ request.url }}">
+<meta property="twitter:title" content="Pathlight | Discover Your Purpose & Reclaim Your Agency">
+<meta property="twitter:description" content="Transform self-reflection into clarity and direction with Pathlight's AI-powered purpose discovery tool.">
+<meta property="twitter:image" content="/static/images/pathlight_logo.png">
+
+<!-- Schema.org markup for Google -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  "name": "Pathlight",
+  "description": "AI-powered purpose discovery tool that helps you find your authentic purpose and reclaim your agency through guided reflection.",
+  "applicationCategory": "LifestyleApplication",
+  "offers": {
+    "@type": "AggregateOffer",
+    "offers": [
+      {
+        "@type": "Offer",
+        "name": "Purpose",
+        "price": "0.99",
+        "priceCurrency": "USD",
+        "description": "Personalized purpose statement and guiding mantra"
+      },
+      {
+        "@type": "Offer",
+        "name": "Plan",
+        "price": "4.99",
+        "priceCurrency": "USD",
+        "description": "Complete guidance with practical next steps, daily routine, and obstacle strategies"
+      }
+    ]
+  }
+}
+</script>
+{% endblock %}
 
 {% block styles %}
 <link rel="stylesheet" href="/static/css/index.css">
@@ -10,15 +59,15 @@
 <section class="hero">
     <div class="hero-content">
         <div class="hero-text">
-            <h1>Illuminate Your Path</h1>
-            <p>Discover your authentic purpose and create a meaningful life plan through guided reflection.</p>
+            <h1>Discover Your Purpose & Reclaim Your Agency</h1>
+            <p>Transform self-reflection into clarity and direction with AI-powered insights that reveal your authentic purpose and empower you to live with intention.</p>
             <div class="cta-buttons">
                 <a href="/form" class="cta-button">Begin Your Journey</a>
                 <a href="/login" class="cta-button secondary">Continue Your Journey</a>
             </div>
         </div>
         <div class="hero-image">
-            <img src="/static/images/1TheSpark.png" alt="The Spark - Begin your journey">
+            <img src="/static/images/1TheSpark.png" alt="The Spark - Discover your authentic purpose and reclaim your agency">
             <div class="celestial-decoration">
                 <div class="star star1"></div>
                 <div class="star star2"></div>
@@ -33,19 +82,19 @@
         <h2>What is Pathlight?</h2>
         <div class="about-columns">
             <div class="about-column">
-                <img src="/static/images/6TheBeacon.png" alt="The Beacon" class="about-image">
-                <h3>Reflective Questions</h3>
-                <p>Answer thoughtfully crafted questions designed to reveal your authentic self, core values, and natural gifts.</p>
+                <img src="/static/images/6TheBeacon.png" alt="The Beacon - Reflective Journey" class="about-image">
+                <h3>Reflective Journey</h3>
+                <p>Answer thoughtfully designed questions that reveal your core values, natural gifts, and deepest aspirations. Our guided reflection process helps you uncover patterns and insights about yourself that might otherwise remain hidden.</p>
             </div>
             <div class="about-column">
-                <img src="/static/images/11TheCompass.png" alt="The Compass" class="about-image">
-                <h3>AI-Generated Insights</h3>
-                <p>Receive personalized analysis that identifies patterns and connections you might not see yourself.</p>
+                <img src="/static/images/11TheCompass.png" alt="The Compass - Personalized Insights" class="about-image">
+                <h3>Personalized Insights</h3>
+                <p>Receive AI-generated analysis that identifies your authentic purpose and creates a personalized mantra to guide you. Our technology transforms your reflections into meaningful insights about who you are and what you're meant to contribute.</p>
             </div>
             <div class="about-column">
-                <img src="/static/images/16TheHorizon.png" alt="The Horizon" class="about-image">
-                <h3>Practical Life Plan</h3>
-                <p>Get a comprehensive guide with actionable steps to align your life with your newly discovered purpose.</p>
+                <img src="/static/images/16TheHorizon.png" alt="The Horizon - Practical Guidance" class="about-image">
+                <h3>Practical Guidance</h3>
+                <p>Gain clarity on your next steps with actionable guidance that empowers you to align your daily life with your deeper purpose, helping you make decisions with confidence and intention.</p>
             </div>
         </div>
     </div>
@@ -59,21 +108,28 @@
                 <div class="step-number">1</div>
                 <div class="step-content">
                     <h3>Reflect</h3>
-                    <p>Answer 25 thoughtfully designed questions at your own pace. Save your progress and return anytime.</p>
+                    <p>Begin with 5 foundational questions about your authentic self. Save your progress and continue at your own pace.</p>
                 </div>
             </div>
             <div class="step">
                 <div class="step-number">2</div>
                 <div class="step-content">
-                    <h3>Discover</h3>
-                    <p>Receive a free summary of your core strengths, values, and potential life direction.</p>
+                    <h3>Discover Your Purpose</h3>
+                    <p>For just $0.99, receive your personalized purpose statement and guiding mantra based on your initial reflections.</p>
                 </div>
             </div>
             <div class="step">
                 <div class="step-number">3</div>
                 <div class="step-content">
-                    <h3>Transform</h3>
-                    <p>Unlock your full personalized life plan with practical guidance for the next 30, 90, and 365 days.</p>
+                    <h3>Explore</h3>
+                    <p>Continue your journey with 20 more in-depth questions that explore your values, aspirations, and potential.</p>
+                </div>
+            </div>
+            <div class="step">
+                <div class="step-number">4</div>
+                <div class="step-content">
+                    <h3>Activate Your Agency</h3>
+                    <p>For $4.99, unlock your complete guidance with practical next steps, a customized daily routine, and strategies to overcome obstacles on your path to purposeful living.</p>
                 </div>
             </div>
         </div>
@@ -82,8 +138,8 @@
 
 <section class="cta">
     <div class="cta-content">
-        <h2>Ready to Find Your Path?</h2>
-        <p>Begin your journey of self-discovery and purpose today.</p>
+        <h2>Begin Your Journey to Purposeful Living</h2>
+        <p>Join others who have discovered their authentic purpose and reclaimed their sense of agency with Pathlight. Start with just 5 questions today.</p>
         <div class="cta-buttons">
             <a href="/form" class="cta-button">Start Now</a>
             <a href="/login" class="cta-button secondary">Continue Your Journey</a>

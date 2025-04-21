@@ -4,6 +4,13 @@
 Implementing and refining the database schema, AI integration, and user authentication flow for the life purpose application. The focus is on supporting the two-tier payment model, improving result generation, enhancing the user experience, and streamlining the authentication process.
 
 ## Recent Changes
+- Fixed authentication flow issues with magic links in production:
+  - Added proper security attributes to cookies in production environments
+  - Set `secure=True` for HTTPS environments
+  - Added `samesite="lax"` to allow cookies to be sent with same-site navigations
+  - Ensured consistent cookie settings throughout the authentication flow
+  - Added detailed logging to track cookie operations
+  - Updated logout function to use matching settings when clearing cookies
 - Improved mobile responsiveness for the results page:
   - Added media queries for different screen sizes (tablets and phones)
   - Adjusted font sizes, padding, and margins for better readability on small screens
@@ -41,6 +48,7 @@ Implementing and refining the database schema, AI integration, and user authenti
 - Incorporating astrological signs and Stoic philosophy in AI guidance
 - Using Pydantic models for structured AI output
 - Sending magic links to users with existing data to ensure secure access
+- Using environment-specific cookie settings for authentication (secure=True and samesite="lax" in production)
 - Using intelligent content parsing to extract structured information from AI-generated text
 - Implementing visually distinct sections for different parts of the life plan
 - Using content-specific icons for bullet points to improve visual comprehension
@@ -59,6 +67,7 @@ Implementing and refining the database schema, AI integration, and user authenti
 - Database migrations for schema evolution using SQLAlchemy and PostgreSQL
 - Structured AI output with defined schemas
 - Enhanced user authentication flow with context-aware responses
+- Environment-specific cookie security settings (secure=True and samesite="lax" in production)
 - Using Poetry for Python dependency management and virtual environments
 - Visual design patterns with cards, timelines, and color-coded sections
 - Intelligent content parsing to extract structured information from AI text
@@ -79,6 +88,8 @@ Implementing and refining the database schema, AI integration, and user authenti
 - Stoic philosophy underpins the guidance provided
 - Database schema evolution requires careful migration planning
 - User authentication flow needs to be context-aware to provide a seamless experience
+- Modern browsers have increasingly strict cookie policies in HTTPS environments, requiring proper security attributes
+- Production environments require secure=True and appropriate samesite attributes for cookies to work properly
 - Checking for existing user data before deciding on authentication approach improves user experience
 - The project uses PostgreSQL for the database, not SQLite
 - Database migrations should be written using SQLAlchemy and the project's existing migration patterns

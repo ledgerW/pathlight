@@ -1,0 +1,11 @@
+User-agent: *
+Allow: /
+Disallow: /login
+Disallow: /register
+Disallow: /form
+Disallow: /results
+Disallow: /success
+Disallow: /cancel
+Disallow: /api/
+
+Sitemap: https://pathlight.app/sitemap.xml

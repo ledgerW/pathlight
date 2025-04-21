@@ -90,7 +90,7 @@ Marcus Aurelius reminds us that virtue, duty, and rational reflection are the co
 
 
 # Define prompt templates with the system message
-summary_prompt = ChatPromptTemplate.from_messages([
+summary_prompt = ChatPromptTemplate([
     ("system", system_prompt),
     ("user", """
 Based on the user's responses to the reflective questions below, create their purpose and a mantra.
@@ -100,7 +100,7 @@ USER RESPONSES:
 """)
 ])
 
-full_plan_prompt = ChatPromptTemplate.from_messages([
+full_plan_prompt = ChatPromptTemplate([
     ("system", system_prompt),
     ("user", """
 Based on the user's responses to the reflective questions below, create their mantra, purpose, next steps, daily plan, and obstacles.
