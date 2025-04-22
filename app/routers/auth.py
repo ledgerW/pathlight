@@ -27,6 +27,9 @@ router = APIRouter(
 class EmailRequest(BaseModel):
     email: EmailStr
 
+# Cookie name constant to ensure consistency
+STYTCH_COOKIE_NAME = 'stytch_session_token'
+
 # Dependency to get the session cookie
 async def get_cookie_session(request: Request):
     return request.cookies
@@ -40,13 +43,14 @@ async def get_authenticated_user(request: Request):
     Returns None if the user is not authenticated.
     """
     print("[DEBUG] Checking authentication...")
+    print(f"[DEBUG] Available cookies: {list(request.cookies.keys())}")
     
     # First check if we have a token in the cookies
-    stytch_session = request.cookies.get('stytch_session_token')
+    stytch_session = request.cookies.get(STYTCH_COOKIE_NAME)
     if stytch_session:
         print(f"[DEBUG] Found session token in cookies: {stytch_session[:10]}...")
     else:
-        print("[DEBUG] No session token in cookies")
+        print(f"[DEBUG] No session token in cookies with name '{STYTCH_COOKIE_NAME}'")
     
     # If no session token in the cookies and we're in development mode,
     # try to load from the saved file
@@ -178,7 +182,7 @@ async def authenticate(
         
         # Store session token in a cookie with appropriate security settings
         cookie_settings = {
-            "key": "stytch_session_token", 
+            "key": STYTCH_COOKIE_NAME, 
             "value": resp.session_token,
             "httponly": True,
             "max_age": 43200 * 60,  # 30 days in seconds
@@ -255,7 +259,7 @@ async def authenticate(
                     print(f"[DEBUG] Found saved token, using it: {saved_token[:10]}...")
                     # Use the same cookie settings as above for consistency
                     cookie_settings = {
-                        "key": "stytch_session_token", 
+                        "key": STYTCH_COOKIE_NAME, 
                         "value": saved_token,
                         "httponly": True,
                         "max_age": 43200 * 60,  # 30 days in seconds
@@ -296,7 +300,7 @@ async def authenticate(
 async def logout(response: Response) -> RedirectResponse:
     # Clear cookie with appropriate settings
     cookie_clear_settings = {
-        "key": "stytch_session_token",
+        "key": STYTCH_COOKIE_NAME,
         "path": "/"
     }
     

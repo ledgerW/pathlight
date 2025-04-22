@@ -155,6 +155,19 @@
     <!-- Base JavaScript -->
     <script src="/static/js/base.js"></script>
     
+    <!-- Debug cookie information -->
+    <script>
+        // Log cookies for debugging authentication issues
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('Available cookies:', document.cookie);
+            
+            // Check specifically for the Stytch session token
+            const cookies = document.cookie.split(';').map(c => c.trim());
+            const hasStytchCookie = cookies.some(c => c.startsWith('stytch_session_token='));
+            console.log('Has stytch_session_token cookie:', hasStytchCookie);
+        });
+    </script>
+    
     <!-- Page-specific JavaScript -->
     {% block scripts %}{% endblock %}
 </body>
