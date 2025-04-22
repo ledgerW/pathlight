@@ -31,6 +31,55 @@
                 </a>
             </div>
             
+            {% if not user_id %}
+            <nav class="main-nav">
+                <ul class="nav-menu">
+                    <li class="nav-item">
+                        <a href="/#about" class="nav-link">
+                            <span class="nav-text">About</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="/#results-preview" class="nav-link">
+                            <span class="nav-text">Examples</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="/#pricing" class="nav-link">
+                            <span class="nav-text">Pricing</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="/research" class="nav-link">
+                            <span class="nav-text">Research</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="/form" class="nav-link">
+                            <span class="nav-text">Start Now</span>
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+            
+            <div class="hamburger-menu">
+                <div class="hamburger-icon">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </div>
+                <div class="mobile-menu">
+                    <ul>
+                        <li><a href="/#about">About</a></li>
+                        <li><a href="/#results-preview">Examples</a></li>
+                        <li><a href="/#pricing">Pricing</a></li>
+                        <li><a href="/research">Research</a></li>
+                        <li><a href="/form">Start Now</a></li>
+                    </ul>
+                </div>
+            </div>
+            {% endif %}
+            
             {% if user_id %}
         <nav class="main-nav">
             <ul class="nav-menu">
@@ -148,6 +197,11 @@
     
     <footer>
         <div class="footer-content">
+            <div class="footer-links">
+                <a href="/" class="footer-link">Home</a>
+                <a href="/research" class="footer-link">Our Research</a>
+                <a href="/form" class="footer-link">Start Your Journey</a>
+            </div>
             <p>&copy; <span id="currentYear"></span> Pathlight. All rights reserved.</p>
         </div>
     </footer>

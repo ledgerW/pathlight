@@ -174,6 +174,38 @@ function setActiveNavItem() {
     }
 }
 
+// Toggle hamburger menu
+function toggleHamburgerMenu() {
+    const hamburgerMenu = document.querySelector('.hamburger-menu');
+    if (hamburgerMenu) {
+        hamburgerMenu.classList.toggle('active');
+    }
+}
+
+// Close hamburger menu when clicking outside
+function closeHamburgerMenuOnClickOutside(event) {
+    const hamburgerMenu = document.querySelector('.hamburger-menu');
+    const hamburgerIcon = document.querySelector('.hamburger-icon');
+    
+    if (hamburgerMenu && hamburgerMenu.classList.contains('active')) {
+        if (!hamburgerMenu.contains(event.target) || !hamburgerIcon.contains(event.target)) {
+            hamburgerMenu.classList.remove('active');
+        }
+    }
+}
+
+// Show mobile navigation for logged-in users
+function setupMobileNavigation() {
+    // Check if user is logged in by looking for mobile-nav element
+    const mobileNav = document.querySelector('.mobile-nav');
+    if (mobileNav) {
+        // User is logged in, show mobile navigation
+        mobileNav.style.display = 'block';
+        // Add class to body for padding
+        document.body.classList.add('has-mobile-nav');
+    }
+}
+
 // Initialize on DOM content loaded
 document.addEventListener('DOMContentLoaded', function() {
     // Add celestial decorations
@@ -187,4 +219,15 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Set active navigation item
     setActiveNavItem();
+    
+    // Setup hamburger menu
+    const hamburgerIcon = document.querySelector('.hamburger-icon');
+    if (hamburgerIcon) {
+        hamburgerIcon.addEventListener('click', toggleHamburgerMenu);
+        // Close menu when clicking outside
+        document.addEventListener('click', closeHamburgerMenuOnClickOutside);
+    }
+    
+    // Setup mobile navigation for logged-in users
+    setupMobileNavigation();
 });

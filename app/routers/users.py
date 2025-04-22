@@ -1,5 +1,5 @@
 from typing import List, Optional
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlmodel import Session, select
 from app.models import User, get_session
 import uuid
@@ -162,23 +162,18 @@ class EmailRequest(BaseModel):
     email: EmailStr
 
 @router.get("/find-by-email")
-def find_user_by_email(email: str = None, email_obj: EmailRequest = None, session: Session = Depends(get_session)):
+def find_user_by_email(email: Optional[str] = Query(None), session: Session = Depends(get_session)):
     """Find a user by email address to allow returning users to continue"""
     try:
-        # Get email from either query param or request body
-        user_email = email
-        if email_obj:
-            user_email = email_obj.email
-            
-        if not user_email:
+        if not email:
             return {"found": False, "error": "Email is required"}
             
-        print(f"Finding user by email: {user_email}")
-        statement = select(User).where(User.email == user_email)
+        print(f"Finding user by email: {email}")
+        statement = select(User).where(User.email == email)
         user = session.exec(statement).first()
         
         if not user:
-            print(f"User not found with email: {user_email}")
+            print(f"User not found with email: {email}")
             return {"found": False}
         
         # Check if user has responses
@@ -227,5 +222,73 @@ def find_user_by_email(email: str = None, email_obj: EmailRequest = None, sessio
     except Exception as e:
         # Log the error for debugging
         print(f"Error finding user by email: {str(e)}")
+        # Return a detailed error response
+        return {"found": False, "error": str(e), "error_type": type(e).__name__}
+
+@router.post("/find-by-email")
+def find_user_by_email_post(email_request: EmailRequest, session: Session = Depends(get_session)):
+    """POST version of find-by-email endpoint"""
+    # Extract email from request body
+    email = email_request.email
+    
+    # Use the same logic as the GET endpoint
+    try:
+        if not email:
+            return {"found": False, "error": "Email is required"}
+            
+        print(f"Finding user by email (POST): {email}")
+        statement = select(User).where(User.email == email)
+        user = session.exec(statement).first()
+        
+        if not user:
+            print(f"User not found with email: {email}")
+            return {"found": False}
+        
+        # Check if user has responses
+        from app.models.models import FormResponse, Result
+        responses_statement = select(FormResponse).where(FormResponse.user_id == user.id)
+        responses = session.exec(responses_statement).all()
+        has_responses = len(responses) > 0
+        
+        # Get response count
+        response_count = len(responses)
+        
+        # Check if user has results
+        results_statement = select(Result).where(Result.user_id == user.id)
+        result_obj = session.exec(results_statement).first()
+        has_results = result_obj is not None
+        
+        # Get formatted DOB
+        dob_formatted = None
+        if user.dob:
+            try:
+                dob_formatted = user.dob.strftime("%Y-%m-%d")
+            except:
+                pass
+        
+        # Return a detailed user object with all necessary information
+        result = {
+            "found": True,
+            "id": str(user.id),  # Ensure ID is a string
+            "name": user.name,
+            "email": user.email,
+            "dob": dob_formatted,
+            "progress_state": user.progress_state,
+            "payment_tier": user.payment_tier,
+            "has_responses": has_responses,
+            "response_count": response_count,
+            "has_results": has_results
+        }
+        
+        # Add result details if available
+        if result_obj:
+            result["last_generated_at"] = result_obj.last_generated_at.isoformat() if result_obj.last_generated_at else None
+            result["regeneration_count"] = result_obj.regeneration_count
+        
+        print(f"User found (POST): {result}")
+        return result
+    except Exception as e:
+        # Log the error for debugging
+        print(f"Error finding user by email (POST): {str(e)}")
         # Return a detailed error response
         return {"found": False, "error": str(e), "error_type": type(e).__name__}

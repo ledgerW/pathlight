@@ -461,56 +461,35 @@ document.addEventListener('DOMContentLoaded', function() {
                 
                 if (existingUserData) {
                     console.log('Found existing user data:', existingUserData);
-                    // User exists
-                    const existingUserId = existingUserData.id;
+                    console.log('existingUserData type:', typeof existingUserData);
                     
-                    // Check if user has responses or results
-                    if (existingUserData.has_responses || existingUserData.has_results) {
-                        // User has existing data, send magic link for authentication
-                        showNotification('Welcome back! Sending a magic link to your email to securely access your account...', 'info');
-                        
-                        // Show loading overlay while sending magic link
-                        document.getElementById('loadingOverlay').style.display = 'flex';
-                        document.getElementById('loadingMessage').textContent = 'Sending magic link...';
-                        
-                        // Send magic link
-                        sendMagicLink(newEmail).then(success => {
-                            // Hide loading overlay
-                            document.getElementById('loadingOverlay').style.display = 'none';
-                            
-                            if (success) {
-                                // Show message about checking email
-                                showNotification('Please check your email to continue your journey. The link will take you directly to your saved progress.', 'success');
-                            } else {
-                                // Show error message
-                                showNotification('Failed to send magic link. Please try again.', 'error');
-                            }
-                        });
-                    } else {
-                        // User exists but has no responses, redirect to their form
-                        showNotification('Welcome back! Redirecting to continue your journey...', 'info');
-                        
-                        // Pre-fill user data if available
-                        if (existingUserData.name) {
-                            user.name = existingUserData.name;
-                        }
-                        
-                        if (existingUserData.dob) {
-                            user.dob = existingUserData.dob;
-                        }
-                        
-                        if (existingUserData.progress_state) {
-                            user.progress_state = existingUserData.progress_state;
-                        }
-                        
-                        if (existingUserData.payment_tier) {
-                            user.payment_tier = existingUserData.payment_tier;
-                        }
-                        
-                        setTimeout(() => {
-                            window.location.href = `/form/${existingUserId}`;
-                        }, 1500);
+                    // User exists, redirect to login page
+                    showNotification('Account already exists. Redirecting to login page...', 'info');
+                    
+                    console.log('Will redirect to hardcoded login URL: /login');
+                    
+                    // Prevent any form submission or other actions
+                    event.preventDefault();
+                    if (event) {
+                        event.stopPropagation();
                     }
+                    
+                    // Redirect to login page after a short delay
+                    setTimeout(() => {
+                        try {
+                            console.log('Executing redirect to /login now');
+                            // Use hardcoded URL to avoid any issues
+                            window.location.href = '/login';
+                            console.log('Redirect command executed');
+                        } catch (redirectError) {
+                            console.error('Error during redirect:', redirectError);
+                            // Fallback method
+                            window.location.replace('/login');
+                        }
+                    }, 1500);
+                    
+                    // Return early to prevent any further processing
+                    return;
                 } else {
                     // Create new user
                     user.name = newName;
@@ -936,7 +915,8 @@ document.addEventListener('DOMContentLoaded', function() {
         const { error } = await stripe.confirmPayment({
             elements,
             confirmParams: {
-                return_url: window.location.origin + '/form/' + user.id,
+                // Use string concatenation with the actual user ID string, not the user object
+                return_url: window.location.origin + '/form/' + String(user.id),
             },
             redirect: 'if_required'
         });
@@ -1105,21 +1085,34 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // API Functions
     
-    // Check if user exists by email
+    // Check if user exists by email - using the implementation from form-api.js
     async function checkExistingUser(email) {
         try {
-            const response = await fetch(`/api/users/find-by-email?email=${encodeURIComponent(email)}`);
+            // Use POST request with email in the body
+            console.log('Checking for existing user with email:', email);
+            const response = await fetch('/api/users/find-by-email', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ email })
+            });
             
-            // Check if response is ok before trying to parse JSON
             if (!response.ok) {
                 console.error('Error response from find-by-email:', response.status, response.statusText);
                 return null;
             }
             
             const data = await response.json();
+            console.log('Response from find-by-email:', data);
             
             if (data && data.found) {
-                // Return the full user data object
+                console.log('User found:', data);
+                // Ensure the id is a string
+                if (data.id) {
+                    data.id = String(data.id);
+                    console.log('User ID (string):', data.id);
+                }
                 return data;
             }
             
@@ -1197,16 +1190,15 @@ document.addEventListener('DOMContentLoaded', function() {
             }
             
             const data = await response.json();
-            user.id = data.id;
             
-            // Update URL with user ID
-            const newUrl = `${window.location.pathname}/${user.id}`;
-            window.history.replaceState({}, '', newUrl);
+            // Show notification about the magic link
+            showNotification('Account created! We\'ve sent a magic link to your email. Please check your inbox to continue.', 'success');
             
-            // Proceed to first question without showing the URL modal
-            showSlide(1);
+            // Send magic link for authentication
+            sendMagicLink(user.email);
             
-            showNotification('Your progress will be saved automatically.');
+            // DO NOT store the user ID or update the URL
+            // DO NOT redirect - user will click the magic link in their email
             
         } catch (error) {
             console.error('Error creating user:', error);

@@ -3,46 +3,53 @@
 // Check if user exists by email
 async function checkExistingUser(email) {
     try {
-        // First try with query parameter
-        const response = await fetch(`/api/users/find-by-email?email=${encodeURIComponent(email)}`);
+        // Use POST request with email in the body
+        console.log('Checking for existing user with email:', email);
+        const response = await fetch('/api/users/find-by-email', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ email })
+        });
         
-        // Check if response is ok before trying to parse JSON
         if (!response.ok) {
             console.error('Error response from find-by-email:', response.status, response.statusText);
-            
-            // If we get a 422 error, try with request body instead
-            if (response.status === 422) {
-                console.log('Trying with request body instead of query parameter');
-                const bodyResponse = await fetch('/api/users/find-by-email', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ email })
-                });
-                
-                if (!bodyResponse.ok) {
-                    console.error('Error response from find-by-email with body:', bodyResponse.status, bodyResponse.statusText);
-                    return null;
-                }
-                
-                const bodyData = await bodyResponse.json();
-                
-                if (bodyData && bodyData.found) {
-                    console.log('User found with request body method:', bodyData);
-                    return bodyData;
-                }
-            }
-            
             return null;
         }
         
         const data = await response.json();
+        console.log('Response from find-by-email:', data);
         
         if (data && data.found) {
-            // If user exists, return the full data object
-            console.log('User found with query parameter method:', data);
-            return data;
+            console.log('User found:', data);
+            console.log('User found type:', typeof data);
+            
+            // Ensure the id is a string
+            if (data.id) {
+                data.id = String(data.id);
+                console.log('User ID (string):', data.id);
+                console.log('User ID type after conversion:', typeof data.id);
+            }
+            
+            // Log the entire data object for debugging
+            console.log('Full user data object:', JSON.stringify(data));
+            
+            // Return a new object with primitive values to avoid reference issues
+            return {
+                found: true,
+                id: data.id ? String(data.id) : null,
+                name: data.name ? String(data.name) : '',
+                email: data.email ? String(data.email) : '',
+                dob: data.dob ? String(data.dob) : null,
+                progress_state: data.progress_state ? String(data.progress_state) : '0',
+                payment_tier: data.payment_tier ? String(data.payment_tier) : 'none',
+                has_responses: !!data.has_responses,
+                response_count: data.response_count ? Number(data.response_count) : 0,
+                has_results: !!data.has_results,
+                last_generated_at: data.last_generated_at ? String(data.last_generated_at) : null,
+                regeneration_count: data.regeneration_count ? Number(data.regeneration_count) : 0
+            };
         }
         
         return null;
@@ -119,16 +126,15 @@ async function createUser(dobValue) {
         }
         
         const data = await response.json();
-        user.id = data.id;
         
-        // Update URL with user ID
-        const newUrl = `${window.location.pathname}/${user.id}`;
-        window.history.replaceState({}, '', newUrl);
+        // Show notification about the magic link
+        showNotification('Account created! We\'ve sent a magic link to your email. Please check your inbox to continue.', 'success');
         
-        // Proceed to first question without showing the URL modal
-        showSlide(1);
+        // Send magic link for authentication
+        sendMagicLink(user.email);
         
-        showNotification('Your progress will be saved automatically.');
+        // DO NOT store the user ID or update the URL
+        // DO NOT redirect - user will click the magic link in their email
         
     } catch (error) {
         console.error('Error creating user:', error);

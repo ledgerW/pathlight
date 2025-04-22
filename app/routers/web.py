@@ -30,6 +30,11 @@ async def get_favicon():
     """Serve favicon.ico file (using the existing PNG favicon)"""
     return FileResponse("app/static/images/pathlight_favicon.png", media_type="image/x-icon")
 
+@router.get("/research", response_class=HTMLResponse)
+async def research(request: Request):
+    """Show the research page with information about the 25 questions methodology"""
+    return templates.TemplateResponse("research.html", {"request": request})
+
 @router.get("/", response_class=HTMLResponse)
 async def index(request: Request):
     """

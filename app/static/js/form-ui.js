@@ -331,19 +331,38 @@ function goToNextSlide() {
         const newDob = dobInput.value;
         
         // Check if user exists
-        checkExistingUser(newEmail).then(existingUserId => {
-            if (existingUserId) {
-                // User exists, redirect to Continue Journey page
-                showNotification('You already have an account. Redirecting to continue your journey...', 'info');
+        checkExistingUser(newEmail).then(existingUserData => {
+            if (existingUserData) {
+                console.log('Found existing user data in form-ui.js:', existingUserData);
+                console.log('existingUserData type:', typeof existingUserData);
+                
+                // User exists, redirect to login page
+                showNotification('Account already exists. Redirecting to login page...', 'info');
+                
+                console.log('Will redirect to hardcoded login URL: /login');
+                
+                // Redirect to login page after a short delay
                 setTimeout(() => {
-                    window.location.href = `/form/${existingUserId}`;
-                }, 2000);
+                    try {
+                        console.log('Executing redirect to /login now from form-ui.js');
+                        // Use hardcoded URL to avoid any issues
+                        window.location.href = '/login';
+                        console.log('Redirect command executed');
+                    } catch (redirectError) {
+                        console.error('Error during redirect:', redirectError);
+                        // Fallback method
+                        window.location.replace('/login');
+                    }
+                }, 1500);
             } else {
                 // Create new user
                 user.name = newName;
                 user.email = newEmail;
                 createUser(newDob);
             }
+        }).catch(error => {
+            console.error('Error checking existing user in form-ui.js:', error);
+            showNotification('Error checking account status. Please try again.', 'error');
         });
         
         return;

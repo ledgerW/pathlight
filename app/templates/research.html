@@ -1,0 +1,289 @@
+{% extends "base.html" %}
+
+{% block title %}The Science Behind Our Questions - Pathlight{% endblock %}
+
+{% block meta %}
+<meta name="description" content="Discover the research and methodology behind Pathlight's 25 purpose-discovery questions. Learn how our carefully crafted questions help you uncover your authentic purpose.">
+<meta name="keywords" content="purpose discovery, research methodology, self-discovery, personal agency, psychology, Carl Jung, Viktor Frankl, Ikigai, life purpose questions">
+
+<!-- Open Graph / Facebook -->
+<meta property="og:type" content="article">
+<meta property="og:url" content="{{ request.url }}">
+<meta property="og:title" content="The Science Behind Our Questions - Pathlight">
+<meta property="og:description" content="Discover the research and methodology behind Pathlight's 25 purpose-discovery questions.">
+<meta property="og:image" content="/static/images/pathlight_logo.png">
+
+<!-- Twitter -->
+<meta property="twitter:card" content="summary_large_image">
+<meta property="twitter:url" content="{{ request.url }}">
+<meta property="twitter:title" content="The Science Behind Our Questions - Pathlight">
+<meta property="twitter:description" content="Discover the research and methodology behind Pathlight's 25 purpose-discovery questions.">
+<meta property="twitter:image" content="/static/images/pathlight_logo.png">
+{% endblock %}
+
+{% block styles %}
+<style>
+    /* Research page specific styles */
+    .research-hero {
+        padding: var(--spacing-xl) 0;
+        background-color: var(--cream);
+        text-align: center;
+    }
+    
+    .research-hero-content {
+        max-width: 900px;
+        margin: 0 auto;
+        padding: 0 var(--spacing-lg);
+    }
+    
+    .research-hero h1 {
+        font-size: 3rem;
+        margin-bottom: var(--spacing-md);
+        color: var(--teal);
+    }
+    
+    .research-hero p {
+        font-size: 1.25rem;
+        margin-bottom: var(--spacing-lg);
+        max-width: 800px;
+        margin-left: auto;
+        margin-right: auto;
+    }
+    
+    .research-section {
+        padding: var(--spacing-xl) 0;
+    }
+    
+    .research-section:nth-child(odd) {
+        background-color: var(--dark-cream);
+    }
+    
+    .research-section:nth-child(even) {
+        background-color: var(--cream);
+    }
+    
+    .research-content {
+        max-width: 900px;
+        margin: 0 auto;
+        padding: 0 var(--spacing-lg);
+    }
+    
+    .research-content h2 {
+        color: var(--teal);
+        margin-bottom: var(--spacing-lg);
+        font-size: 2.2rem;
+        text-align: center;
+    }
+    
+    .research-content h3 {
+        color: var(--teal);
+        margin: var(--spacing-lg) 0 var(--spacing-md);
+        font-size: 1.8rem;
+    }
+    
+    .research-content p {
+        margin-bottom: var(--spacing-md);
+        font-size: 1.1rem;
+        line-height: 1.7;
+    }
+    
+    .research-content ul {
+        margin-bottom: var(--spacing-md);
+        padding-left: var(--spacing-lg);
+    }
+    
+    .research-content li {
+        margin-bottom: var(--spacing-sm);
+        font-size: 1.1rem;
+        line-height: 1.7;
+    }
+    
+    .research-content blockquote {
+        border-left: 4px solid var(--gold);
+        padding-left: var(--spacing-md);
+        margin: var(--spacing-lg) 0;
+        font-style: italic;
+        color: var(--teal);
+    }
+    
+    .research-content blockquote p {
+        font-size: 1.2rem;
+    }
+    
+    .research-content .citation {
+        font-size: 0.9rem;
+        color: var(--light-teal);
+        text-align: right;
+        margin-top: var(--spacing-xs);
+    }
+    
+    .question-category {
+        margin: var(--spacing-xl) 0;
+        padding: var(--spacing-lg);
+        background-color: var(--white);
+        border-radius: var(--radius-md);
+        box-shadow: var(--shadow-md);
+    }
+    
+    .question-category h3 {
+        color: var(--teal);
+        margin-top: 0;
+        border-bottom: 2px solid var(--gold);
+        padding-bottom: var(--spacing-sm);
+        display: inline-block;
+    }
+    
+    .question-item {
+        margin-bottom: var(--spacing-lg);
+    }
+    
+    .question-text {
+        font-weight: 600;
+        color: var(--teal);
+        margin-bottom: var(--spacing-sm);
+        font-size: 1.2rem;
+    }
+    
+    .question-explanation {
+        font-size: 1.1rem;
+        line-height: 1.6;
+    }
+    
+    .research-cta {
+        text-align: center;
+        margin-top: var(--spacing-xl);
+    }
+    
+    .research-image-container {
+        text-align: center;
+        margin: var(--spacing-lg) 0;
+    }
+    
+    .research-image {
+        max-width: 100%;
+        height: auto;
+        border-radius: var(--radius-md);
+        box-shadow: var(--shadow-md);
+    }
+    
+    @media (max-width: 768px) {
+        .research-hero h1 {
+            font-size: 2.5rem;
+        }
+        
+        .research-content h2 {
+            font-size: 2rem;
+        }
+        
+        .research-content h3 {
+            font-size: 1.5rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<section class="research-hero">
+    <div class="research-hero-content">
+        <h1>Discovering Your Life's Purpose: The Science Behind Our Questions</h1>
+        <p>Our 25 carefully crafted questions are based on extensive research in psychology, philosophy, and personal development. Each question is designed to illuminate different aspects of your authentic self and guide you toward purpose and agency.</p>
+    </div>
+</section>
+
+<section class="research-section">
+    <div class="research-content">
+        <h2>Our Research Foundation</h2>
+        
+        <p>Finding your life's purpose is a deeply personal journey that requires reflection and courage. Our approach draws on multiple frameworks and psychological traditions to create a comprehensive method for self-discovery and purpose identification.</p>
+        
+        <blockquote>
+            <p>"The process of self-realisation, the discovery and experience of meaning and purpose in life."</p>
+            <div class="citation">— Carl Jung on individuation</div>
+        </blockquote>
+        
+        <p>The 25 questions in Pathlight are organized in a deliberate sequence, guiding you through stages of self-discovery that build upon each other. Our methodology integrates insights from:</p>
+        
+        <ul>
+            <li><strong>Jungian Psychology</strong> - Carl Jung's concepts of individuation and the authentic self</li>
+            <li><strong>Ikigai</strong> - The Japanese concept of finding purpose at the intersection of what you love, what you're good at, what the world needs, and what you can be paid for</li>
+            <li><strong>Logotherapy</strong> - Viktor Frankl's approach to finding meaning in life</li>
+            <li><strong>Stanford's Life Design</strong> - Methods for designing a meaningful and fulfilling life</li>
+            <li><strong>Positive Psychology</strong> - Research on strengths, values, and well-being</li>
+        </ul>
+        
+        <p>These questions are not meant to be answered quickly or superficially. They are designed to prompt deep reflection and honest self-assessment. There are no "right" answers—only answers that ring true for you.</p>
+    </div>
+</section>
+
+<section class="research-section">
+    <div class="research-content">
+        <h2>The Journey Through Our Methodology</h2>
+        
+        <div class="question-category">
+            <h3>Self-Discovery: Uncovering Who You Are</h3>
+            <p>The first stage focuses on exploring your inner world—your passions, personality, memories, and even the "shadow" parts of yourself that you might not usually consider. The goal is to gain a clearer picture of who you truly are, beyond societal roles.</p>
+            <p>Our carefully crafted questions in this section draw on Mihaly Csikszentmihalyi's concept of "flow" and explore your authentic inclinations from childhood. We guide you to articulate your core traits and identify which aspects of your personality you value most, as self-concept is a powerful predictor of behavior and life satisfaction.</p>
+        </div>
+        
+        <div class="question-category">
+            <h3>Skills & Strengths: Recognizing Your Gifts</h3>
+            <p>This section focuses on what you're good at—your natural talents, skills, and strengths. Positive psychology suggests that using our strengths regularly can lead to greater engagement and meaning in life.</p>
+            <p>Our methodology helps you recognize natural talents that you might take for granted and gather external feedback that provides valuable perspective on your capabilities and impact. This process is essential for identifying your unique contribution to the world.</p>
+        </div>
+        
+        <div class="question-category">
+            <h3>Core Values & Meaning: Clarifying What Matters</h3>
+            <p>This stage examines your core values, beliefs, and the sources of meaning in your life. Viktor Frankl observed that people can find profound meaning through purposeful work, through love and relationships, and through the attitude they take toward suffering.</p>
+            <p>Our approach helps you clarify your internal compass for decision-making and life direction, identify the impact you want to have in the world, and consider your desired legacy. These reflections provide crucial direction for your purpose.</p>
+        </div>
+        
+        <div class="question-category">
+            <h3>Visioning: Envisioning Your Future Possibilities</h3>
+            <p>Having reflected on your present self, this stage projects into the future. Stanford's Life Design approach suggests that there are many possible "yous" and encourages designing multiple futures.</p>
+            <p>Through guided visualization techniques, we help you identify what elements are essential for your happiness and fulfillment. By temporarily setting aside practical constraints, our methodology allows your deepest aspirations to surface, often revealing important aspects of your purpose that practical thinking might suppress.</p>
+        </div>
+        
+        <div class="question-category">
+            <h3>Alignment with the World: Connecting Self with Society</h3>
+            <p>The Japanese concept of Ikigai illustrates that a truly purposeful life exists at the intersection of what you love, what you're good at, what the world needs, and what you can be paid for.</p>
+            <p>Our questions in this section help you identify where personal passion meets societal need, guiding you to discover where your unique contribution might make a meaningful difference. We explore how your talents can benefit others, which research suggests is a key to a meaningful life.</p>
+        </div>
+        
+        <p>The remaining sections of our methodology continue this journey, exploring topics such as:</p>
+        <ul>
+            <li>Practical application of your purpose</li>
+            <li>Overcoming obstacles on your path</li>
+            <li>Creating daily practices that align with your purpose</li>
+            <li>Building supportive relationships</li>
+            <li>Integrating purpose into different life domains</li>
+        </ul>
+        
+        <p>Each stage builds upon previous insights, creating a comprehensive picture of your authentic purpose and practical ways to live it out.</p>
+        
+        <div class="research-cta">
+            <a href="/form" class="cta-button">Begin Your Purpose Journey</a>
+        </div>
+    </div>
+</section>
+
+<section class="research-section">
+    <div class="research-content">
+        <h2>The Ongoing Journey of Purpose</h2>
+        
+        <p>Discovering your purpose is not a one-time epiphany but an ongoing journey of growth and refinement. As you gain new experiences and wisdom, your understanding of your purpose may evolve and deepen.</p>
+        
+        <p>The questions in Pathlight are designed to initiate this journey and provide a foundation for continued exploration. By engaging with these questions thoughtfully and honestly, you begin the process of uncovering your authentic purpose and reclaiming your sense of agency in life.</p>
+        
+        <blockquote>
+            <p>"The two most important days in your life are the day you are born and the day you find out why."</p>
+            <div class="citation">— Mark Twain</div>
+        </blockquote>
+        
+        <p>We invite you to approach these questions with curiosity, patience, and self-compassion. The journey to purpose is not always straightforward, but it is invariably rewarding.</p>
+        
+        <div class="research-cta">
+            <a href="/form" class="cta-button">Start Your Purpose Discovery</a>
+        </div>
+    </div>
+</section>
+{% endblock %}
