@@ -30,6 +30,17 @@ class EmailRequest(BaseModel):
 # Cookie name constant to ensure consistency
 STYTCH_COOKIE_NAME = 'stytch_session_token'
 
+# Debug function to log cookie operations
+def log_cookie_operation(operation, settings):
+    """Log cookie operations with detailed settings for debugging"""
+    print(f"[DEBUG] Cookie {operation} operation with settings:")
+    for key, value in settings.items():
+        if key == 'value' and value:
+            # Truncate token value for security
+            print(f"[DEBUG]   {key}: {value[:10]}...")
+        else:
+            print(f"[DEBUG]   {key}: {value}")
+
 # Dependency to get the session cookie
 async def get_cookie_session(request: Request):
     return request.cookies
@@ -115,15 +126,19 @@ async def get_authenticated_user(request: Request):
 @router.post("/login_or_create_user")
 async def login_or_create_user(email_request: EmailRequest, request: Request) -> Dict[str, str]:
     try:
-        # Create the magic link - use a simpler URL without query parameters
-        # We'll handle the token type in the authenticate endpoint
-        login_url = f"{request.base_url}auth/authenticate"
+        # Create the magic link URL with the proper base URL
+        login_magic_link_url = f"{request.base_url}auth/authenticate"
         
-        # Send the magic link with minimal parameters
+        print(f"[DEBUG] Magic link URL: {login_magic_link_url}")
+        
+        # Send the magic link with explicit URLs
         resp = stytch_client.magic_links.email.login_or_create(
-            email=email_request.email
+            email=email_request.email,
+            login_magic_link_url=login_magic_link_url,
+            signup_magic_link_url=login_magic_link_url
         )
         
+        print(f"[DEBUG] Magic link email sent to: {email_request.email}")
         return {"message": "Email sent! Check your inbox!"}
     except StytchError as e:
         print(f"[ERROR] Stytch error: {str(e)}")
@@ -186,17 +201,22 @@ async def authenticate(
             "value": resp.session_token,
             "httponly": True,
             "max_age": 43200 * 60,  # 30 days in seconds
-            "path": "/"
+            "path": "/",
+            # Always set samesite to "lax" to allow cookies to be sent with same-site navigations
+            # This is important for magic links which navigate from email to the site
+            "samesite": "lax"
         }
         
-        # Add secure and samesite attributes in production
+        # Add secure attribute in production
         if is_production():
             cookie_settings["secure"] = True
-            cookie_settings["samesite"] = "lax"
-            print("[DEBUG] Setting production cookie with secure=True and samesite=lax")
+            print("[DEBUG] Setting production cookie with secure=True")
         
+        # Log the cookie operation
+        log_cookie_operation("set", cookie_settings)
+        
+        # Set the cookie
         response.set_cookie(**cookie_settings)
-        print(f"[DEBUG] Stored session token in cookie: {resp.session_token[:10]}... with settings: {cookie_settings}")
         
         # In development mode, save the token to a file for persistence
         if not is_production():
@@ -263,17 +283,21 @@ async def authenticate(
                         "value": saved_token,
                         "httponly": True,
                         "max_age": 43200 * 60,  # 30 days in seconds
-                        "path": "/"
+                        "path": "/",
+                        # Always set samesite to "lax" to allow cookies to be sent with same-site navigations
+                        "samesite": "lax"
                     }
                     
-                    # Add secure and samesite attributes in production
+                    # Add secure attribute in production
                     if is_production():
                         cookie_settings["secure"] = True
-                        cookie_settings["samesite"] = "lax"
-                        print("[DEBUG] Setting production cookie with secure=True and samesite=lax for recovered token")
+                        print("[DEBUG] Setting production cookie with secure=True for recovered token")
                     
+                    # Log the cookie operation
+                    log_cookie_operation("set (recovered)", cookie_settings)
+                    
+                    # Set the cookie
                     response.set_cookie(**cookie_settings)
-                    print(f"[DEBUG] Stored recovered session token in cookie: {saved_token[:10]}... with settings: {cookie_settings}")
                     return RedirectResponse(url="/form", status_code=303)
             
             # If we couldn't recover, redirect to form or the specified redirect URL with a message
@@ -298,20 +322,24 @@ async def authenticate(
 
 @router.get("/logout")
 async def logout(response: Response) -> RedirectResponse:
-    # Clear cookie with appropriate settings
+        # Clear cookie with appropriate settings
     cookie_clear_settings = {
         "key": STYTCH_COOKIE_NAME,
-        "path": "/"
+        "path": "/",
+        # Always set samesite to "lax" for consistency with set operations
+        "samesite": "lax"
     }
     
-    # Add domain and secure settings in production
+    # Add secure setting in production
     if is_production():
         cookie_clear_settings["secure"] = True
         print("[DEBUG] Clearing production cookie with secure=True")
     
+    # Log the cookie operation
+    log_cookie_operation("delete", cookie_clear_settings)
+    
     # Clear cookie
     response.delete_cookie(**cookie_clear_settings)
-    print(f"[DEBUG] Cleared session cookie with settings: {cookie_clear_settings}")
     
     # In development mode, also clear the saved token file
     if not is_production():

@@ -194,15 +194,22 @@ function closeHamburgerMenuOnClickOutside(event) {
     }
 }
 
-// Show mobile navigation for logged-in users
+// Show mobile navigation for logged-in users on mobile devices only
 function setupMobileNavigation() {
     // Check if user is logged in by looking for mobile-nav element
     const mobileNav = document.querySelector('.mobile-nav');
     if (mobileNav) {
-        // User is logged in, show mobile navigation
-        mobileNav.style.display = 'block';
-        // Add class to body for padding
-        document.body.classList.add('has-mobile-nav');
+        // Only show mobile nav on mobile devices
+        if (window.innerWidth <= 768) {
+            // User is logged in and on mobile, show mobile navigation
+            mobileNav.style.display = 'block';
+            // Add class to body for padding
+            document.body.classList.add('has-mobile-nav');
+        } else {
+            // On desktop, hide mobile navigation
+            mobileNav.style.display = 'none';
+            document.body.classList.remove('has-mobile-nav');
+        }
     }
 }
 
@@ -230,4 +237,7 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Setup mobile navigation for logged-in users
     setupMobileNavigation();
+    
+    // Update mobile navigation on window resize
+    window.addEventListener('resize', setupMobileNavigation);
 });
