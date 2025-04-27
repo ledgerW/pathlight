@@ -188,16 +188,38 @@
     <!-- Base JavaScript -->
     <script src="/static/js/base.js"></script>
     
-    <!-- Debug cookie information -->
+    <!-- Debug authentication information -->
     <script>
-        // Log cookies for debugging authentication issues
+        // Log cookies and localStorage for debugging authentication issues
         document.addEventListener('DOMContentLoaded', function() {
+            // Check cookies
             console.log('Available cookies:', document.cookie);
             
             // Check specifically for the Stytch session token
             const cookies = document.cookie.split(';').map(c => c.trim());
             const hasStytchCookie = cookies.some(c => c.startsWith('stytch_session_token='));
             console.log('Has stytch_session_token cookie:', hasStytchCookie);
+            
+            // Check localStorage for session information
+            const hasLocalSession = localStorage.getItem('pathlight_session') === 'true';
+            console.log('Has localStorage session:', hasLocalSession);
+            
+            if (hasLocalSession) {
+                console.log('Session created:', localStorage.getItem('pathlight_session_created'));
+                console.log('User ID:', localStorage.getItem('pathlight_user_id'));
+                console.log('User email:', localStorage.getItem('pathlight_user_email'));
+                
+                // Check for auth token
+                const authToken = localStorage.getItem('stytch_session_token');
+                if (authToken) {
+                    console.log('Auth token exists:', authToken.substring(0, 10) + '...');
+                } else {
+                    console.log('Auth token missing!');
+                }
+            }
+            
+            // Log authentication status
+            console.log('Authentication status:', hasStytchCookie || hasLocalSession ? 'Potentially logged in' : 'Not logged in');
         });
     </script>
     

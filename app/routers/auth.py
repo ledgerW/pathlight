@@ -2,7 +2,8 @@ from typing import Dict, Any, Optional
 from datetime import datetime
 
 from fastapi import APIRouter, Request, Response, Depends, HTTPException, status, Form
-from fastapi.responses import RedirectResponse, JSONResponse
+from fastapi.responses import RedirectResponse, JSONResponse, HTMLResponse
+from fastapi.templating import Jinja2Templates
 from pydantic import BaseModel, EmailStr
 from stytch.core.response_base import StytchError
 from sqlmodel import Session, select
@@ -12,10 +13,12 @@ from app.models.models import User, Result
 
 # Import the Stytch client from clients.py
 from clients import get_stytch_client, is_production
-from auth_persistance import save_auth_token, load_auth_token, clear_auth_token
 
 # Initialize the Stytch client
 stytch_client = get_stytch_client()
+
+# Initialize templates
+templates = Jinja2Templates(directory="app/templates")
 
 # Create a router for authentication endpoints
 router = APIRouter(
@@ -27,15 +30,16 @@ router = APIRouter(
 class EmailRequest(BaseModel):
     email: EmailStr
 
-# Cookie name constant to ensure consistency
+# Cookie name constants to ensure consistency
 STYTCH_COOKIE_NAME = 'stytch_session_token'
+STYTCH_SESSION_JS_COOKIE_NAME = 'stytch_session_js'  # Non-HTTP-only cookie for JS access
 
 # Debug function to log cookie operations
 def log_cookie_operation(operation, settings):
     """Log cookie operations with detailed settings for debugging"""
     print(f"[DEBUG] Cookie {operation} operation with settings:")
     for key, value in settings.items():
-        if key == 'value' and value:
+        if key == 'value' and value and isinstance(value, str):
             # Truncate token value for security
             print(f"[DEBUG]   {key}: {value[:10]}...")
         else:
@@ -49,76 +53,99 @@ async def get_authenticated_user(request: Request):
     """
     Get the authenticated user from the session.
     
-    In development mode, if no session token is found, attempts to load from file.
+    Checks multiple sources for the authentication token:
+    1. Cookies
+    2. Request state (set by AuthHeaderMiddleware from Authorization header)
     
     Returns None if the user is not authenticated.
     """
     print("[DEBUG] Checking authentication...")
     print(f"[DEBUG] Available cookies: {list(request.cookies.keys())}")
     
+    # Track the source of the token for debugging
+    token_source = None
+    
     # First check if we have a token in the cookies
     stytch_session = request.cookies.get(STYTCH_COOKIE_NAME)
     if stytch_session:
         print(f"[DEBUG] Found session token in cookies: {stytch_session[:10]}...")
+        token_source = "cookie"
     else:
         print(f"[DEBUG] No session token in cookies with name '{STYTCH_COOKIE_NAME}'")
-    
-    # If no session token in the cookies and we're in development mode,
-    # try to load from the saved file
-    if not stytch_session and not is_production():
-        print("[DEBUG] Attempting to load token from file")
-        stytch_session = load_auth_token()
-        if stytch_session:
-            print(f"[DEBUG] Loaded auth token from file: {stytch_session[:10]}...")
+        
+        # Check if token is in request state (set by AuthHeaderMiddleware)
+        if hasattr(request.state, 'auth_token') and request.state.auth_token:
+            stytch_session = request.state.auth_token
+            print(f"[DEBUG] Found session token in request state (Authorization header): {stytch_session[:10]}...")
+            token_source = "auth_header"
+        else:
+            print("[DEBUG] No session token in request state")
     
     if not stytch_session:
         print("[DEBUG] No valid session token found")
         return None
 
     try:
-        print(f"[DEBUG] Authenticating with Stytch using token: {stytch_session[:10]}...")
-        resp = stytch_client.sessions.authenticate(session_token=stytch_session)
+        print(f"[DEBUG] Authenticating with Stytch using token from {token_source}: {stytch_session[:10]}...")
+        
+        # Use the appropriate Stytch method based on the token format
+        # If the token starts with 'session-', it's a session token
+        # Otherwise, it might be a JWT
+        if stytch_session.startswith('session-'):
+            resp = stytch_client.sessions.authenticate(session_token=stytch_session)
+        else:
+            # Try JWT authentication as a fallback
+            try:
+                resp = stytch_client.sessions.authenticate_jwt(session_jwt=stytch_session)
+                print("[DEBUG] Successfully authenticated with JWT")
+            except Exception as jwt_error:
+                print(f"[DEBUG] JWT authentication failed, falling back to session token: {str(jwt_error)}")
+                resp = stytch_client.sessions.authenticate(session_token=stytch_session)
+        
         print("[DEBUG] Authentication successful")
         return resp.user
     except StytchError as e:
-        print(f"[ERROR] Stytch authentication error: {str(e)}")
+        print(f"[ERROR] Stytch authentication error with token from {token_source}: {str(e)}")
         
-        # Also clear the saved token file
-        if not is_production():
-            clear_auth_token()
-        
-        # Try to extract user information from the expired token
-        try:
-            # This is a workaround to get user info from an expired token
-            # We'll only use this for redirecting, not for actual authentication
-            import jwt
-            import base64
-            import json
+        # If the token was from an Authorization header and failed, try to recreate a session
+        if token_source == "auth_header" and hasattr(e, 'details') and e.details.error_type == 'session_not_found':
+            print("[DEBUG] Session not found for Authorization header token, attempting to recreate session")
             
-            # Split the token into parts
-            parts = stytch_session.split('.')
-            if len(parts) >= 2:
-                # Decode the payload part (second part)
-                padded = parts[1] + '=' * (4 - len(parts[1]) % 4)
-                payload = base64.b64decode(padded)
-                data = json.loads(payload)
+            # Try to extract user information from the token
+            try:
+                # This is a workaround to get user info from the token
+                import jwt
+                import base64
+                import json
                 
-                # Check if we have user data
-                if 'sub' in data and data.get('type') == 'session':
-                    print(f"[DEBUG] Extracted user ID from expired token: {data['sub']}")
+                # Split the token into parts
+                parts = stytch_session.split('.')
+                if len(parts) >= 2:
+                    # Decode the payload part (second part)
+                    padded = parts[1] + '=' * (4 - len(parts[1]) % 4)
+                    payload = base64.b64decode(padded)
+                    data = json.loads(payload)
                     
-                    # Create a minimal user object with just the ID
-                    from types import SimpleNamespace
-                    minimal_user = SimpleNamespace()
-                    minimal_user.user_id = data['sub']
+                    print(f"[DEBUG] Extracted token payload: {data}")
                     
-                    # If we have email info, add it
-                    if 'email' in data:
-                        minimal_user.emails = [SimpleNamespace(email=data['email'])]
-                    
-                    return minimal_user
-        except Exception as token_error:
-            print(f"[DEBUG] Could not extract user info from expired token: {str(token_error)}")
+                    # Check if we have user data
+                    if 'sub' in data:
+                        user_id = data['sub']
+                        print(f"[DEBUG] Extracted user ID from token: {user_id}")
+                        
+                        # Create a minimal user object with just the ID
+                        from types import SimpleNamespace
+                        minimal_user = SimpleNamespace()
+                        minimal_user.user_id = user_id
+                        
+                        # If we have email info, add it
+                        if 'email' in data:
+                            minimal_user.emails = [SimpleNamespace(email=data['email'])]
+                            print(f"[DEBUG] Extracted email from token: {data['email']}")
+                        
+                        return minimal_user
+            except Exception as token_error:
+                print(f"[DEBUG] Could not extract user info from token: {str(token_error)}")
         
         return None
 
@@ -161,7 +188,7 @@ async def authenticate(
     response: Response,
     redirect: str = None,
     stytch_token_type: str = "magic_links"  # Default to magic_links
-) -> RedirectResponse:
+):
     print(f"[DEBUG] Authenticate endpoint called with token_type: {stytch_token_type}")
     
     # First check if the user is already authenticated
@@ -195,7 +222,19 @@ async def authenticate(
         )
         print(f"[DEBUG] Authentication successful, got session token: {resp.session_token[:10]}...")
         
-        # Store session token in a cookie with appropriate security settings
+        # Get the session JWT as well, which might be more compatible with some browsers
+        session_jwt = None
+        try:
+            # Try to get the JWT from the session
+            jwt_resp = stytch_client.sessions.exchange_session_token(
+                session_token=resp.session_token
+            )
+            session_jwt = jwt_resp.session_jwt
+            print(f"[DEBUG] Got session JWT: {session_jwt[:10]}...")
+        except Exception as jwt_error:
+            print(f"[DEBUG] Failed to get session JWT: {str(jwt_error)}")
+        
+        # Store session token in a HTTP-only cookie with appropriate security settings
         cookie_settings = {
             "key": STYTCH_COOKIE_NAME, 
             "value": resp.session_token,
@@ -207,24 +246,45 @@ async def authenticate(
             "samesite": "lax"
         }
         
+        # Also set a non-HTTP-only cookie for JavaScript access
+        js_cookie_settings = {
+            "key": STYTCH_SESSION_JS_COOKIE_NAME, 
+            "value": "true",  # Just a flag, not the actual token
+            "httponly": False,
+            "max_age": 43200 * 60,  # 30 days in seconds
+            "path": "/",
+            "samesite": "lax"
+        }
+        
         # Add secure attribute in production
         if is_production():
             cookie_settings["secure"] = True
-            print("[DEBUG] Setting production cookie with secure=True")
+            js_cookie_settings["secure"] = True
+            print("[DEBUG] Setting production cookies with secure=True")
         
-        # Log the cookie operation
-        log_cookie_operation("set", cookie_settings)
+        # Log the cookie operations
+        log_cookie_operation("set (http-only)", cookie_settings)
+        log_cookie_operation("set (js-accessible)", js_cookie_settings)
         
-        # Set the cookie
+        # Set the cookies
         response.set_cookie(**cookie_settings)
+        response.set_cookie(**js_cookie_settings)
         
-        # In development mode, save the token to a file for persistence
-        if not is_production():
-            print("[DEBUG] Saving token to file for persistence")
-            save_auth_token(resp.user, resp.session_token)
+        # Extract user information
+        user_id = None
+        user_email = None
+        
+        if hasattr(resp.user, 'user_id'):
+            user_id = resp.user.user_id
+            
+        if hasattr(resp.user, 'emails') and resp.user.emails:
+            user_email = resp.user.emails[0].email
         
         # Get user from database or create if not exists
         db = next(get_session())
+        
+        # Determine the redirect URL based on user state
+        redirect_url = "/form"  # Default redirect
         
         if hasattr(resp.user, 'emails') and resp.user.emails:
             user_email = resp.user.emails[0].email
@@ -243,26 +303,37 @@ async def authenticate(
                 if user_results:
                     # If user has results, redirect to results page
                     print(f"[DEBUG] User has results, redirecting to results page")
-                    return RedirectResponse(url=f"/results/{db_user.id}", status_code=303)
-                
-                # Get progress state
-                progress_state = int(db_user.progress_state)
-                
-                if progress_state > 0:
-                    # If user has progress, redirect to form with user ID
-                    print(f"[DEBUG] User has progress state {progress_state}, redirecting to form")
-                    return RedirectResponse(url=f"/form/{db_user.id}", status_code=303)
+                    redirect_url = f"/results/{db_user.id}"
                 else:
-                    # If user has no progress, redirect to form with user ID
-                    print(f"[DEBUG] User has no progress, redirecting to form")
-                    return RedirectResponse(url=f"/form/{db_user.id}", status_code=303)
+                    # Get progress state
+                    progress_state = int(db_user.progress_state)
+                    
+                    if progress_state > 0:
+                        # If user has progress, redirect to form with user ID
+                        print(f"[DEBUG] User has progress state {progress_state}, redirecting to form")
+                        redirect_url = f"/form/{db_user.id}"
+                    else:
+                        # If user has no progress, redirect to form with user ID
+                        print(f"[DEBUG] User has no progress, redirecting to form")
+                        redirect_url = f"/form/{db_user.id}"
             else:
                 print(f"[DEBUG] User with email {user_email} not found, redirecting to form")
-                # Redirect to form to create a new user
-                return RedirectResponse(url="/form", status_code=303)
         else:
             print("[DEBUG] No email found in Stytch user data, redirecting to form")
-            return RedirectResponse(url="/form", status_code=303)
+        
+        # Render the authentication template with the token and redirect URL
+        # This will store the token in localStorage and then redirect
+        return templates.TemplateResponse(
+            "authenticate.html",
+            {
+                "request": request,
+                "session_token": resp.session_token,
+                "session_created": datetime.now().isoformat(),
+                "user_id": getattr(resp.user, "user_id", None) if hasattr(resp.user, "user_id") else None,
+                "user_email": user_email if hasattr(resp.user, 'emails') and resp.user.emails else None,
+                "redirect_url": redirect_url
+            }
+        )
         
     except StytchError as e:
         print(f"[ERROR] Stytch authentication error: {str(e)}")
@@ -270,37 +341,9 @@ async def authenticate(
         
         # Check if this is a "magic link already used" error
         if "already used or expired" in error_message:
-            print("[DEBUG] Magic link already used, checking if we have a valid session")
+            print("[DEBUG] Magic link already used")
             
-            # Try to load token from file in development mode
-            if not is_production():
-                saved_token = load_auth_token()
-                if saved_token:
-                    print(f"[DEBUG] Found saved token, using it: {saved_token[:10]}...")
-                    # Use the same cookie settings as above for consistency
-                    cookie_settings = {
-                        "key": STYTCH_COOKIE_NAME, 
-                        "value": saved_token,
-                        "httponly": True,
-                        "max_age": 43200 * 60,  # 30 days in seconds
-                        "path": "/",
-                        # Always set samesite to "lax" to allow cookies to be sent with same-site navigations
-                        "samesite": "lax"
-                    }
-                    
-                    # Add secure attribute in production
-                    if is_production():
-                        cookie_settings["secure"] = True
-                        print("[DEBUG] Setting production cookie with secure=True for recovered token")
-                    
-                    # Log the cookie operation
-                    log_cookie_operation("set (recovered)", cookie_settings)
-                    
-                    # Set the cookie
-                    response.set_cookie(**cookie_settings)
-                    return RedirectResponse(url="/form", status_code=303)
-            
-            # If we couldn't recover, redirect to form or the specified redirect URL with a message
+            # Redirect to form or the specified redirect URL with a message
             error_message = "Magic+link+expired+or+already+used.+Please+request+a+new+one."
             if redirect:
                 return RedirectResponse(
@@ -322,7 +365,7 @@ async def authenticate(
 
 @router.get("/logout")
 async def logout(response: Response) -> RedirectResponse:
-        # Clear cookie with appropriate settings
+    # Clear HTTP-only cookie
     cookie_clear_settings = {
         "key": STYTCH_COOKIE_NAME,
         "path": "/",
@@ -330,23 +373,115 @@ async def logout(response: Response) -> RedirectResponse:
         "samesite": "lax"
     }
     
+    # Clear JS-accessible cookie
+    js_cookie_clear_settings = {
+        "key": STYTCH_SESSION_JS_COOKIE_NAME,
+        "path": "/",
+        "samesite": "lax"
+    }
+    
     # Add secure setting in production
     if is_production():
         cookie_clear_settings["secure"] = True
-        print("[DEBUG] Clearing production cookie with secure=True")
+        js_cookie_clear_settings["secure"] = True
+        print("[DEBUG] Clearing production cookies with secure=True")
     
-    # Log the cookie operation
-    log_cookie_operation("delete", cookie_clear_settings)
+    # Log the cookie operations
+    log_cookie_operation("delete (http-only)", cookie_clear_settings)
+    log_cookie_operation("delete (js-accessible)", js_cookie_clear_settings)
     
-    # Clear cookie
+    # Clear cookies
     response.delete_cookie(**cookie_clear_settings)
+    response.delete_cookie(**js_cookie_clear_settings)
     
-    # In development mode, also clear the saved token file
-    if not is_production():
-        clear_auth_token()
+    # Add script to clear localStorage session data
+    logout_script = """
+    <script>
+        // Clear session data from localStorage
+        localStorage.removeItem('pathlight_session');
+        localStorage.removeItem('pathlight_session_created');
+        localStorage.removeItem('pathlight_user_id');
+        localStorage.removeItem('pathlight_user_email');
+        localStorage.removeItem('stytch_session_token');
+        console.log('Session information cleared from localStorage');
+    </script>
+    """
     
-    return RedirectResponse(url="/")
+    # Create response with the logout script
+    response = RedirectResponse(url="/")
+    response.headers["HX-Trigger"] = logout_script
+    return response
 
+
+# Add a session check endpoint
+@router.get("/check-session")
+async def check_session(request: Request, response: Response):
+    """
+    Check if the user has a valid session.
+    Returns user information if authenticated, or an error if not.
+    This endpoint can be called by frontend JavaScript to verify session status.
+    """
+    # Log the request headers for debugging
+    auth_header = request.headers.get('Authorization')
+    if auth_header:
+        print(f"[DEBUG] Authorization header present: {auth_header[:20]}...")
+    else:
+        print("[DEBUG] No Authorization header present")
+    
+    user = await get_authenticated_user(request)
+    if user:
+        # Return minimal user info (no sensitive data)
+        user_data = {
+            "authenticated": True,
+            "user_id": getattr(user, "user_id", None)
+        }
+        
+        # Add email if available
+        if hasattr(user, "emails") and user.emails:
+            user_data["email"] = user.emails[0].email
+        
+        # If the request came with an Authorization header but no cookie,
+        # try to set the cookie from the token in the header
+        if auth_header and auth_header.startswith('Bearer ') and not request.cookies.get(STYTCH_COOKIE_NAME):
+            token = auth_header.replace('Bearer ', '')
+            print(f"[DEBUG] Setting cookie from Authorization header token: {token[:10]}...")
+            
+            # Set the HTTP-only cookie
+            cookie_settings = {
+                "key": STYTCH_COOKIE_NAME, 
+                "value": token,
+                "httponly": True,
+                "max_age": 43200 * 60,  # 30 days in seconds
+                "path": "/",
+                "samesite": "lax"
+            }
+            
+            # Set the JS-accessible cookie
+            js_cookie_settings = {
+                "key": STYTCH_SESSION_JS_COOKIE_NAME, 
+                "value": "true",
+                "httponly": False,
+                "max_age": 43200 * 60,  # 30 days in seconds
+                "path": "/",
+                "samesite": "lax"
+            }
+            
+            # Add secure attribute in production
+            if is_production():
+                cookie_settings["secure"] = True
+                js_cookie_settings["secure"] = True
+            
+            # Log the cookie operations
+            log_cookie_operation("set from auth header (http-only)", cookie_settings)
+            log_cookie_operation("set from auth header (js-accessible)", js_cookie_settings)
+            
+            # Set the cookies
+            response.set_cookie(**cookie_settings)
+            response.set_cookie(**js_cookie_settings)
+            
+        return user_data
+    else:
+        return {"authenticated": False}
 
 # Export the get_authenticated_user function so it can be used in other modules
 __all__ = ["router", "get_authenticated_user"]

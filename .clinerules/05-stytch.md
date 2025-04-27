@@ -17,9 +17,10 @@ Stytch is a developer platform for authentication and user management that provi
 In our project, Stytch is used for:
 
 1. User authentication via email magic links
-2. Session management and token validation
+2. Multi-layered session management with cookies, localStorage, and Authorization headers
 3. User profile management
 4. Secure access control to protected routes
+5. JWT and session token validation
 
 ## Common Patterns
 
@@ -74,29 +75,66 @@ async def authenticate(request: Request, response: Response, token: str):
         return {"error": str(e)}
 ```
 
-### Session Validation Middleware
+### Multi-Layered Session Management
+
+Our application uses a robust multi-layered approach to session management:
 
 ```python
-from fastapi import Depends, HTTPException, Request
-from functools import wraps
+async def get_authenticated_user(request: Request):
+    """
+    Get the authenticated user from the session.
+    
+    Checks multiple sources for the authentication token:
+    1. Cookies
+    2. Request state (set by AuthHeaderMiddleware from Authorization header)
+    
+    Returns None if the user is not authenticated.
+    """
+    # First check if we have a token in the cookies
+    stytch_session = request.cookies.get(STYTCH_COOKIE_NAME)
+    
+    # If no cookie, check Authorization header (set by client-side JavaScript)
+    if not stytch_session and hasattr(request.state, 'auth_token'):
+        stytch_session = request.state.auth_token
+    
+    if not stytch_session:
+        return None
 
-async def get_current_user(request: Request):
-    session_token = request.cookies.get("stytch_session")
-    
-    if not session_token:
-        raise HTTPException(status_code=401, detail="Not authenticated")
-    
     try:
-        # Validate the session
-        response = client.sessions.authenticate(session_token=session_token)
-        return response.user
-    except Exception:
-        raise HTTPException(status_code=401, detail="Invalid session")
+        # Try session token authentication
+        if stytch_session.startswith('session-'):
+            resp = stytch_client.sessions.authenticate(session_token=stytch_session)
+        else:
+            # Try JWT authentication as fallback
+            resp = stytch_client.sessions.authenticate_jwt(session_jwt=stytch_session)
+        
+        return resp.user
+    except StytchError:
+        # Handle authentication errors
+        return None
+```
 
-# Use as a dependency in protected routes
-@router.get("/profile")
-async def get_profile(user = Depends(get_current_user)):
-    return {"user_id": user.user_id, "email": user.emails[0].email}
+### Authorization Header Middleware
+
+```python
+class AuthHeaderMiddleware(BaseHTTPMiddleware):
+    """
+    Middleware to check for Authorization header and set the token in request state.
+    
+    This helps bridge the gap between localStorage token storage and server-side authentication.
+    """
+    
+    async def dispatch(self, request: Request, call_next):
+        # Check if there's an Authorization header
+        auth_header = request.headers.get('Authorization')
+        if auth_header and auth_header.startswith('Bearer '):
+            # Extract the token and store it in request state
+            token = auth_header.replace('Bearer ', '')
+            request.state.auth_token = token
+        
+        # Continue processing the request
+        response = await call_next(request)
+        return response
 ```
 
 ### OAuth Integration
@@ -135,36 +173,111 @@ async def oauth_callback(request: Request, response: Response, token: str):
         return {"error": str(e)}
 ```
 
-### Logout
+### Client-Side Token Management
 
-```python
-@router.post("/logout")
-async def logout(request: Request, response: Response):
-    session_token = request.cookies.get("stytch_session")
+```javascript
+// Add auth token to fetch requests
+function addAuthTokenToFetch() {
+    // Store the original fetch function
+    const originalFetch = window.fetch;
     
-    if session_token:
-        try:
-            # Revoke the session
-            client.sessions.revoke(session_token=session_token)
-        except Exception:
-            pass
-    
-    # Clear the session cookie
-    response.delete_cookie(key="stytch_session")
-    
-    return {"success": True}
+    // Override the fetch function
+    window.fetch = function(url, options = {}) {
+        // Create headers if they don't exist
+        options.headers = options.headers || {};
+        
+        // If we have an auth token in localStorage, add it to the request headers
+        const authToken = localStorage.getItem('stytch_session_token');
+        if (authToken) {
+            // Add Authorization header with Bearer token
+            if (!(options.headers instanceof Headers)) {
+                const headers = new Headers(options.headers);
+                headers.append('Authorization', `Bearer ${authToken}`);
+                options.headers = headers;
+            } else {
+                options.headers.append('Authorization', `Bearer ${authToken}`);
+            }
+        }
+        
+        // Include credentials to send cookies with the request
+        options.credentials = 'include';
+        
+        // Call the original fetch with the modified options
+        return originalFetch(url, options);
+    };
+}
 ```
 
-## Project-Specific Examples
-
-From our project's `app/routers/auth.py`:
+### Comprehensive Logout
 
 ```python
-@router.post("/login")
-async def login(request: Request):
-    # Process login request with Stytch
-    # ...
+@router.get("/logout")
+async def logout(response: Response) -> RedirectResponse:
+    # Clear HTTP-only cookie
+    cookie_clear_settings = {
+        "key": STYTCH_COOKIE_NAME,
+        "path": "/",
+        "samesite": "lax"
+    }
+    
+    # Clear JS-accessible cookie
+    js_cookie_clear_settings = {
+        "key": STYTCH_SESSION_JS_COOKIE_NAME,
+        "path": "/",
+        "samesite": "lax"
+    }
+    
+    # Add secure setting in production
+    if is_production():
+        cookie_clear_settings["secure"] = True
+        js_cookie_clear_settings["secure"] = True
+    
+    # Clear cookies
+    response.delete_cookie(**cookie_clear_settings)
+    response.delete_cookie(**js_cookie_clear_settings)
+    
+    # Add script to clear localStorage session data
+    logout_script = """
+    <script>
+        // Clear session data from localStorage
+        localStorage.removeItem('pathlight_session');
+        localStorage.removeItem('pathlight_session_created');
+        localStorage.removeItem('pathlight_user_id');
+        localStorage.removeItem('pathlight_user_email');
+        localStorage.removeItem('stytch_session_token');
+    </script>
+    """
+    
+    # Create response with the logout script
+    response = RedirectResponse(url="/")
+    response.headers["HX-Trigger"] = logout_script
+    return response
 ```
+
+## Best Practices Implemented
+
+1. **Multi-Layered Authentication**:
+   - HTTP-only cookies for secure token storage
+   - localStorage for client-side awareness of authentication state
+   - Authorization headers for API requests
+   - Fallback mechanisms when one method fails
+
+2. **Environment-Specific Security**:
+   - `secure=True` for cookies in production (HTTPS) environments
+   - `samesite="lax"` to allow cookies to be sent with same-site navigations
+   - Consistent cookie settings throughout the authentication flow
+
+3. **Robust Error Handling**:
+   - Detailed logging for troubleshooting
+   - Graceful degradation when authentication fails
+   - User-friendly error messages
+   - Recovery mechanisms for expired sessions
+
+4. **Enhanced User Experience**:
+   - Automatic session checking
+   - Smart redirects based on authentication state
+   - Clean loading spinner during authentication
+   - Seamless token renewal
 
 ## Documentation Links
 

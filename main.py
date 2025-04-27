@@ -8,6 +8,9 @@ from dotenv import load_dotenv
 import time
 from starlette.middleware.base import BaseHTTPMiddleware
 
+# Import custom middleware
+from app.middleware import AuthHeaderMiddleware
+
 # Import routers
 from app.routers import (
     users_router,
@@ -91,6 +94,12 @@ class RequestLoggingMiddleware(BaseHTTPMiddleware):
             if 'stytch_session_token' in cookies:
                 token = cookies['stytch_session_token']
                 print(f"[REQUEST COOKIE] stytch_session_token: {token[:10]}...")
+            
+            # Log Authorization header if it exists
+            auth_header = request.headers.get('Authorization')
+            if auth_header and auth_header.startswith('Bearer '):
+                token = auth_header.replace('Bearer ', '')
+                print(f"[REQUEST AUTH HEADER] Bearer token: {token[:10]}...")
         
         # Process the request
         start_time = time.time()
@@ -107,7 +116,8 @@ class RequestLoggingMiddleware(BaseHTTPMiddleware):
         
         return response
 
-# Add the middleware to the app
+# Add the middlewares to the app
+app.add_middleware(AuthHeaderMiddleware)  # Add this first so it runs before logging
 app.add_middleware(RequestLoggingMiddleware)
 
 # Create database tables on startup
