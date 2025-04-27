@@ -8,4 +8,4 @@ Disallow: /success
 Disallow: /cancel
 Disallow: /api/
 
-Sitemap: https://pathlight.app/sitemap.xml
+Sitemap: https://followpathlight.com/sitemap.xml
