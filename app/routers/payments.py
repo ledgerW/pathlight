@@ -12,23 +12,14 @@ router = APIRouter(
     tags=["payments"],
 )
 
-from clients import is_production
+from clients import is_production, initialize_stripe, get_stripe_config
 
-# Initialize Stripe with the appropriate key based on environment
-if is_production():
-    stripe_secret_key = os.getenv("STRIPE_SECRET_KEY")
-    stripe_basic_price_id = os.getenv("STRIPE_BASIC_PRICE_ID")
-    stripe_basic_product_id = os.getenv("STRIPE_BASIC_PRODUCT_ID")
-    stripe_full_price_id = os.getenv("STRIPE_FULL_PRICE_ID")
-    stripe_full_product_id = os.getenv("STRIPE_FULL_PRODUCT_ID")
-else:
-    stripe_secret_key = os.getenv("STRIPE_SECRET_KEY_TEST")
-    stripe_basic_price_id = os.getenv("STRIPE_BASIC_PRICE_ID_TEST")
-    stripe_basic_product_id = os.getenv("STRIPE_BASIC_PRODUCT_ID_TEST")
-    stripe_full_price_id = os.getenv("STRIPE_FULL_PRICE_ID_TEST")
-    stripe_full_product_id = os.getenv("STRIPE_FULL_PRODUCT_ID_TEST")
-
-stripe.api_key = stripe_secret_key
+# Initialize Stripe and get configuration
+stripe_config = initialize_stripe()
+stripe_basic_price_id = stripe_config["basic_price_id"]
+stripe_basic_product_id = stripe_config["basic_product_id"]
+stripe_full_price_id = stripe_config["full_price_id"]
+stripe_full_product_id = stripe_config["full_product_id"]
 
 # Create checkout session endpoint
 @router.post("/{user_id}/create-checkout-session/{tier}", response_model=Dict)
@@ -158,15 +149,12 @@ async def verify_payment(
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.get("/config", response_model=Dict)
-async def get_stripe_config():
+async def get_stripe_public_config():
     """Get Stripe publishable key based on environment"""
-    if is_production():
-        publishable_key = os.getenv("STRIPE_PUBLIC_KEY")
-    else:
-        publishable_key = os.getenv("STRIPE_PUBLIC_KEY_TEST")
+    config = get_stripe_config()
     
     return {
-        "publishableKey": publishable_key
+        "publishableKey": config["public_key"]
     }
 
 # Note: The confirm-payment-intent endpoint has been removed as we've migrated to Stripe Checkout
