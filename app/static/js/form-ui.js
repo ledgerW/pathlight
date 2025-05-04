@@ -174,15 +174,16 @@ function showSlide(slideIndex) {
         slide.classList.remove('active');
     });
     
-    // Show the current slide
-    if (slides[slideIndex]) {
-        slides[slideIndex].classList.add('active');
-        console.log('Activated slide:', slideIndex);
+    // Show the current slide using data-slide attribute
+    const targetSlide = document.querySelector(`.form-slide[data-slide="${slideIndex}"]`);
+    if (targetSlide) {
+        targetSlide.classList.add('active');
+        console.log('Activated slide with data-slide:', slideIndex);
     } else {
-        console.error('Slide not found:', slideIndex);
+        console.error('Slide not found with data-slide:', slideIndex);
     }
     
-    // Handle progress display differently for intro slide vs. question slides
+    // Handle progress display for question slides
     const progressTextElement = document.getElementById('progressText');
     const progressFill = document.getElementById('progressFill');
     const currentQuestionSpan = document.getElementById('currentQuestion');
@@ -191,39 +192,32 @@ function showSlide(slideIndex) {
     const nextButton = document.getElementById('nextButton');
     const submitButton = document.getElementById('submitButton');
     
-    if (slideIndex === 0) {
-        // Hide question counter for intro slide
-        progressTextElement.style.visibility = 'hidden';
-        progressFill.style.width = '0%';
-        currentMarker.style.display = 'none';
-    } else {
-        // Show question counter for question slides
-        progressTextElement.style.visibility = 'visible';
-        
-        // Always show total of 25 questions for the progress bar visual
-        const totalQuestionsForProgress = PREMIUM_TIER_QUESTIONS;
-        const progress = ((slideIndex - 1) / totalQuestionsForProgress) * 100; // Adjust for intro slide
-        progressFill.style.width = `${Math.min(progress, 100)}%`;
-        
-        // Update current question number
-        currentQuestionSpan.textContent = slideIndex;
-        
-        // Update total questions display
-        document.getElementById('totalQuestions').textContent = PREMIUM_TIER_QUESTIONS;
-        
-        // Update current marker position and image
-        currentMarker.style.display = 'block';
-        // Position the marker at the correct percentage point
-        // Subtract half the width of the marker to center it
-        currentMarker.style.left = `calc(${Math.min(progress, 100)}% - 20px)`;
-        
-        // Get the current image name based on the slide index
-        const currentImageName = imageNames[slideIndex - 1]; // Adjust for intro slide
-        currentMarker.style.backgroundImage = `url('/static/images/${currentImageName}')`;
-    }
+    // Show question counter for question slides
+    progressTextElement.style.visibility = 'visible';
+    
+    // Calculate progress percentage
+    const totalQuestionsForProgress = PREMIUM_TIER_QUESTIONS;
+    const progress = ((slideIndex) / totalQuestionsForProgress) * 100;
+    progressFill.style.width = `${Math.min(progress, 100)}%`;
+    
+    // Update current question number
+    currentQuestionSpan.textContent = slideIndex;
+    
+    // Update total questions display
+    document.getElementById('totalQuestions').textContent = PREMIUM_TIER_QUESTIONS;
+    
+    // Update current marker position and image
+    currentMarker.style.display = 'block';
+    // Position the marker at the correct percentage point
+    // Subtract half the width of the marker to center it
+    currentMarker.style.left = `calc(${Math.min(progress, 100)}% - 20px)`;
+    
+    // Get the current image name based on the slide index
+    const currentImageName = imageNames[slideIndex - 1];
+    currentMarker.style.backgroundImage = `url('/static/images/${currentImageName}')`;
     
     // Update button states
-    prevButton.disabled = slideIndex === 0;
+    prevButton.disabled = slideIndex === 1; // Disable prev button on first question
     
     // Check if we've reached the end of the current tier
     const isEndOfBasicTier = slideIndex === BASIC_TIER_QUESTIONS && user.payment_tier !== 'premium';
@@ -301,75 +295,8 @@ function goToPrevSlide() {
 
 // Go to next slide
 function goToNextSlide() {
-    if (currentSlide === 0) {
-        // Validate user info
-        const nameInput = document.getElementById('userName');
-        const emailInput = document.getElementById('userEmail');
-        const dobInput = document.getElementById('userDob');
-        
-        if (!nameInput.value.trim()) {
-            showNotification('Please enter your name.', 'error');
-            nameInput.focus();
-            return;
-        }
-        
-        if (!emailInput.value.trim() || !isValidEmail(emailInput.value.trim())) {
-            showNotification('Please enter a valid email address.', 'error');
-            emailInput.focus();
-            return;
-        }
-        
-        if (!dobInput.value) {
-            showNotification('Please enter your date of birth.', 'error');
-            dobInput.focus();
-            return;
-        }
-        
-        // Save user info
-        const newName = nameInput.value.trim();
-        const newEmail = emailInput.value.trim();
-        const newDob = dobInput.value;
-        
-        // Check if user exists
-        checkExistingUser(newEmail).then(existingUserData => {
-            if (existingUserData) {
-                console.log('Found existing user data in form-ui.js:', existingUserData);
-                console.log('existingUserData type:', typeof existingUserData);
-                
-                // User exists, redirect to login page
-                showNotification('Account already exists. Redirecting to login page...', 'info');
-                
-                console.log('Will redirect to hardcoded login URL: /login');
-                
-                // Redirect to login page after a short delay
-                setTimeout(() => {
-                    try {
-                        console.log('Executing redirect to /login now from form-ui.js');
-                        // Use hardcoded URL to avoid any issues
-                        window.location.href = '/login';
-                        console.log('Redirect command executed');
-                    } catch (redirectError) {
-                        console.error('Error during redirect:', redirectError);
-                        // Fallback method
-                        window.location.replace('/login');
-                    }
-                }, 1500);
-            } else {
-                // Create new user
-                user.name = newName;
-                user.email = newEmail;
-                createUser(newDob);
-            }
-        }).catch(error => {
-            console.error('Error checking existing user in form-ui.js:', error);
-            showNotification('Error checking account status. Please try again.', 'error');
-        });
-        
-        return;
-    } else {
-        // Save current question response
-        saveCurrentSlideData();
-    }
+    // Save current question response
+    saveCurrentSlideData();
     
     // Check if we're at the end of basic tier and need to show payment modal
     if (currentSlide === BASIC_TIER_QUESTIONS && user.payment_tier === 'none') {
@@ -408,6 +335,26 @@ function saveCurrentSlideData() {
     // Save to server if user exists and response is not empty
     if (user.id && response) {
         saveResponse(questionNumber, response);
+    } else if (!user.id && response) {
+        // Save to localStorage for anonymous users
+        try {
+            // Get existing responses from localStorage
+            let savedResponses = {};
+            const existingResponses = localStorage.getItem('anonymousResponses');
+            if (existingResponses) {
+                savedResponses = JSON.parse(existingResponses);
+            }
+            
+            // Update with current response
+            savedResponses[questionNumber] = response;
+            
+            // Save back to localStorage
+            localStorage.setItem('anonymousResponses', JSON.stringify(savedResponses));
+            console.log('Saved anonymous response to localStorage:', questionNumber, response);
+            console.log('All anonymous responses:', savedResponses);
+        } catch (e) {
+            console.error('Error saving to localStorage:', e);
+        }
     }
     
     // If we're on the last slide, update the submit button state

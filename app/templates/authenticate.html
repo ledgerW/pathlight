@@ -204,12 +204,59 @@
             // Set up Authorization header for future fetch requests
             debugLog('Authentication setup verified, preparing to redirect...');
             
-            // Redirect to the appropriate page after a short delay
-            setTimeout(function() {
-                const redirectUrl = '{{ redirect_url }}';
-                debugLog('Redirecting to', redirectUrl);
-                window.location.href = redirectUrl;
-            }, 2000); // Longer delay to ensure token is stored and test request completes
+            // Check if there's a pending authentication user ID
+            const pendingAuthUserId = localStorage.getItem('pendingAuthUserId');
+            
+            if (pendingAuthUserId) {
+                debugLog('Found pending auth user ID', pendingAuthUserId);
+                
+                // Update the user object with the pending user ID
+                if (userId && userId !== "None") {
+                    // If we have a user ID from Stytch, make sure it matches
+                    if (pendingAuthUserId === userId) {
+                        debugLog('Pending user ID matches authenticated user ID');
+                    } else {
+                        debugLog('Warning: Pending user ID does not match authenticated user ID', {
+                            pendingId: pendingAuthUserId,
+                            authId: userId
+                        });
+                    }
+                }
+                
+                // Clear the pending auth user ID
+                localStorage.removeItem('pendingAuthUserId');
+                
+                // Redirect to the payment flow
+                setTimeout(function() {
+                    debugLog('Redirecting to payment flow for user', pendingAuthUserId);
+                    
+                    // Create a payment initiation function
+                    const initiatePaymentScript = document.createElement('script');
+                    initiatePaymentScript.textContent = `
+                        // Function to initiate payment after authentication
+                        function initiatePaymentAfterAuth() {
+                            // Show a message
+                            document.querySelector('.loading-container h2').textContent = 'Preparing Payment...';
+                            document.querySelector('.loading-container p').textContent = 'Please wait while we prepare your payment...';
+                            
+                            // Redirect to the form page with the user ID
+                            // The form page will detect the authenticated user and show the payment modal
+                            window.location.href = '/form/${pendingAuthUserId}?initiate_payment=true';
+                        }
+                        
+                        // Call the function after a short delay
+                        setTimeout(initiatePaymentAfterAuth, 1000);
+                    `;
+                    document.body.appendChild(initiatePaymentScript);
+                }, 1000);
+            } else {
+                // Normal redirect to the specified URL
+                setTimeout(function() {
+                    const redirectUrl = '{{ redirect_url }}';
+                    debugLog('Redirecting to', redirectUrl);
+                    window.location.href = redirectUrl;
+                }, 2000); // Longer delay to ensure token is stored and test request completes
+            }
         } else {
             // Hide spinner if there's an error
             document.querySelector('.spinner').style.display = 'none';

@@ -303,6 +303,45 @@ async def success(request: Request, session_id: str, user_id: uuid.UUID, tier: s
         {"request": request, "session_id": session_id, "user_id": user_id, "tier": tier}
     )
 
+@router.get("/account/{user_id}", response_class=HTMLResponse)
+async def account(request: Request, user_id: uuid.UUID, session: Session = Depends(get_session)):
+    """Show the account page for a user"""
+    # Check if user exists
+    user = session.get(User, user_id)
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    # Check if user is authenticated
+    stytch_user = await get_authenticated_user(request)
+    
+    # If user is not authenticated, redirect to login
+    if not stytch_user:
+        return RedirectResponse(url=f"/login?redirect=/account/{user_id}", status_code=303)
+    
+    # If user is authenticated, check if the email matches
+    if stytch_user and hasattr(stytch_user, 'emails') and stytch_user.emails:
+        stytch_email = stytch_user.emails[0].email
+        
+        # If the authenticated user's email doesn't match the requested user's email,
+        # redirect to their own account
+        if stytch_email != user.email:
+            # Find the user with the authenticated email
+            statement = select(User).where(User.email == stytch_email)
+            auth_user = session.exec(statement).first()
+            
+            if auth_user:
+                return RedirectResponse(url=f"/account/{auth_user.id}", status_code=303)
+    
+    return templates.TemplateResponse(
+        "account.html", 
+        {
+            "request": request, 
+            "user": user,
+            "user_id": user_id,
+            "payment_tier": user.payment_tier
+        }
+    )
+
 @router.get("/cancel", response_class=HTMLResponse)
 async def cancel(request: Request, user_id: uuid.UUID):
     return templates.TemplateResponse(

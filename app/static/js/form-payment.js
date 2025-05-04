@@ -38,10 +38,15 @@ async function initiatePayment(tier, isRegeneration = false) {
             ? `/api/payments/${user.id}/create-checkout-session/${tier}?is_regeneration=true`
             : `/api/payments/${user.id}/create-checkout-session/${tier}`;
             
+        // Get authentication token
+        const authToken = localStorage.getItem('stytch_session_token');
+        console.log('Using auth token for payment initiation:', authToken ? `${authToken.substring(0, 10)}...` : 'none');
+        
         const response = await fetch(url, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
+                'Authorization': authToken ? `Bearer ${authToken}` : ''
             }
         });
         
@@ -68,10 +73,23 @@ async function initiatePayment(tier, isRegeneration = false) {
 // Verify payment
 async function verifyPayment(sessionId, tier) {
     try {
+        // Show loading overlay
+        const loadingOverlay = document.getElementById('loadingOverlay');
+        const loadingMessage = document.getElementById('loadingMessage');
+        if (loadingOverlay && loadingMessage) {
+            loadingOverlay.style.display = 'flex';
+            loadingMessage.textContent = 'Verifying payment...';
+        }
+        
+        // Get authentication token
+        const authToken = localStorage.getItem('stytch_session_token');
+        console.log('Using auth token for payment verification:', authToken ? `${authToken.substring(0, 10)}...` : 'none');
+        
         const response = await fetch(`/api/payments/${user.id}/verify-payment`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
+                'Authorization': authToken ? `Bearer ${authToken}` : ''
             },
             body: JSON.stringify({
                 session_id: sessionId,
@@ -95,20 +113,38 @@ async function verifyPayment(sessionId, tier) {
             // Update tier badge
             updateTierBadge();
             
-            // If premium tier, show all questions
-            if (tier === 'premium') {
-                // Redirect to form with all questions
-                window.location.href = `/form/${user.id}`;
+            // Generate results based on tier
+            if (loadingMessage) {
+                if (tier === 'premium') {
+                    loadingMessage.textContent = 'Generating your comprehensive life plan...';
+                    await generatePremiumResults();
+                } else {
+                    loadingMessage.textContent = 'Generating your personal insight...';
+                    await generateBasicResults();
+                }
             } else {
-                // Redirect to results page
-                window.location.href = `/results/${user.id}`;
+                // If premium tier, show all questions
+                if (tier === 'premium') {
+                    // Redirect to form with all questions
+                    window.location.href = `/form/${user.id}`;
+                } else {
+                    // Redirect to results page
+                    window.location.href = `/results/${user.id}`;
+                }
             }
         } else {
+            if (loadingOverlay) {
+                loadingOverlay.style.display = 'none';
+            }
             showNotification('Payment verification failed. Please try again.', 'error');
         }
         
     } catch (error) {
         console.error('Error verifying payment:', error);
+        const loadingOverlay = document.getElementById('loadingOverlay');
+        if (loadingOverlay) {
+            loadingOverlay.style.display = 'none';
+        }
         showNotification('Error verifying payment. Please try again.', 'error');
     }
 }

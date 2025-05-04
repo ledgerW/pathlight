@@ -1,8 +1,10 @@
 // Form core functionality for Pathlight
 
 // Global variables
-let currentSlide = 0;
-let totalSlides = 26; // 25 questions + 1 user info slide
+let currentSlide = 1; // Start with question 1 instead of user info slide
+let totalSlides = 25; // 25 questions (removed user info slide)
+// Anonymous session ID for temporary storage
+let anonymousSessionId = null;
 let userResponses = {};
 let user = {
     id: null,
@@ -20,6 +22,24 @@ document.addEventListener('DOMContentLoaded', function() {
     // Debug: Check if questions and imageNames arrays are defined
     console.log('Questions array:', questions);
     console.log('Image names array:', imageNames);
+    
+    // Initialize or retrieve anonymous session ID
+    anonymousSessionId = localStorage.getItem('anonymousSessionId');
+    if (!anonymousSessionId) {
+        anonymousSessionId = 'anonymous-' + Date.now() + '-' + Math.random().toString(36).substring(2, 15);
+        localStorage.setItem('anonymousSessionId', anonymousSessionId);
+    }
+    
+    // Load anonymous responses from localStorage if they exist
+    const savedResponses = localStorage.getItem('anonymousResponses');
+    if (savedResponses) {
+        try {
+            userResponses = JSON.parse(savedResponses);
+            console.log('Loaded anonymous responses from localStorage:', userResponses);
+        } catch (e) {
+            console.error('Error parsing saved responses:', e);
+        }
+    }
     
     // Get DOM elements
     const formSlides = document.getElementById('formSlides');
@@ -99,7 +119,44 @@ document.addEventListener('DOMContentLoaded', function() {
                 basicPaymentModal.style.display = 'none';
                 premiumPaymentModal.style.display = 'none';
                 document.getElementById('regenerationModal').style.display = 'none';
+                document.getElementById('accountCreationModal').style.display = 'none';
             });
+        });
+        
+        // Account creation modal buttons
+        const accountCreationModal = document.getElementById('accountCreationModal');
+        document.getElementById('createAccountAndPay').addEventListener('click', () => {
+            const name = document.getElementById('createUserName').value.trim();
+            const email = document.getElementById('createUserEmail').value.trim();
+            const dob = document.getElementById('createUserDob').value;
+            
+            if (!name) {
+                showNotification('Please enter your name.', 'error');
+                return;
+            }
+            
+            if (!email || !isValidEmail(email)) {
+                showNotification('Please enter a valid email address.', 'error');
+                return;
+            }
+            
+            if (!dob) {
+                showNotification('Please enter your date of birth.', 'error');
+                return;
+            }
+            
+            // Save user info to global user object
+            user.name = name;
+            user.email = email;
+            
+            // Create user account and proceed to payment
+            createUserFromAnonymous(dob);
+            accountCreationModal.style.display = 'none';
+        });
+        
+        // Add close button for account creation modal
+        document.querySelector('#accountCreationModal .close-modal').addEventListener('click', () => {
+            accountCreationModal.style.display = 'none';
         });
         
         // Copy URL button
@@ -153,7 +210,21 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // If user ID exists, load saved responses
         if (userId) {
-            loadUserData();
+            loadUserData().then(() => {
+                // Check if we need to initiate payment after loading user data
+                if (window.initiatePaymentAfterLoad) {
+                    console.log('Initiating payment after user data loaded');
+                    
+                    // Show the basic payment modal
+                    setTimeout(() => {
+                        // Make sure we're at the basic tier questions
+                        showSlide(BASIC_TIER_QUESTIONS);
+                        
+                        // Show the basic payment modal
+                        document.getElementById('basicPaymentModal').style.display = 'flex';
+                    }, 500);
+                }
+            });
         } else {
             // Show first slide for new users
             showSlide(currentSlide);
@@ -251,6 +322,13 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Check if we're at the end of basic tier
         if (currentSlide === BASIC_TIER_QUESTIONS) {
+            // If user is not logged in, show account creation modal
+            if (!user.id) {
+                // Show account creation modal
+                document.getElementById('accountCreationModal').style.display = 'flex';
+                return;
+            }
+            
             // Check if results already exist
             const resultsData = await checkExistingResults();
             
@@ -312,6 +390,87 @@ document.addEventListener('DOMContentLoaded', function() {
         } else {
             loadingMessage.textContent = 'Generating your personal insight...';
             generateBasicResults();
+        }
+    }
+    
+    // Save current slide data
+    function saveCurrentSlideData() {
+        if (currentSlide === 0) {
+            // User info slide - already handled in goToNextSlide
+            return;
+        }
+        
+        // Get question response
+        const questionNumber = currentSlide;
+        const responseTextarea = document.getElementById(`question${questionNumber}`);
+        
+        // Check if textarea exists
+        if (!responseTextarea) {
+            console.error(`Textarea for question ${questionNumber} not found`);
+            return;
+        }
+        
+        const response = responseTextarea.value.trim();
+        
+        // Save to state
+        userResponses[questionNumber] = response;
+        
+        // Save to server if user exists and response is not empty
+        if (user.id && response) {
+            saveResponse(questionNumber, response);
+        } else if (!user.id && response) {
+            // Save to localStorage for anonymous users
+            localStorage.setItem('anonymousResponses', JSON.stringify(userResponses));
+            console.log('Saved anonymous response to localStorage:', questionNumber, response);
+        }
+        
+        // If we're on the last slide, update the submit button state
+        if (currentSlide === BASIC_TIER_QUESTIONS || currentSlide === PREMIUM_TIER_QUESTIONS) {
+            updateSubmitButtonState();
+        }
+    }
+    
+    // Create user from anonymous responses
+    async function createUserFromAnonymous(dob) {
+        try {
+            // First, make sure we have responses in localStorage
+            const savedResponses = localStorage.getItem('anonymousResponses');
+            if (!savedResponses) {
+                console.error('No anonymous responses found in localStorage');
+                showNotification('No responses found. Please answer the questions before proceeding.', 'error');
+                return;
+            }
+            
+            // Parse responses to verify we have enough
+            try {
+                const responses = JSON.parse(savedResponses);
+                let validResponseCount = 0;
+                
+                // Count valid responses for questions 1-5
+                for (let i = 1; i <= BASIC_TIER_QUESTIONS; i++) {
+                    if (responses[i] && responses[i].trim()) {
+                        validResponseCount++;
+                    }
+                }
+                
+                console.log(`Found ${validResponseCount} valid responses out of ${BASIC_TIER_QUESTIONS} required`);
+                
+                if (validResponseCount < BASIC_TIER_QUESTIONS) {
+                    showNotification(`Please answer all ${BASIC_TIER_QUESTIONS} questions before proceeding. You've completed ${validResponseCount}.`, 'error');
+                    return;
+                }
+            } catch (e) {
+                console.error('Error parsing saved responses:', e);
+                showNotification('Error processing your responses. Please try again.', 'error');
+                return;
+            }
+            
+            // Call the createUserFromAnonymous function from form-api.js
+            await window.createUserFromAnonymous(dob);
+            
+        } catch (error) {
+            console.error('Error in createUserFromAnonymous wrapper:', error);
+            showNotification('Error creating user. Please try again.', 'error');
         }
     }
     

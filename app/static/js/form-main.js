@@ -13,10 +13,19 @@ document.addEventListener('DOMContentLoaded', function() {
     const tier = urlParams.get('tier');
     const startQuestion = urlParams.get('start');
     const slideParam = urlParams.get('slide');
+    const initiatePayment = urlParams.get('initiate_payment');
     
     // If we have a session_id and tier, verify the payment
     if (sessionId && tier && user.id) {
         verifyPayment(sessionId, tier);
+    }
+    
+    // If initiate_payment is true, trigger the payment flow after loading user data
+    if (initiatePayment === 'true') {
+        console.log('Initiating payment after authentication');
+        
+        // Set a flag to initiate payment after user data is loaded
+        window.initiatePaymentAfterLoad = true;
     }
     
     // If we have a slide parameter, set the current slide after loading user data
@@ -24,11 +33,10 @@ document.addEventListener('DOMContentLoaded', function() {
         window.startAtSlide = parseInt(slideParam);
         console.log('Will start at slide:', window.startAtSlide);
         
-        // Force show slide 0 if it's the profile slide
+        // If slide parameter is 0, update it to 1 since we removed the profile slide
         if (window.startAtSlide === 0) {
-            setTimeout(() => {
-                showSlide(0);
-            }, 200);
+            window.startAtSlide = 1;
+            console.log('Updated to start at slide 1 instead of 0 (profile slide removed)');
         }
     }
     // If we have a start parameter, set the current slide after loading user data
@@ -38,33 +46,15 @@ document.addEventListener('DOMContentLoaded', function() {
         console.log('Will start at question:', window.startAtQuestion);
     }
     
-    // Clean URL parameters but keep the slide=0 parameter for the profile page
+    // Clean URL parameters
     const url = new URL(window.location.href);
     url.searchParams.delete('session_id');
     url.searchParams.delete('tier');
     url.searchParams.delete('start');
-    
-    // Only remove the slide parameter if it's not 0
-    if (slideParam !== '0') {
-        url.searchParams.delete('slide');
-    }
+    url.searchParams.delete('slide');
+    url.searchParams.delete('initiate_payment');
     
     window.history.replaceState({}, '', url);
     
-    // Add event listener for logout button
-    const logoutButton = document.getElementById('logoutButton');
-    if (logoutButton) {
-        logoutButton.addEventListener('click', function() {
-            // Redirect to the logout endpoint
-            window.location.href = '/auth/logout';
-        });
-        
-        // Only show the logout button if the user is logged in
-        if (!user.id) {
-            const logoutButtonContainer = document.getElementById('logoutButtonContainer');
-            if (logoutButtonContainer) {
-                logoutButtonContainer.style.display = 'none';
-            }
-        }
-    }
+    // We removed the logout button since we removed the user info slide
 });

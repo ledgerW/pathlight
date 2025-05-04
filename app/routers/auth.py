@@ -108,8 +108,45 @@ async def get_authenticated_user(request: Request):
         print(f"[ERROR] Stytch authentication error with token from {token_source}: {str(e)}")
         
         # If the token was from an Authorization header and failed, try to recreate a session
-        if token_source == "auth_header" and hasattr(e, 'details') and e.details.error_type == 'session_not_found':
+        if token_source == "auth_header":
             print("[DEBUG] Session not found for Authorization header token, attempting to recreate session")
+            
+            # Check if this is a temporary token we created for anonymous users
+            if stytch_session.startswith('temp-token-'):
+                try:
+                    # Extract the user ID from the token
+                    user_id = stytch_session.replace('temp-token-', '')
+                    print(f"[DEBUG] Found temporary token with user ID: {user_id}")
+                    
+                    # Verify this is a valid UUID
+                    import uuid
+                    try:
+                        user_uuid = uuid.UUID(user_id)
+                        print(f"[DEBUG] Valid UUID: {user_uuid}")
+                        
+                        # Check if this user exists in the database
+                        from sqlmodel import Session, select
+                        from app.models.database import get_session
+                        from app.models.models import User
+                        
+                        db = next(get_session())
+                        statement = select(User).where(User.id == user_uuid)
+                        db_user = db.exec(statement).first()
+                        
+                        if db_user:
+                            print(f"[DEBUG] Found user in database: {db_user.email}")
+                            
+                            # Create a minimal user object with the ID and email
+                            from types import SimpleNamespace
+                            minimal_user = SimpleNamespace()
+                            minimal_user.user_id = user_id
+                            minimal_user.emails = [SimpleNamespace(email=db_user.email)]
+                            
+                            return minimal_user
+                    except ValueError:
+                        print(f"[DEBUG] Invalid UUID in temporary token: {user_id}")
+                except Exception as temp_token_error:
+                    print(f"[DEBUG] Error processing temporary token: {str(temp_token_error)}")
             
             # Try to extract user information from the token
             try:

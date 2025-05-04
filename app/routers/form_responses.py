@@ -1,9 +1,9 @@
-from typing import List, Union
+from typing import List, Union, Dict
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlmodel import Session, select
 from app.models import FormResponse, User, get_session
 import uuid
-from pydantic import validator
+from pydantic import validator, BaseModel
 
 router = APIRouter(
     prefix="/api/form-responses",
@@ -125,4 +125,77 @@ def get_specific_response(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Error retrieving specific response: {str(e)}"
+        )
+
+class AnonymousResponsesRequest(BaseModel):
+    responses: Dict[str, str]  # Question number (as string) to response text
+
+@router.post("/transfer-anonymous")
+def transfer_anonymous_responses(
+    user_id: uuid.UUID,
+    anonymous_session_id: str,
+    responses: AnonymousResponsesRequest,
+    session: Session = Depends(get_session)
+):
+    """Transfer anonymous responses from localStorage to the database for a new user"""
+    try:
+        # Check if user exists
+        user = session.get(User, user_id)
+        if not user:
+            raise HTTPException(status_code=404, detail="User not found")
+        
+        print(f"Transferring anonymous responses from session {anonymous_session_id} to user {user_id}")
+        print(f"Responses: {responses.responses}")
+        
+        # Create form responses for each question
+        created_responses = []
+        
+        for question_str, response_text in responses.responses.items():
+            try:
+                # Convert question number to int
+                question_number = int(question_str)
+                
+                # Create form response
+                form_response = FormResponse(
+                    user_id=user_id,
+                    question_number=question_number,
+                    response=response_text
+                )
+                
+                # Check if response already exists
+                statement = select(FormResponse).where(
+                    FormResponse.user_id == user_id,
+                    FormResponse.question_number == question_number
+                )
+                existing_response = session.exec(statement).first()
+                
+                if existing_response:
+                    # Update existing response
+                    existing_response.response = response_text
+                    session.add(existing_response)
+                    created_responses.append(existing_response)
+                else:
+                    # Create new response
+                    session.add(form_response)
+                    created_responses.append(form_response)
+            except ValueError:
+                # Skip invalid question numbers
+                print(f"Skipping invalid question number: {question_str}")
+                continue
+        
+        # Commit all changes
+        session.commit()
+        
+        # Return success response
+        return {
+            "success": True,
+            "message": f"Transferred {len(created_responses)} responses from anonymous session {anonymous_session_id} to user {user_id}",
+            "transferred_count": len(created_responses)
+        }
+    except Exception as e:
+        session.rollback()
+        print(f"Error transferring anonymous responses: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error transferring anonymous responses: {str(e)}"
         )

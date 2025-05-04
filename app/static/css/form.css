@@ -337,6 +337,43 @@
     cursor: pointer;
 }
 
+/* Account Creation Modal */
+.account-creation-form {
+    margin-bottom: 1.5rem;
+}
+
+.account-creation-form .form-field {
+    margin-bottom: 1rem;
+}
+
+.payment-section {
+    background-color: #f9f9f9;
+    padding: 1.5rem;
+    border-radius: 8px;
+    margin-bottom: 1.5rem;
+}
+
+.payment-section h3 {
+    margin-top: 0;
+    margin-bottom: 1rem;
+    color: #333;
+}
+
+.payment-section ul {
+    padding-left: 1.5rem;
+    margin-bottom: 0;
+}
+
+.payment-section li {
+    margin-bottom: 0.5rem;
+}
+
+.account-creation-buttons {
+    display: flex;
+    gap: 1rem;
+    margin-top: 1.5rem;
+}
+
 /* Payment modals */
 .payment-buttons {
     display: flex;

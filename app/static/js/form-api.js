@@ -145,16 +145,11 @@ async function createUser(dobValue) {
 // Update user
 async function updateUser() {
     try {
-        // Only update fields that have changed
+        // Update progress state and payment tier
         const updateData = {
             progress_state: user.progress_state,
             payment_tier: user.payment_tier
         };
-        
-        // Only include name if it has changed
-        if (document.getElementById('userName').value.trim() !== user.name) {
-            updateData.name = document.getElementById('userName').value.trim();
-        }
         
         const response = await fetch(`/api/users/${user.id}`, {
             method: 'PUT',
@@ -236,130 +231,127 @@ async function saveResponse(questionNumber, response) {
 
 // Load user data
 async function loadUserData() {
-    try {
-        // Get user data
-        const userResponse = await fetch(`/api/users/${user.id}`);
-        if (!userResponse.ok) {
-            throw new Error('Failed to load user data');
-        }
-        
-        const userData = await userResponse.json();
-        user = userData;
-        
-        // Update tier badge
-        updateTierBadge();
-        
-        // Fill user info fields
-        document.getElementById('userName').value = user.name;
-        document.getElementById('userEmail').value = user.email;
-        
-        // Make email field read-only for returning users
-        document.getElementById('userEmail').readOnly = true;
-        document.getElementById('userEmail').classList.add('readonly-field');
-        
-        // Format and display DOB
-        if (user.dob) {
-            // Convert ISO date string to YYYY-MM-DD format for date input
-            const dobDate = new Date(user.dob);
-            if (!isNaN(dobDate.getTime())) {
-                const year = dobDate.getFullYear();
-                const month = String(dobDate.getMonth() + 1).padStart(2, '0');
-                const day = String(dobDate.getDate()).padStart(2, '0');
-                document.getElementById('userDob').value = `${year}-${month}-${day}`;
+    return new Promise(async (resolve, reject) => {
+        try {
+            // Get user data
+            const userResponse = await fetch(`/api/users/${user.id}`);
+            if (!userResponse.ok) {
+                throw new Error('Failed to load user data');
             }
-        }
-        
-        // Get user responses
-        const responsesResponse = await fetch(`/api/form-responses/user/${user.id}`);
-        if (!responsesResponse.ok) {
-            throw new Error('Failed to load responses');
-        }
-        
-        const responsesData = await responsesResponse.json();
-        
-        // Fill responses
-        responsesData.forEach(response => {
-            userResponses[response.question_number] = response.response;
             
-            const textarea = document.getElementById(`question${response.question_number}`);
-            if (textarea) {
-                textarea.value = response.response;
+            const userData = await userResponse.json();
+            user = userData;
+            
+            // Update tier badge
+            updateTierBadge();
+            
+            // Get user responses
+            const responsesResponse = await fetch(`/api/form-responses/user/${user.id}`);
+            if (!responsesResponse.ok) {
+                throw new Error('Failed to load responses');
             }
-        });
-        
-        // Go to the next unanswered question
-        const progressState = parseInt(user.progress_state);
-        console.log('User progress state:', progressState);
-        
-        // Check if we have a specific slide to start at (for profile page)
-        if (window.startAtSlide === 0) {
-            console.log('Starting at profile slide (slide 0)');
             
-            // Force the slide to be shown
-            setTimeout(() => {
-                showSlide(0);
-            }, 100);
-        }
-        // Check if we have a specific starting question from URL parameter
-        else if (window.startAtQuestion && window.startAtQuestion > 0 && window.startAtQuestion <= PREMIUM_TIER_QUESTIONS) {
-            console.log('Starting at specified question:', window.startAtQuestion);
+            const responsesData = await responsesResponse.json();
             
-            // Force the slide to be shown
-            setTimeout(() => {
-                showSlide(window.startAtQuestion);
+            // Fill responses
+            responsesData.forEach(response => {
+                userResponses[response.question_number] = response.response;
                 
-                // If we're at the end of a tier, update submit button state
-                const isEndOfBasicTier = window.startAtQuestion === BASIC_TIER_QUESTIONS && user.payment_tier !== 'premium';
-                const isEndOfPremiumTier = window.startAtQuestion === PREMIUM_TIER_QUESTIONS;
-                
-                if (isEndOfBasicTier || isEndOfPremiumTier) {
-                    updateSubmitButtonState();
+                const textarea = document.getElementById(`question${response.question_number}`);
+                if (textarea) {
+                    textarea.value = response.response;
                 }
-            }, 100);
-        } else if (progressState > 0) {
-            // Make sure we're showing the correct slide based on progress
-            // This is critical for returning users
-            console.log('Showing slide based on progress state:', progressState);
+            });
             
-            // Force the slide to be shown
-            setTimeout(() => {
-                showSlide(progressState);
+            // Go to the next unanswered question
+            const progressState = parseInt(user.progress_state);
+            console.log('User progress state:', progressState);
+            
+            // Check if we have a specific slide to start at
+            if (window.startAtSlide === 0) {
+                console.log('Starting at first question (slide 1) instead of profile slide (slide 0)');
                 
-                // If we're at the end of a tier, update submit button state
-                const isEndOfBasicTier = progressState === BASIC_TIER_QUESTIONS && user.payment_tier !== 'premium';
-                const isEndOfPremiumTier = progressState === PREMIUM_TIER_QUESTIONS;
+                // Force the slide to be shown - start at question 1 since profile slide was removed
+                setTimeout(() => {
+                    showSlide(1);
+                    resolve(); // Resolve the promise after showing the slide
+                }, 100);
+            }
+            // Check if we have a specific starting question from URL parameter
+            else if (window.startAtQuestion && window.startAtQuestion > 0 && window.startAtQuestion <= PREMIUM_TIER_QUESTIONS) {
+                console.log('Starting at specified question:', window.startAtQuestion);
                 
-                if (isEndOfBasicTier || isEndOfPremiumTier) {
-                    updateSubmitButtonState();
-                }
-            }, 100);
-        } else {
-            showSlide(1); // Start at the first question
+                // Force the slide to be shown
+                setTimeout(() => {
+                    showSlide(window.startAtQuestion);
+                    
+                    // If we're at the end of a tier, update submit button state
+                    const isEndOfBasicTier = window.startAtQuestion === BASIC_TIER_QUESTIONS && user.payment_tier !== 'premium';
+                    const isEndOfPremiumTier = window.startAtQuestion === PREMIUM_TIER_QUESTIONS;
+                    
+                    if (isEndOfBasicTier || isEndOfPremiumTier) {
+                        updateSubmitButtonState();
+                    }
+                    
+                    resolve(); // Resolve the promise after showing the slide
+                }, 100);
+            } else if (progressState > 0) {
+                // Make sure we're showing the correct slide based on progress
+                // This is critical for returning users
+                console.log('Showing slide based on progress state:', progressState);
+                
+                // Force the slide to be shown
+                setTimeout(() => {
+                    showSlide(progressState);
+                    
+                    // If we're at the end of a tier, update submit button state
+                    const isEndOfBasicTier = progressState === BASIC_TIER_QUESTIONS && user.payment_tier !== 'premium';
+                    const isEndOfPremiumTier = progressState === PREMIUM_TIER_QUESTIONS;
+                    
+                    if (isEndOfBasicTier || isEndOfPremiumTier) {
+                        updateSubmitButtonState();
+                    }
+                    
+                    resolve(); // Resolve the promise after showing the slide
+                }, 100);
+            } else {
+                showSlide(1); // Start at the first question
+                resolve(); // Resolve the promise after showing the slide
+            }
+            
+            showNotification('Your saved responses have been loaded.');
+            
+        } catch (error) {
+            console.error('Error loading user data:', error);
+            showNotification('Error loading your saved data. Starting a new form.', 'error');
+            reject(error); // Reject the promise on error
         }
-        
-        showNotification('Your saved responses have been loaded.');
-        
-    } catch (error) {
-        console.error('Error loading user data:', error);
-        showNotification('Error loading your saved data. Starting a new form.', 'error');
-    }
+    });
 }
 
 // Generate basic results (summary and mantra)
 async function generateBasicResults() {
     try {
+        // Get authentication token
+        const authToken = localStorage.getItem('stytch_session_token');
+        console.log('Using auth token for basic results generation:', authToken ? `${authToken.substring(0, 10)}...` : 'none');
+        
         const response = await fetch(`/api/ai/${user.id}/generate-basic`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
+                'Authorization': authToken ? `Bearer ${authToken}` : ''
             }
         });
         
         if (!response.ok) {
-            throw new Error('Failed to generate basic results');
+            const errorText = await response.text();
+            console.error('Error generating basic results:', errorText);
+            throw new Error(`Failed to generate basic results: ${response.status} ${response.statusText}`);
         }
         
         const data = await response.json();
+        console.log('Basic results generated successfully:', data);
         
         // Redirect to results page
         window.location.href = `/results/${user.id}`;
@@ -374,18 +366,26 @@ async function generateBasicResults() {
 // Generate premium results (full path and plan)
 async function generatePremiumResults() {
     try {
+        // Get authentication token
+        const authToken = localStorage.getItem('stytch_session_token');
+        console.log('Using auth token for premium results generation:', authToken ? `${authToken.substring(0, 10)}...` : 'none');
+        
         const response = await fetch(`/api/ai/${user.id}/generate-premium`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
+                'Authorization': authToken ? `Bearer ${authToken}` : ''
             }
         });
         
         if (!response.ok) {
-            throw new Error('Failed to generate premium results');
+            const errorText = await response.text();
+            console.error('Error generating premium results:', errorText);
+            throw new Error(`Failed to generate premium results: ${response.status} ${response.statusText}`);
         }
         
         const data = await response.json();
+        console.log('Premium results generated successfully:', data);
         
         // Redirect to results page
         window.location.href = `/results/${user.id}`;
@@ -410,6 +410,251 @@ async function checkExistingResults() {
     } catch (error) {
         console.error('Error checking results status:', error);
         return { has_results: false };
+    }
+}
+
+// Create user from anonymous responses
+// Make this function globally accessible so it can be called from form-core.js
+window.createUserFromAnonymous = async function(dobValue) {
+    try {
+        // Show loading overlay
+        const loadingOverlay = document.getElementById('loadingOverlay');
+        const loadingMessage = document.getElementById('loadingMessage');
+        loadingOverlay.style.display = 'flex';
+        loadingMessage.textContent = 'Creating your account...';
+        
+        // Format date as ISO string
+        const dob = new Date(dobValue);
+        // Ensure the date is valid
+        if (isNaN(dob.getTime())) {
+            showNotification('Please enter a valid date of birth.', 'error');
+            loadingOverlay.style.display = 'none';
+            return;
+        }
+        
+        // Use UTC date string to avoid timezone issues
+        const dobString = dob.toISOString();
+        
+        // Step 1: Create the new user account
+        const userData = {
+            name: user.name,
+            email: user.email,
+            dob: dobString,
+            progress_state: BASIC_TIER_QUESTIONS.toString(),
+            payment_tier: 'none',
+            anonymous_session_id: anonymousSessionId
+        };
+        
+        console.log('Creating user from anonymous data:', userData);
+        
+        const response = await fetch('/api/users/from-anonymous', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(userData),
+        });
+        
+        if (!response.ok) {
+            const errorText = await response.text();
+            console.error('Server error response:', errorText);
+            showNotification(`Error creating user: ${response.status} ${response.statusText}`, 'error');
+            loadingOverlay.style.display = 'none';
+            throw new Error(`Failed to create user: ${response.status} ${response.statusText}`);
+        }
+        
+        const data = await response.json();
+        
+        // Update user object with new user ID
+        user.id = data.id;
+        
+        // Step 2: Save form responses to the user
+        loadingMessage.textContent = 'Saving your responses...';
+        
+        // Get anonymous responses from localStorage
+        const savedResponses = localStorage.getItem('anonymousResponses');
+        if (!savedResponses) {
+            console.error('No anonymous responses found in localStorage');
+            showNotification('No responses found. Please answer the questions before proceeding.', 'error');
+            loadingOverlay.style.display = 'none';
+            return;
+        }
+        
+        // Parse responses
+        const responses = JSON.parse(savedResponses);
+        
+        // Save each response individually using the standard saveResponse function
+        for (const [questionNum, responseText] of Object.entries(responses)) {
+            if (responseText && responseText.trim()) {
+                try {
+                    const questionNumber = parseInt(questionNum);
+                    await saveResponse(questionNumber, responseText.trim());
+                    console.log(`Saved response for question ${questionNum}`);
+                } catch (err) {
+                    console.error(`Error saving response for question ${questionNum}:`, err);
+                }
+            }
+        }
+        
+        // Clear anonymous responses from localStorage
+        localStorage.removeItem('anonymousResponses');
+        
+        // Step 3: Email the stytch magic link
+        loadingMessage.textContent = 'Sending login email...';
+        await sendMagicLink(user.email);
+        
+        // Store authentication data in localStorage for immediate use
+        localStorage.setItem('pathlight_session', 'true');
+        localStorage.setItem('pathlight_session_created', new Date().toISOString());
+        localStorage.setItem('pathlight_user_id', user.id);
+        localStorage.setItem('pathlight_user_email', user.email);
+        
+        // Set up authentication for future requests
+        const tempAuthToken = `temp-token-${user.id}`;
+        localStorage.setItem('stytch_session_token', tempAuthToken);
+        
+        // Step 4: Call the generate purpose endpoint to create their results
+        loadingMessage.textContent = 'Generating your results...';
+        
+        // Proceed to payment
+        initiatePayment('basic');
+        
+    } catch (error) {
+        console.error('Error creating user from anonymous:', error);
+        document.getElementById('loadingOverlay').style.display = 'none';
+        showNotification('Error creating user. Please try again.', 'error');
+    }
+}
+
+// Show authentication required modal
+// Make this function globally accessible so it can be called from createUserFromAnonymous
+window.showAuthenticationRequiredModal = function(userId) {
+    // Create modal if it doesn't exist
+    let authModal = document.getElementById('authenticationRequiredModal');
+    
+    if (!authModal) {
+        // Create the modal element
+        authModal = document.createElement('div');
+        authModal.id = 'authenticationRequiredModal';
+        authModal.className = 'modal';
+        authModal.style.display = 'none';
+        
+        // Create modal content
+        authModal.innerHTML = `
+            <div class="modal-content">
+                <span class="close-modal">&times;</span>
+                <h2>Check Your Email</h2>
+                <p>We've sent a magic link to your email address. Please check your inbox and click the link to complete your account setup.</p>
+                <p>After clicking the link, you'll be redirected back to continue with payment and generate your results.</p>
+                <p>If you don't see the email, please check your spam folder.</p>
+                <div class="modal-buttons">
+                    <button id="resendMagicLinkButton" class="button">Resend Magic Link</button>
+                </div>
+            </div>
+        `;
+        
+        // Add modal to the document
+        document.body.appendChild(authModal);
+        
+        // Add event listeners
+        document.querySelector('#authenticationRequiredModal .close-modal').addEventListener('click', () => {
+            authModal.style.display = 'none';
+        });
+        
+        document.getElementById('resendMagicLinkButton').addEventListener('click', async () => {
+            if (user && user.email) {
+                // Show loading message
+                document.getElementById('resendMagicLinkButton').textContent = 'Sending...';
+                
+                // Resend magic link
+                await sendMagicLink(user.email);
+                
+                // Reset button text
+                setTimeout(() => {
+                    document.getElementById('resendMagicLinkButton').textContent = 'Resend Magic Link';
+                }, 2000);
+            }
+        });
+    }
+    
+    // Show the modal
+    authModal.style.display = 'flex';
+    
+    // Save user ID to localStorage for later use
+    localStorage.setItem('pendingAuthUserId', userId);
+}
+
+// Transfer anonymous responses to the new user
+async function transferAnonymousResponses(userId, anonymousSessionId) {
+    try {
+        // Get anonymous responses from localStorage
+        const savedResponses = localStorage.getItem('anonymousResponses');
+        if (!savedResponses) {
+            console.log('No anonymous responses found in localStorage');
+            return null;
+        }
+        
+        // Parse anonymous responses
+        const responses = JSON.parse(savedResponses);
+        console.log('Transferring anonymous responses:', responses);
+        
+        // Format responses correctly for the API
+        // The API expects a map of question numbers to response text
+        const formattedResponses = {};
+        for (const [questionNum, responseText] of Object.entries(responses)) {
+            // Only include non-empty responses
+            if (responseText && responseText.trim()) {
+                formattedResponses[questionNum] = responseText.trim();
+            }
+        }
+        
+        // Check if we have any responses to transfer
+        if (Object.keys(formattedResponses).length === 0) {
+            console.error('No valid responses to transfer');
+            return null;
+        }
+        
+        console.log('Formatted responses for API:', formattedResponses);
+        
+        // Create the request body with the exact structure expected by the API
+        // The server expects a structure where 'responses' is the formatted responses object directly
+        const requestBody = {
+            user_id: userId,
+            anonymous_session_id: anonymousSessionId,
+            responses: formattedResponses
+        };
+        
+        console.log('Request body for transfer-anonymous:', JSON.stringify(requestBody));
+        
+        // Log the exact request we're sending for debugging
+        console.log('Sending transfer-anonymous request with body:', JSON.stringify(requestBody, null, 2));
+        
+        // Call the transfer-anonymous endpoint
+        // The endpoint expects query parameters for user_id and anonymous_session_id, not in the body
+        const response = await fetch(`/api/form-responses/transfer-anonymous?user_id=${userId}&anonymous_session_id=${anonymousSessionId}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ responses: formattedResponses }),
+        });
+        
+        if (!response.ok) {
+            const errorText = await response.text();
+            console.error('Error transferring anonymous responses:', errorText);
+            throw new Error(`Failed to transfer anonymous responses: ${response.status} ${response.statusText}`);
+        }
+        
+        const data = await response.json();
+        console.log('Anonymous responses transferred:', data);
+        
+        // Clear anonymous responses from localStorage
+        localStorage.removeItem('anonymousResponses');
+        
+        return data;
+    } catch (error) {
+        console.error('Error transferring anonymous responses:', error);
+        return null;
     }
 }
 
