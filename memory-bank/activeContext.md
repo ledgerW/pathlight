@@ -4,6 +4,14 @@
 Implementing and refining the database schema, AI integration, and user authentication flow for the life purpose application. The focus is on supporting the two-tier payment model, improving result generation, enhancing the user experience, and streamlining the authentication process.
 
 ## Recent Changes
+- Fixed UI and UX for Next Steps and Daily Plan sections:
+  - Added checkable items to Next Steps and Daily Plan sections
+  - Implemented category-based icon selection using LLM-assigned categories
+  - Added Reset All buttons to clear checked items
+  - Implemented cookie-based storage for checkbox states with fallback to 'anonymous' user
+  - Fixed category-based icon selection by prioritizing category over timeframe
+  - Implemented consistent IDs for timeframe cards to ensure checkbox states persist between sessions
+
 - Fixed broken authentication flow with comprehensive solution:
   - Enhanced server-side authentication in `app/routers/auth.py`:
     - Added support for both session tokens and JWTs

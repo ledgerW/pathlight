@@ -186,9 +186,9 @@ function displayStructuredPlan(fullPlanData) {
                     weekdaySection.innerHTML = `
                         <h3 class="daily-plan-section-title">Weekdays (Monday-Friday)</h3>
                         <div class="daily-plan-timeframes">
-                            ${createTimeframeCard('Morning', dailyPlan.weekdays.morning, 'sunrise')}
-                            ${createTimeframeCard('Afternoon', dailyPlan.weekdays.afternoon, 'sun')}
-                            ${createTimeframeCard('Evening', dailyPlan.weekdays.evening, 'moon')}
+                            ${createTimeframeCard('Morning', dailyPlan.weekdays.morning, 'sunrise', 'weekday')}
+                            ${createTimeframeCard('Afternoon', dailyPlan.weekdays.afternoon, 'sun', 'weekday')}
+                            ${createTimeframeCard('Evening', dailyPlan.weekdays.evening, 'moon', 'weekday')}
                         </div>
                     `;
                     dailyPlanContainer.appendChild(weekdaySection);
@@ -201,9 +201,9 @@ function displayStructuredPlan(fullPlanData) {
                     weekendSection.innerHTML = `
                         <h3 class="daily-plan-section-title">Weekends (Saturday-Sunday)</h3>
                         <div class="daily-plan-timeframes">
-                            ${createTimeframeCard('Morning', dailyPlan.weekends.morning, 'sunrise')}
-                            ${createTimeframeCard('Afternoon', dailyPlan.weekends.afternoon, 'sun')}
-                            ${createTimeframeCard('Evening', dailyPlan.weekends.evening, 'moon')}
+                            ${createTimeframeCard('Morning', dailyPlan.weekends.morning, 'sunrise', 'weekend')}
+                            ${createTimeframeCard('Afternoon', dailyPlan.weekends.afternoon, 'sun', 'weekend')}
+                            ${createTimeframeCard('Evening', dailyPlan.weekends.evening, 'moon', 'weekend')}
                         </div>
                     `;
                     dailyPlanContainer.appendChild(weekendSection);

@@ -92,6 +92,11 @@ async function loadFullPlan() {
             paymentSection.style.display = 'none';
         }
         
+        // Dispatch the resultsLoaded event
+        if (window.resultsLoadedEvent) {
+            document.dispatchEvent(window.resultsLoadedEvent);
+        }
+        
         return true;
         
     } catch (error) {

@@ -7,6 +7,15 @@ document.addEventListener('DOMContentLoaded', function() {
         initializeCollapsibleSections();
     }
     
+    // Create a custom event for when results are loaded
+    window.resultsLoadedEvent = new Event('resultsLoaded');
+    
+    // Add event listener for results loaded event
+    document.addEventListener('resultsLoaded', function() {
+        // Initialize checkboxes after results are loaded
+        initializeCheckboxes();
+    });
+    
     // Check URL parameters for payment verification
     const urlParams = new URLSearchParams(window.location.search);
     const paymentSuccess = urlParams.get('payment_success');
@@ -113,4 +122,79 @@ function showTab(tabName) {
         // Load full plan content if not already loaded
         loadFullPlan();
     }
+}
+
+// Initialize checkbox functionality
+function initializeCheckboxes() {
+    // Load saved states for all sections
+    document.querySelectorAll('.checkable-list').forEach(list => {
+        const sectionId = list.dataset.section;
+        if (sectionId) {
+            loadCheckboxStates(sectionId);
+        }
+    });
+    
+    // Add event listeners to all checkboxes
+    document.querySelectorAll('.item-checkbox').forEach(checkbox => {
+        const listItem = checkbox.closest('.checkable-item');
+        const list = checkbox.closest('.checkable-list');
+        
+        if (listItem && list) {
+            const sectionId = list.dataset.section;
+            const itemIndex = listItem.dataset.index;
+            
+            // Remove any existing event listeners
+            const newCheckbox = checkbox.cloneNode(true);
+            checkbox.parentNode.replaceChild(newCheckbox, checkbox);
+            
+            // Add new event listener
+            newCheckbox.addEventListener('change', function() {
+                saveCheckboxState(sectionId, itemIndex, this.checked);
+            });
+        }
+    });
+    
+    // Initialize reset buttons
+    initializeResetButtons();
+    
+    // Make resetCheckboxes function available globally
+    window.resetCheckboxes = resetCheckboxes;
+}
+
+// Initialize reset buttons
+function initializeResetButtons() {
+    console.log('Initializing reset buttons');
+    
+    // Use direct onclick handler for all reset buttons
+    document.querySelectorAll('.reset-checklist-button').forEach(button => {
+        // Remove any existing event listeners by cloning
+        const newButton = button.cloneNode(true);
+        button.parentNode.replaceChild(newButton, button);
+        
+        // Get the section ID from the data attribute
+        const sectionId = newButton.dataset.section;
+        console.log('Found reset button for section:', sectionId);
+        
+        if (sectionId) {
+            // Add direct onclick handler
+            newButton.onclick = function(event) {
+                console.log('Reset button clicked for section:', sectionId);
+                event.preventDefault();
+                event.stopPropagation();
+                
+                try {
+                    // Call the resetCheckboxes function
+                    if (typeof window.resetCheckboxes === 'function') {
+                        window.resetCheckboxes(sectionId);
+                    } else {
+                        console.error('resetCheckboxes function not found');
+                    }
+                } catch (error) {
+                    console.error('Error resetting checkboxes:', error);
+                }
+                
+                return false;
+            };
+        }
+    });
 }

@@ -32,20 +32,24 @@ class Obstacle(BaseModel):
     solution: str = Field(description="How to overcome this obstacle")
     type: str = Field(description="Type of obstacle: 'personal' or 'external'")
 
+class ActionItem(BaseModel):
+    text: str = Field(description="The action item text")
+    category: str = Field(description="The category this item belongs to, one of: health, learning, mindfulness, writing, planning, social, nutrition, rest, creativity, family, friendship, career, finance, medical, travel, hobbies, goals, reflection, gratitude, nature")
+
 class DailyPlanTimeframe(BaseModel):
-    morning: List[str] = Field(description="Morning activities and routines as a list of bullet points")
-    afternoon: List[str] = Field(description="Afternoon activities and routines as a list of bullet points")
-    evening: List[str] = Field(description="Evening activities and routines as a list of bullet points")
+    morning: List[ActionItem] = Field(description="Morning activities and routines")
+    afternoon: List[ActionItem] = Field(description="Afternoon activities and routines")
+    evening: List[ActionItem] = Field(description="Evening activities and routines")
 
 class DailyPlan(BaseModel):
     weekdays: DailyPlanTimeframe = Field(description="Daily plan for weekdays (Monday-Friday)")
     weekends: DailyPlanTimeframe = Field(description="Daily plan for weekends (Saturday-Sunday)")
 
 class NextSteps(BaseModel):
-    today: List[str] = Field(description="Immediate actions to take today, as a list of bullet points")
-    next_7_days: List[str] = Field(description="Actions to take in the next 7 days, as a list of bullet points")
-    next_30_days: List[str] = Field(description="Actions to take in the next 30 days, as a list of bullet points")
-    next_180_days: List[str] = Field(description="Actions to take in the next 180 days, as a list of bullet points")
+    today: List[ActionItem] = Field(description="Immediate actions to take today")
+    next_7_days: List[ActionItem] = Field(description="Actions to take in the next 7 days")
+    next_30_days: List[ActionItem] = Field(description="Actions to take in the next 30 days")
+    next_180_days: List[ActionItem] = Field(description="Actions to take in the next 180 days")
 
 class FullPlanOutput(BaseModel):
     mantra: str = Field(description="A mantra designed to instill purpose and agency.")
@@ -105,18 +109,21 @@ full_plan_prompt = ChatPromptTemplate([
     ("user", """
 Based on the user's responses to the reflective questions below, create their mantra, purpose, next steps, daily plan, and obstacles.
 
+For each action item in the next steps and daily plan sections, assign one of these categories:
+health, learning, mindfulness, writing, planning, social, nutrition, rest, creativity, family, friendship, career, finance, medical, travel, hobbies, goals, reflection, gratitude, nature
+
 For the daily plan section, create a structured routine that distinguishes between:
 1. Weekdays (Monday-Friday) and weekends (Saturday-Sunday)
 2. For each of those, provide specific guidance for:
-   - Morning activities and routines (as a list of bullet points)
-   - Afternoon activities and routines (as a list of bullet points)
-   - Evening activities and routines (as a list of bullet points)
+   - Morning activities and routines
+   - Afternoon activities and routines
+   - Evening activities and routines
 
 For the next steps section, organize actions into these timeframes:
-1. Today: Immediate actions to take today (as a list of bullet points)
-2. Next 7 Days: Actions to take in the next week (as a list of bullet points)
-3. Next 30 Days: Actions to take in the next month (as a list of bullet points)
-4. Next 180 Days: Actions to take in the next six months (as a list of bullet points)
+1. Today: Immediate actions to take today
+2. Next 7 Days: Actions to take in the next week
+3. Next 30 Days: Actions to take in the next month
+4. Next 180 Days: Actions to take in the next six months
 
 For the obstacles section, identify both personal and external challenges the user might face. For each obstacle:
 1. Clearly describe the challenge

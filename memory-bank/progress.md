@@ -29,6 +29,14 @@ The core functionality of the application has been implemented:
   - Collapsible sections for better mobile experience
 
 ## Latest Improvements
+- Fixed UI and UX for Next Steps and Daily Plan sections:
+  - Added checkable items to Next Steps and Daily Plan sections to allow users to track progress
+  - Implemented category-based icon selection using LLM-assigned categories
+  - Added Reset All buttons to clear checked items in each section
+  - Implemented cookie-based storage for checkbox states with fallback to 'anonymous' user
+  - Fixed category-based icon selection by prioritizing category over timeframe
+  - Implemented consistent IDs for timeframe cards to ensure checkbox states persist between sessions
+
 - Fixed broken authentication flow with comprehensive solution:
   - Enhanced server-side authentication in `app/routers/auth.py`:
     - Added support for both session tokens and JWTs
@@ -95,7 +103,11 @@ The core functionality of the application has been implemented:
 - Progress tracking for completed plan items
 
 ## Current Status
-The application is functional with the core features implemented. Recent work has focused on fixing the broken authentication flow with a comprehensive solution, fixing the redirection issue in the user authentication flow, improving the mobile experience with responsive design and collapsible sections, as well as fixing the "Update My Plan" button functionality for users with premium plans and improving modal handling across the application. The authentication flow fix implements a multi-layered approach using localStorage, Authorization headers, and cookies to ensure users remain logged in across all scenarios, with robust error handling and recovery mechanisms. The redirection fix ensures existing users are properly redirected to the login page instead of an invalid URL. These changes have significantly improved the user experience by ensuring seamless authentication, making the application more usable on mobile devices, ensuring consistency between different parts of the application, and fixing issues with loading spinners.
+The application is functional with the core features implemented. Recent work has focused on fixing the UI/UX issues with the Next Steps and Daily Plan sections, fixing the broken authentication flow with a comprehensive solution, fixing the redirection issue in the user authentication flow, improving the mobile experience with responsive design and collapsible sections, as well as fixing the "Update My Plan" button functionality for users with premium plans and improving modal handling across the application. 
+
+The checkbox UI/UX fixes implement consistent IDs for timeframe cards to ensure checkbox states persist between sessions, prioritize category-based icon selection over timeframe icons, and provide fallback to 'anonymous' user for cookie storage when userId is missing. The authentication flow fix implements a multi-layered approach using localStorage, Authorization headers, and cookies to ensure users remain logged in across all scenarios, with robust error handling and recovery mechanisms. The redirection fix ensures existing users are properly redirected to the login page instead of an invalid URL. 
+
+These changes have significantly improved the user experience by ensuring seamless authentication, making the application more usable on mobile devices, ensuring consistency between different parts of the application, and fixing issues with loading spinners and checkbox functionality.
 
 ## Known Issues
 - Database migrations should only use PostgreSQL (not SQLite)
@@ -120,5 +132,8 @@ The application is functional with the core features implemented. Recent work ha
 - **Mobile Responsiveness**: Evolved from desktop-focused to fully responsive with mobile-specific optimizations
 - **Content Organization**: Evolved to use collapsible sections for better space utilization and focus
 - **Interactive Elements**: Enhanced with visual indicators and smooth transitions
+- **Checkbox Functionality**: Evolved from basic implementation to robust solution with persistent state across sessions, category-based icons, and fallback mechanisms
+- **Icon Selection**: Evolved from timeframe-based to category-based with multiple fallback strategies
+- **State Persistence**: Evolved from simple cookie storage to robust solution with anonymous user fallback and consistent IDs
 
 This document will be continuously updated as work progresses and new insights are gained.
