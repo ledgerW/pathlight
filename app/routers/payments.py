@@ -27,6 +27,7 @@ async def create_checkout_session(
     user_id: uuid.UUID, 
     tier: str,
     is_regeneration: bool = False,
+    is_magic_link_sent: bool = False,
     session: Session = Depends(get_session),
     request: Request = None
 ):
@@ -35,6 +36,12 @@ async def create_checkout_session(
         query_params = request.query_params
         is_regeneration_str = query_params.get('is_regeneration', 'false').lower()
         is_regeneration = is_regeneration_str == 'true'
+        
+    # Check if is_magic_link_sent was passed as a query parameter
+    if request and not is_magic_link_sent:
+        query_params = request.query_params
+        is_magic_link_str = query_params.get('is_magic_link_sent', 'false').lower()
+        is_magic_link_sent = is_magic_link_str == 'true'
     # Check if user exists
     user = session.get(User, user_id)
     if not user:
@@ -51,6 +58,16 @@ async def create_checkout_session(
         raise HTTPException(status_code=400, detail=f"User has already paid for {tier} tier")
     
     try:
+        # Determine the success URL based on whether a magic link was sent
+        success_url = ""
+        if is_magic_link_sent:
+            # For users who have a magic link sent, redirect to payment-success page
+            # Include the user's email for the instructions
+            success_url = f"{os.getenv('PROD_DOMAIN') if is_production() else os.getenv('DEV_DOMAIN')}/payment-success?user_id={user_id}&tier={tier}&email={user.email}"
+        else:
+            # For regular users, use the standard success page
+            success_url = f"{os.getenv('PROD_DOMAIN') if is_production() else os.getenv('DEV_DOMAIN')}/success?session_id={{CHECKOUT_SESSION_ID}}&user_id={user_id}&tier={tier}"
+        
         # Create Stripe checkout session
         checkout_session = stripe.checkout.Session.create(
             payment_method_types=["card"],
@@ -61,13 +78,14 @@ async def create_checkout_session(
                 },
             ],
             mode="payment",
-            success_url=f"{os.getenv('PROD_DOMAIN') if is_production() else os.getenv('DEV_DOMAIN')}/success?session_id={{CHECKOUT_SESSION_ID}}&user_id={user_id}&tier={tier}",
+            success_url=success_url,
             cancel_url=f"{os.getenv('PROD_DOMAIN') if is_production() else os.getenv('DEV_DOMAIN')}/cancel?user_id={user_id}",
             client_reference_id=f"{user_id}:{tier}",  # Include tier in reference ID
             metadata={
                 "tier": tier,
-                "is_regeneration": str(is_regeneration)
-            },  # Add tier and regeneration flag to metadata for webhook
+                "is_regeneration": str(is_regeneration),
+                "is_magic_link_sent": str(is_magic_link_sent)
+            },  # Add tier, regeneration flag, and magic link flag to metadata for webhook
         )
         
         return {"checkout_url": checkout_session.url}

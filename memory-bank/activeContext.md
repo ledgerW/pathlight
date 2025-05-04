@@ -4,6 +4,17 @@
 Implementing and refining the database schema, AI integration, and user authentication flow for the life purpose application. The focus is on supporting the two-tier payment model, improving result generation, enhancing the user experience, and streamlining the authentication process.
 
 ## Recent Changes
+- Fixed user flow issues with magic link and payment process:
+  - Modified the flow to show email notification only after payment is complete
+  - Created a dedicated payment success page for users with magic links
+  - Implemented background results generation that doesn't trigger redirects
+  - Added proper header handling in API endpoints to prevent unwanted redirects
+  - Modified Stripe checkout flow to use different success URLs based on user state
+  - Enhanced payment verification to properly handle magic link users
+  - Added localStorage flags to track when a magic link has been sent
+  - Improved email notification flow with conditional notifications
+  - Fixed issues where users were being redirected to login page after payment
+
 - Successfully implemented a new arrival flow for users:
   - Modified the form to allow users to answer the first five questions without creating an account
   - Added an account creation modal that appears after question 5

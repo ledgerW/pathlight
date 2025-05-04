@@ -60,7 +60,7 @@ async function checkExistingUser(email) {
 }
 
 // Send magic link for authentication
-async function sendMagicLink(email) {
+async function sendMagicLink(email, showNotifications = true) {
     try {
         const response = await fetch('/auth/login_or_create_user', {
             method: 'POST',
@@ -73,15 +73,21 @@ async function sendMagicLink(email) {
         const data = await response.json();
         
         if (response.ok) {
-            showNotification('Magic link sent! Please check your email to continue.', 'success');
+            if (showNotifications) {
+                showNotification('Magic link sent! Please check your email to continue.', 'success');
+            }
             return true;
         } else {
-            showNotification('Error sending magic link: ' + (data.error || 'Unknown error'), 'error');
+            if (showNotifications) {
+                showNotification('Error sending magic link: ' + (data.error || 'Unknown error'), 'error');
+            }
             return false;
         }
     } catch (error) {
         console.error('Error sending magic link:', error);
-        showNotification('Error sending magic link. Please try again.', 'error');
+        if (showNotifications) {
+            showNotification('Error sending magic link. Please try again.', 'error');
+        }
         return false;
     }
 }
@@ -353,8 +359,14 @@ async function generateBasicResults() {
         const data = await response.json();
         console.log('Basic results generated successfully:', data);
         
-        // Redirect to results page
-        window.location.href = `/results/${user.id}`;
+        // Check if this is a background request (from payment_success.html)
+        const isBackgroundRequest = response.headers.get('X-Background-Request') === 'true';
+        
+        // Only redirect if this is not a background request
+        if (!isBackgroundRequest) {
+            // Redirect to results page
+            window.location.href = `/results/${user.id}`;
+        }
         
     } catch (error) {
         console.error('Error generating basic results:', error);
@@ -387,8 +399,14 @@ async function generatePremiumResults() {
         const data = await response.json();
         console.log('Premium results generated successfully:', data);
         
-        // Redirect to results page
-        window.location.href = `/results/${user.id}`;
+        // Check if this is a background request (from payment_success.html)
+        const isBackgroundRequest = response.headers.get('X-Background-Request') === 'true';
+        
+        // Only redirect if this is not a background request
+        if (!isBackgroundRequest) {
+            // Redirect to results page
+            window.location.href = `/results/${user.id}`;
+        }
         
     } catch (error) {
         console.error('Error generating premium results:', error);
@@ -499,9 +517,12 @@ window.createUserFromAnonymous = async function(dobValue) {
         // Clear anonymous responses from localStorage
         localStorage.removeItem('anonymousResponses');
         
-        // Step 3: Email the stytch magic link
-        loadingMessage.textContent = 'Sending login email...';
-        await sendMagicLink(user.email);
+        // Step 3: Email the stytch magic link but don't show notification yet
+        loadingMessage.textContent = 'Preparing your account...';
+        await sendMagicLink(user.email, false); // Pass false to suppress notification
+        
+        // Set a flag to indicate that a magic link has been sent
+        localStorage.setItem('magic_link_sent', 'true');
         
         // Store authentication data in localStorage for immediate use
         localStorage.setItem('pathlight_session', 'true');
@@ -513,8 +534,8 @@ window.createUserFromAnonymous = async function(dobValue) {
         const tempAuthToken = `temp-token-${user.id}`;
         localStorage.setItem('stytch_session_token', tempAuthToken);
         
-        // Step 4: Call the generate purpose endpoint to create their results
-        loadingMessage.textContent = 'Generating your results...';
+        // Step 4: Proceed directly to payment without showing email notification
+        loadingMessage.textContent = 'Preparing payment...';
         
         // Proceed to payment
         initiatePayment('basic');

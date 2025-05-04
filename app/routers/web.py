@@ -303,6 +303,14 @@ async def success(request: Request, session_id: str, user_id: uuid.UUID, tier: s
         {"request": request, "session_id": session_id, "user_id": user_id, "tier": tier}
     )
 
+@router.get("/payment-success", response_class=HTMLResponse)
+async def payment_success(request: Request, user_id: uuid.UUID, tier: str, email: str):
+    """Show a success page after payment with instructions to check email for magic link"""
+    return templates.TemplateResponse(
+        "payment_success.html", 
+        {"request": request, "user_id": user_id, "tier": tier, "email": email}
+    )
+
 @router.get("/account/{user_id}", response_class=HTMLResponse)
 async def account(request: Request, user_id: uuid.UUID, session: Session = Depends(get_session)):
     """Show the account page for a user"""

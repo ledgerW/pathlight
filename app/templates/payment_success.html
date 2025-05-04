@@ -1,0 +1,147 @@
+{% extends "base.html" %}
+
+{% block title %}Pathlight - Payment Successful{% endblock %}
+
+{% block styles %}
+<link rel="stylesheet" href="/static/css/payment.css">
+<style>
+    .email-instructions {
+        margin-top: 20px;
+        padding: 20px;
+        background-color: #f8f9fa;
+        border-radius: 8px;
+        border-left: 4px solid #4a90e2;
+    }
+    
+    .email-instructions h3 {
+        color: #333;
+        margin-top: 0;
+    }
+    
+    .email-instructions p {
+        margin-bottom: 10px;
+    }
+    
+    .email-instructions ul {
+        margin-left: 20px;
+    }
+    
+    .resend-button {
+        background-color: #4a90e2;
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 16px;
+        margin-top: 15px;
+        transition: background-color 0.3s;
+    }
+    
+    .resend-button:hover {
+        background-color: #3a7bc8;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="payment-container">
+    <div class="payment-content success">
+        <img src="/static/images/16TheHorizon.png" alt="The Horizon" class="payment-image">
+        <h1>Payment Successful!</h1>
+        <p>Thank you for your purchase. Your {{ tier }} plan has been activated.</p>
+        
+        <div class="email-instructions">
+            <h3>Check Your Email</h3>
+            <p>We've sent a magic link to <strong>{{ email }}</strong>.</p>
+            <p>Please check your inbox and click the link to log in and view your results.</p>
+            <p>If you don't see the email, please check your spam folder.</p>
+            <p>The link will expire after 24 hours.</p>
+            
+            <button id="resendMagicLinkButton" class="resend-button">Resend Magic Link</button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        // Set up resend button
+        const resendButton = document.getElementById('resendMagicLinkButton');
+        if (resendButton) {
+            resendButton.addEventListener('click', async () => {
+                // Show loading state
+                resendButton.textContent = 'Sending...';
+                resendButton.disabled = true;
+                
+                try {
+                    // Send request to resend magic link
+                    const response = await fetch('/auth/login_or_create_user', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ email: '{{ email }}' })
+                    });
+                    
+                    const data = await response.json();
+                    
+                    if (response.ok) {
+                        // Show success message
+                        showNotification('Magic link sent! Please check your email.', 'success');
+                    } else {
+                        // Show error message
+                        showNotification('Error sending magic link: ' + (data.error || 'Unknown error'), 'error');
+                    }
+                } catch (error) {
+                    console.error('Error sending magic link:', error);
+                    showNotification('Error sending magic link. Please try again.', 'error');
+                }
+                
+                // Reset button state
+                setTimeout(() => {
+                    resendButton.textContent = 'Resend Magic Link';
+                    resendButton.disabled = false;
+                }, 2000);
+            });
+        }
+        
+        // Custom function to generate results without redirecting
+        async function generateResultsInBackground() {
+            try {
+                // Call the appropriate AI endpoint based on tier
+                const userId = '{{ user_id }}';
+                const tier = '{{ tier }}';
+                const endpoint = tier === 'premium' ? 'generate-premium' : 'generate-basic';
+                
+                console.log(`Generating ${tier} results in the background for user ${userId}`);
+                
+                // Use fetch with the X-Background-Request header to prevent redirects
+                const response = await fetch(`/api/ai/${userId}/${endpoint}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Background-Request': 'true'
+                    }
+                });
+                
+                if (!response.ok) {
+                    console.error('Failed to generate results in background');
+                    return;
+                }
+                
+                const data = await response.json();
+                console.log('Results generated successfully in background:', data);
+                
+                // Do NOT redirect to results page - user needs to click magic link first
+            } catch (error) {
+                console.error('Error generating results in background:', error);
+            }
+        }
+        
+        // Start background generation after a short delay
+        setTimeout(generateResultsInBackground, 1000);
+    });
+</script>
+{% endblock %}

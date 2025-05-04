@@ -1,5 +1,5 @@
 from typing import List, Dict, Optional
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlmodel import Session, select
 from app.models import User, FormResponse, Result, get_session
 import uuid
@@ -170,7 +170,11 @@ def generate_purpose(user: User, zodiac_info: Dict[str, str], responses: List[Fo
     return summary_output
 
 @router.post("/{user_id}/generate-basic", response_model=dict)
-async def generate_basic_results(user_id: uuid.UUID, session: Session = Depends(get_session)):
+async def generate_basic_results(
+    user_id: uuid.UUID, 
+    request: Request,
+    session: Session = Depends(get_session)
+):
     """Generate basic results (summary and mantra) after answering the first 5 questions"""
     # Check if user exists
     user = session.get(User, user_id)
@@ -230,11 +234,24 @@ async def generate_basic_results(user_id: uuid.UUID, session: Session = Depends(
             session.add(user)
             session.commit()
         
-        return {
+        # Check if this is a background request and pass the header back in the response
+        is_background = request.headers.get('X-Background-Request') == 'true'
+        
+        response_data = {
             "success": True,
             "summary": summary_output.model_dump(),
             "message": "Basic results generated successfully"
         }
+        
+        # Create a Response object to be able to set headers
+        from fastapi.responses import JSONResponse
+        response = JSONResponse(content=response_data)
+        
+        # If this is a background request, set the header in the response
+        if is_background:
+            response.headers['X-Background-Request'] = 'true'
+        
+        return response
     
     except Exception as e:
         raise HTTPException(
@@ -298,7 +315,11 @@ def generate_plan(
     return basic_plan_json, full_plan_output
 
 @router.post("/{user_id}/generate-premium", response_model=dict)
-async def generate_premium_results(user_id: uuid.UUID, session: Session = Depends(get_session)):
+async def generate_premium_results(
+    user_id: uuid.UUID, 
+    request: Request,
+    session: Session = Depends(get_session)
+):
     """Generate premium results (full path and plan) after answering all 25 questions"""
     # Check if user exists
     user = session.get(User, user_id)
@@ -358,10 +379,23 @@ async def generate_premium_results(user_id: uuid.UUID, session: Session = Depend
         
         session.commit()
         
-        return {
+        # Check if this is a background request and pass the header back in the response
+        is_background = request.headers.get('X-Background-Request') == 'true'
+        
+        response_data = {
             "success": True,
             "message": "Premium results generated successfully"
         }
+        
+        # Create a Response object to be able to set headers
+        from fastapi.responses import JSONResponse
+        response = JSONResponse(content=response_data)
+        
+        # If this is a background request, set the header in the response
+        if is_background:
+            response.headers['X-Background-Request'] = 'true'
+        
+        return response
     
     except Exception as e:
         raise HTTPException(

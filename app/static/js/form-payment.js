@@ -32,11 +32,26 @@ async function initiatePayment(tier, isRegeneration = false) {
         loadingOverlay.style.display = 'flex';
         loadingMessage.textContent = 'Preparing payment...';
         
+        // Check if a magic link has been sent
+        const magicLinkSent = localStorage.getItem('magic_link_sent') === 'true';
+        
         // Call payment API to create checkout session
-        // Add is_regeneration parameter if needed
-        const url = isRegeneration 
-            ? `/api/payments/${user.id}/create-checkout-session/${tier}?is_regeneration=true`
-            : `/api/payments/${user.id}/create-checkout-session/${tier}`;
+        // Add is_regeneration and is_magic_link_sent parameters if needed
+        let url = `/api/payments/${user.id}/create-checkout-session/${tier}`;
+        
+        // Add query parameters
+        const params = new URLSearchParams();
+        if (isRegeneration) {
+            params.append('is_regeneration', 'true');
+        }
+        if (magicLinkSent) {
+            params.append('is_magic_link_sent', 'true');
+        }
+        
+        // Append parameters to URL if any exist
+        if (params.toString()) {
+            url += `?${params.toString()}`;
+        }
             
         // Get authentication token
         const authToken = localStorage.getItem('stytch_session_token');
@@ -104,7 +119,25 @@ async function verifyPayment(sessionId, tier) {
         const data = await response.json();
         
         if (data.payment_verified) {
-            // Show success message
+            // Check if a magic link was sent during account creation
+            const magicLinkSent = localStorage.getItem('magic_link_sent') === 'true';
+            
+            // Hide loading overlay
+            if (loadingOverlay) {
+                loadingOverlay.style.display = 'none';
+            }
+            
+            if (magicLinkSent) {
+                // Clear the magic link flag
+                localStorage.removeItem('magic_link_sent');
+                
+                // Redirect to the payment success page with instructions to check email
+                window.location.href = `/payment-success?user_id=${user.id}&tier=${tier}&email=${encodeURIComponent(user.email)}`;
+                return; // Exit early to prevent further processing
+            }
+            
+            // For users who are already logged in (not using magic link flow)
+            // Show regular success message
             showNotification(`Payment successful! Your ${tier} tier is now active.`, 'success');
             
             // Update user object
@@ -116,9 +149,11 @@ async function verifyPayment(sessionId, tier) {
             // Generate results based on tier
             if (loadingMessage) {
                 if (tier === 'premium') {
+                    loadingOverlay.style.display = 'flex'; // Show loading overlay again
                     loadingMessage.textContent = 'Generating your comprehensive life plan...';
                     await generatePremiumResults();
                 } else {
+                    loadingOverlay.style.display = 'flex'; // Show loading overlay again
                     loadingMessage.textContent = 'Generating your personal insight...';
                     await generateBasicResults();
                 }

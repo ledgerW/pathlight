@@ -29,6 +29,17 @@ The core functionality of the application has been implemented:
   - Collapsible sections for better mobile experience
 
 ## Latest Improvements
+- Fixed user flow issues with magic link and payment process:
+  - Modified the flow to show email notification only after payment is complete
+  - Created a dedicated payment success page for users with magic links
+  - Implemented background results generation that doesn't trigger redirects
+  - Added proper header handling in API endpoints to prevent unwanted redirects
+  - Modified Stripe checkout flow to use different success URLs based on user state
+  - Enhanced payment verification to properly handle magic link users
+  - Added localStorage flags to track when a magic link has been sent
+  - Improved email notification flow with conditional notifications
+  - Fixed issues where users were being redirected to login page after payment
+
 - Successfully implemented a new arrival flow for users:
   - Modified the form to allow users to answer the first five questions without creating an account
   - Added an account creation modal that appears after question 5
@@ -126,6 +137,7 @@ These changes have significantly improved the user experience by ensuring seamle
   - ~~Magic link emails are not being sent consistently~~ (Fixed with improved email sending)
   - ~~Results are not being generated after payment~~ (Fixed with proper flow implementation)
   - ~~The implementation requires significant debugging and rework~~ (Completed)
+  - ~~Users are being redirected to login page after payment instead of seeing email instructions~~ (Fixed with dedicated payment success page)
 - Database migrations should only use PostgreSQL (not SQLite)
 - Error handling for AI generation could be improved
 - The payment flow UX could be enhanced for better conversion
@@ -138,6 +150,7 @@ These changes have significantly improved the user experience by ensuring seamle
 - **Database Schema**: Evolved from simple text storage to structured JSON for results
 - **AI Integration**: Enhanced with structured output using Pydantic models
 - **Payment Model**: Implemented two-tier system with support for regeneration payments
+- **User Flow**: Evolved from simple linear flow to context-aware flow with dedicated pages for different user states
 - **Authentication Flow**: Evolved from simple cookie-based auth to a robust multi-layered approach with localStorage, Authorization headers, and cookies, with comprehensive error handling and recovery mechanisms
 - **Form Navigation**: Improved to provide clear options for users with existing results
 - **Results Display**: Evolved from simple text to structured sections with intelligent parsing
