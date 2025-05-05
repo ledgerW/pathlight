@@ -16,6 +16,47 @@ document.addEventListener('DOMContentLoaded', function() {
         initializeCheckboxes();
     });
     
+    // Update progress bar width based on data-progress attribute
+    const progressFill = document.querySelector('.progress-fill');
+    if (progressFill && progressFill.dataset.progress) {
+        const progress = parseInt(progressFill.dataset.progress);
+        const progressPercentage = Math.min((progress / 25) * 100, 100);
+        progressFill.style.width = progressPercentage + '%';
+        
+        // Also update the current marker position and image
+        const currentMarker = document.querySelector('.progress-marker');
+        if (currentMarker) {
+            currentMarker.style.left = `calc(${progressPercentage}% - 20px)`;
+            
+            // Update the marker image based on the progress
+            // The image names follow the pattern: 1TheSpark.png, 2TheRoot.png, etc.
+            // We need to get the correct image for the current progress
+            if (progress >= 1 && progress <= 25) {
+                // Get the image name for the current progress
+                // We need to map the progress (1-25) to the corresponding image index (0-24)
+                const imageIndex = progress - 1;
+                
+                // Fetch the image names from a global array if available, or use a hardcoded approach
+                if (window.imageNames && window.imageNames[imageIndex]) {
+                    currentMarker.style.backgroundImage = `url('/static/images/${window.imageNames[imageIndex]}')`;
+                } else {
+                    // Hardcoded approach as fallback
+                    const imageNames = [
+                        '1TheSpark.png', '2TheRoot.png', '3TheFlame.png', '4TheVeil.png', '5TheMirror.png',
+                        '6TheBeacon.png', '7TheGift.png', '8TheDelight.png', '9TheStream.png', '10TheLonging.png',
+                        '11TheCompass.png', '12TheMeasure.png', '13TheThread.png', '14TheImprint.png', '15TheAshes.png',
+                        '16TheHorizon.png', '17TheWhisper.png', '18TheGate.png', '19TheMuse.png', '20TheDivide.png',
+                        '21TheAche.png', '22TheBridge.png', '23TheVessel.png', '24TheRole.png', '25TheSeed.png'
+                    ];
+                    
+                    if (imageIndex < imageNames.length) {
+                        currentMarker.style.backgroundImage = `url('/static/images/${imageNames[imageIndex]}')`;
+                    }
+                }
+            }
+        }
+    }
+    
     // Check URL parameters for payment verification
     const urlParams = new URLSearchParams(window.location.search);
     const paymentSuccess = urlParams.get('payment_success');

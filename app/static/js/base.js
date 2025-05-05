@@ -401,6 +401,31 @@ function addAuthTokenToXHR() {
     };
 }
 
+// Handle HTMX events for clearing localStorage
+document.addEventListener('htmx:afterOnLoad', function(event) {
+    // Check if the response has an HX-Trigger header
+    const triggerHeader = event.detail.xhr.getResponseHeader('HX-Trigger');
+    if (triggerHeader) {
+        try {
+            // Parse the JSON from the header
+            const triggers = JSON.parse(triggerHeader);
+            
+            // Check if clearLocalStorage is triggered
+            if (triggers.clearLocalStorage) {
+                console.log('Clearing session data from localStorage');
+                localStorage.removeItem(SESSION_KEY);
+                localStorage.removeItem(SESSION_CREATED_KEY);
+                localStorage.removeItem(USER_ID_KEY);
+                localStorage.removeItem(USER_EMAIL_KEY);
+                localStorage.removeItem(AUTH_TOKEN_KEY);
+                console.log('Session information cleared from localStorage');
+            }
+        } catch (error) {
+            console.error('Error parsing HX-Trigger header:', error);
+        }
+    }
+});
+
 // Initialize on DOM content loaded
 document.addEventListener('DOMContentLoaded', function() {
     // Add celestial decorations

@@ -13,11 +13,11 @@
         <div class="journey-progress">
             <div class="start-marker"></div>
             <div class="progress-bar">
-                <div class="progress-fill" style="width: 20%;"></div>
+                <div class="progress-fill" data-progress="{{ progress }}" style="width: 0%;"></div>
                 <div class="progress-marker"></div>
             </div>
             <div class="end-marker"></div>
-            <div class="progress-text">5/25 questions completed</div>
+            <div class="progress-text">{{ progress }}/25 questions completed</div>
         </div>
         <div class="top-actions">
             <!-- Continue Journey button and info icon removed as requested -->

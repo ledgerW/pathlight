@@ -401,7 +401,10 @@ async def authenticate(
 
 
 @router.get("/logout")
-async def logout(response: Response) -> RedirectResponse:
+async def logout(request: Request):
+    # Create a response with the logout template
+    response = templates.TemplateResponse("logout.html", {"request": request})
+    
     # Clear HTTP-only cookie
     cookie_clear_settings = {
         "key": STYTCH_COOKIE_NAME,
@@ -427,26 +430,13 @@ async def logout(response: Response) -> RedirectResponse:
     log_cookie_operation("delete (http-only)", cookie_clear_settings)
     log_cookie_operation("delete (js-accessible)", js_cookie_clear_settings)
     
-    # Clear cookies
+    # Clear cookies on the response
     response.delete_cookie(**cookie_clear_settings)
     response.delete_cookie(**js_cookie_clear_settings)
     
-    # Add script to clear localStorage session data
-    logout_script = """
-    <script>
-        // Clear session data from localStorage
-        localStorage.removeItem('pathlight_session');
-        localStorage.removeItem('pathlight_session_created');
-        localStorage.removeItem('pathlight_user_id');
-        localStorage.removeItem('pathlight_user_email');
-        localStorage.removeItem('stytch_session_token');
-        console.log('Session information cleared from localStorage');
-    </script>
-    """
+    # Add a debug message to verify cookie deletion
+    print("[DEBUG] Cookies should be deleted now")
     
-    # Create response with the logout script
-    response = RedirectResponse(url="/")
-    response.headers["HX-Trigger"] = logout_script
     return response
 
 
