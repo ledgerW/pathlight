@@ -1,0 +1,648 @@
+{% extends "base.html" %}
+
+{% block title %}{{ title }} - Pathlight Guides{% endblock %}
+
+{% block meta %}
+<meta name="description" content="{{ description }}">
+<meta name="keywords" content="{{ keywords }}">
+
+<!-- Open Graph / Facebook -->
+<meta property="og:type" content="article">
+<meta property="og:url" content="{{ request.url }}">
+<meta property="og:title" content="{{ title }} - Pathlight Guides">
+<meta property="og:description" content="{{ description }}">
+<meta property="og:image" content="{{ image_url }}">
+
+<!-- Twitter -->
+<meta property="twitter:card" content="summary_large_image">
+<meta property="twitter:url" content="{{ request.url }}">
+<meta property="twitter:title" content="{{ title }} - Pathlight Guides">
+<meta property="twitter:description" content="{{ description }}">
+<meta property="twitter:image" content="{{ image_url }}">
+
+<!-- Schema.org markup for Google -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "HowTo",
+  "name": "{{ title }}",
+  "image": "{{ image_url }}",
+  "description": "{{ description }}",
+  "estimatedCost": {
+    "@type": "MonetaryAmount",
+    "currency": "USD",
+    "value": "0"
+  },
+  "totalTime": "PT{{ time_minutes }}M",
+  "difficulty": "{{ difficulty }}",
+  "step": [
+    {% for step in steps %}
+    {
+      "@type": "HowToStep",
+      "name": "{{ step.name }}",
+      "text": "{{ step.text }}",
+      "url": "{{ request.url }}#step-{{ loop.index }}"
+    }{% if not loop.last %},{% endif %}
+    {% endfor %}
+  ]
+}
+</script>
+{% endblock %}
+
+{% block styles %}
+<style>
+    /* Guide page specific styles */
+    .guide-hero {
+        padding: var(--spacing-xl) 0;
+        background-color: var(--cream);
+        text-align: center;
+    }
+    
+    .guide-hero-content {
+        max-width: 900px;
+        margin: 0 auto;
+        padding: 0 var(--spacing-lg);
+    }
+    
+    .guide-hero h1 {
+        font-size: 3rem;
+        margin-bottom: var(--spacing-md);
+        color: var(--teal);
+    }
+    
+    .guide-meta-header {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: var(--spacing-md);
+        margin-bottom: var(--spacing-lg);
+        font-size: 1rem;
+    }
+    
+    .guide-meta-item {
+        display: flex;
+        align-items: center;
+    }
+    
+    .guide-meta-item i {
+        margin-right: var(--spacing-xs);
+    }
+    
+    .guide-difficulty {
+        padding: var(--spacing-xs) var(--spacing-sm);
+        border-radius: var(--radius-sm);
+        display: inline-block;
+    }
+    
+    .difficulty-beginner {
+        background-color: #e6f7e6;
+        color: #2c662d;
+    }
+    
+    .difficulty-intermediate {
+        background-color: #fff6e6;
+        color: #b35900;
+    }
+    
+    .difficulty-advanced {
+        background-color: #f7e6e6;
+        color: #a61717;
+    }
+    
+    .guide-time {
+        color: var(--light-teal);
+    }
+    
+    .guide-category {
+        color: var(--teal);
+    }
+    
+    .guide-featured-image {
+        max-width: 100%;
+        height: auto;
+        border-radius: var(--radius-md);
+        box-shadow: var(--shadow-md);
+        margin-bottom: var(--spacing-lg);
+    }
+    
+    .guide-section {
+        padding: var(--spacing-xl) 0;
+        background-color: var(--white);
+    }
+    
+    .guide-content {
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 0 var(--spacing-lg);
+    }
+    
+    .guide-intro {
+        font-size: 1.2rem;
+        line-height: 1.7;
+        margin-bottom: var(--spacing-lg);
+        color: var(--teal);
+    }
+    
+    .guide-content h2 {
+        color: var(--teal);
+        margin: var(--spacing-xl) 0 var(--spacing-md);
+        font-size: 2.2rem;
+    }
+    
+    .guide-content h3 {
+        color: var(--teal);
+        margin: var(--spacing-lg) 0 var(--spacing-md);
+        font-size: 1.8rem;
+    }
+    
+    .guide-content p {
+        margin-bottom: var(--spacing-md);
+        font-size: 1.1rem;
+        line-height: 1.7;
+    }
+    
+    .guide-content ul, .guide-content ol {
+        margin-bottom: var(--spacing-md);
+        padding-left: var(--spacing-lg);
+    }
+    
+    .guide-content li {
+        margin-bottom: var(--spacing-sm);
+        font-size: 1.1rem;
+        line-height: 1.7;
+    }
+    
+    .guide-content blockquote {
+        border-left: 4px solid var(--gold);
+        padding-left: var(--spacing-md);
+        margin: var(--spacing-lg) 0;
+        font-style: italic;
+        color: var(--teal);
+    }
+    
+    .guide-content blockquote p {
+        font-size: 1.2rem;
+    }
+    
+    .guide-content .citation {
+        font-size: 0.9rem;
+        color: var(--light-teal);
+        text-align: right;
+        margin-top: var(--spacing-xs);
+    }
+    
+    .guide-content img {
+        max-width: 100%;
+        height: auto;
+        border-radius: var(--radius-md);
+        box-shadow: var(--shadow-md);
+        margin: var(--spacing-lg) 0;
+    }
+    
+    .guide-content a {
+        color: var(--gold);
+        text-decoration: none;
+        transition: color 0.3s ease;
+    }
+    
+    .guide-content a:hover {
+        color: var(--teal);
+        text-decoration: underline;
+    }
+    
+    .step-container {
+        margin: var(--spacing-xl) 0;
+        padding: var(--spacing-lg);
+        background-color: var(--light-cream);
+        border-radius: var(--radius-md);
+        box-shadow: var(--shadow-sm);
+    }
+    
+    .step-header {
+        display: flex;
+        align-items: center;
+        margin-bottom: var(--spacing-md);
+    }
+    
+    .step-number {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background-color: var(--teal);
+        color: var(--white);
+        font-weight: bold;
+        margin-right: var(--spacing-md);
+        flex-shrink: 0;
+    }
+    
+    .step-title {
+        font-size: 1.5rem;
+        color: var(--teal);
+        margin: 0;
+    }
+    
+    .step-content {
+        margin-left: 56px; /* 40px (circle width) + 16px (margin-right) */
+    }
+    
+    .guide-progress {
+        position: sticky;
+        top: 20px;
+        margin-bottom: var(--spacing-lg);
+        background-color: var(--white);
+        border-radius: var(--radius-md);
+        box-shadow: var(--shadow-md);
+        padding: var(--spacing-md);
+    }
+    
+    .progress-title {
+        font-size: 1.2rem;
+        color: var(--teal);
+        margin-bottom: var(--spacing-md);
+        text-align: center;
+    }
+    
+    .progress-bar-container {
+        width: 100%;
+        height: 8px;
+        background-color: var(--light-cream);
+        border-radius: 4px;
+        overflow: hidden;
+    }
+    
+    .progress-bar {
+        height: 100%;
+        background-color: var(--gold);
+        width: 0;
+        transition: width 0.3s ease;
+    }
+    
+    .progress-steps {
+        display: flex;
+        justify-content: space-between;
+        margin-top: var(--spacing-sm);
+    }
+    
+    .progress-step {
+        font-size: 0.8rem;
+        color: var(--light-teal);
+    }
+    
+    .resources-section {
+        margin-top: var(--spacing-xl);
+        padding: var(--spacing-lg);
+        background-color: var(--light-cream);
+        border-radius: var(--radius-md);
+        box-shadow: var(--shadow-sm);
+    }
+    
+    .resources-title {
+        font-size: 1.5rem;
+        color: var(--teal);
+        margin-bottom: var(--spacing-md);
+    }
+    
+    .resources-list {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+        gap: var(--spacing-md);
+    }
+    
+    .resource-item {
+        background-color: var(--white);
+        border-radius: var(--radius-sm);
+        padding: var(--spacing-md);
+        box-shadow: var(--shadow-sm);
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    
+    .resource-item:hover {
+        transform: translateY(-3px);
+        box-shadow: var(--shadow-md);
+    }
+    
+    .resource-title {
+        font-size: 1.1rem;
+        color: var(--teal);
+        margin-bottom: var(--spacing-xs);
+    }
+    
+    .resource-description {
+        font-size: 0.9rem;
+        color: var(--light-teal);
+        margin-bottom: var(--spacing-sm);
+    }
+    
+    .resource-link {
+        display: inline-block;
+        color: var(--gold);
+        font-weight: 600;
+        text-decoration: none;
+        font-size: 0.9rem;
+    }
+    
+    .resource-link:hover {
+        text-decoration: underline;
+    }
+    
+    .guide-tags {
+        display: flex;
+        flex-wrap: wrap;
+        gap: var(--spacing-sm);
+        margin: var(--spacing-lg) 0;
+    }
+    
+    .guide-tag {
+        background-color: var(--light-cream);
+        color: var(--teal);
+        padding: var(--spacing-xs) var(--spacing-sm);
+        border-radius: var(--radius-sm);
+        font-size: 0.9rem;
+        text-decoration: none;
+    }
+    
+    .guide-tag:hover {
+        background-color: var(--gold);
+        color: var(--white);
+    }
+    
+    .guide-share {
+        margin: var(--spacing-xl) 0;
+        text-align: center;
+    }
+    
+    .guide-share h3 {
+        margin-bottom: var(--spacing-md);
+        font-size: 1.5rem;
+        color: var(--teal);
+    }
+    
+    .share-buttons {
+        display: flex;
+        justify-content: center;
+        gap: var(--spacing-md);
+    }
+    
+    .share-button {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background-color: var(--teal);
+        color: var(--white);
+        font-size: 1.2rem;
+        transition: background-color 0.3s ease;
+    }
+    
+    .share-button:hover {
+        background-color: var(--gold);
+    }
+    
+    .related-guides {
+        margin-top: var(--spacing-xl);
+    }
+    
+    .related-guides h3 {
+        text-align: center;
+        margin-bottom: var(--spacing-lg);
+        font-size: 1.8rem;
+        color: var(--teal);
+    }
+    
+    .related-guides-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+        gap: var(--spacing-lg);
+    }
+    
+    .related-guide-card {
+        background-color: var(--light-cream);
+        border-radius: var(--radius-md);
+        overflow: hidden;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    
+    .related-guide-card:hover {
+        transform: translateY(-5px);
+        box-shadow: var(--shadow-md);
+    }
+    
+    .related-guide-image {
+        width: 100%;
+        height: 150px;
+        object-fit: cover;
+    }
+    
+    .related-guide-content {
+        padding: var(--spacing-md);
+    }
+    
+    .related-guide-title {
+        font-size: 1.2rem;
+        color: var(--teal);
+        margin-bottom: var(--spacing-sm);
+    }
+    
+    .related-guide-link {
+        display: inline-block;
+        color: var(--gold);
+        font-weight: 600;
+        text-decoration: none;
+        transition: color 0.3s ease;
+    }
+    
+    .related-guide-link:hover {
+        color: var(--teal);
+    }
+    
+    .guide-cta {
+        text-align: center;
+        margin: var(--spacing-xl) 0;
+    }
+    
+    @media (max-width: 768px) {
+        .guide-hero h1 {
+            font-size: 2.5rem;
+        }
+        
+        .guide-meta-header {
+            flex-direction: column;
+            gap: var(--spacing-sm);
+        }
+        
+        .guide-content h2 {
+            font-size: 2rem;
+        }
+        
+        .guide-content h3 {
+            font-size: 1.5rem;
+        }
+        
+        .step-header {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+        
+        .step-number {
+            margin-bottom: var(--spacing-sm);
+        }
+        
+        .step-content {
+            margin-left: 0;
+        }
+        
+        .related-guides-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Progress bar functionality
+        const progressBar = document.querySelector('.progress-bar');
+        const steps = document.querySelectorAll('.step-container');
+        const totalSteps = steps.length;
+        
+        // Set initial progress
+        updateProgress(0);
+        
+        // Update progress when scrolling
+        window.addEventListener('scroll', function() {
+            let completedSteps = 0;
+            
+            steps.forEach((step, index) => {
+                const rect = step.getBoundingClientRect();
+                const windowHeight = window.innerHeight;
+                
+                // If the step is in view or has been scrolled past
+                if (rect.top < windowHeight * 0.7) {
+                    completedSteps = index + 1;
+                }
+            });
+            
+            updateProgress(completedSteps);
+        });
+        
+        function updateProgress(completedSteps) {
+            const progressPercentage = (completedSteps / totalSteps) * 100;
+            progressBar.style.width = progressPercentage + '%';
+        }
+    });
+</script>
+{% endblock %}
+
+{% block content %}
+<section class="guide-hero">
+    <div class="guide-hero-content">
+        <h1>{{ title }}</h1>
+        <div class="guide-meta-header">
+            <div class="guide-meta-item">
+                <span class="guide-difficulty difficulty-{{ difficulty|lower }}">{{ difficulty }}</span>
+            </div>
+            <div class="guide-meta-item guide-time">
+                <i class="fas fa-clock"></i> {{ time_minutes }} min read
+            </div>
+            <div class="guide-meta-item guide-category">
+                <i class="fas fa-folder"></i> {{ category }}
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="guide-section">
+    <div class="guide-content">
+        <img src="{{ image_url }}" alt="{{ title }}" class="guide-featured-image">
+        
+        <!-- Progress tracker -->
+        <div class="guide-progress">
+            <div class="progress-title">Your Progress</div>
+            <div class="progress-bar-container">
+                <div class="progress-bar"></div>
+            </div>
+            <div class="progress-steps">
+                <span class="progress-step">Start</span>
+                <span class="progress-step">Complete</span>
+            </div>
+        </div>
+        
+        <!-- Guide introduction -->
+        <div class="guide-intro">
+            {{ introduction }}
+        </div>
+        
+        <!-- Guide content will be included here -->
+        {% block guide_content %}{% endblock %}
+        
+        <!-- Tags -->
+        <div class="guide-tags">
+            {% for tag in tags %}
+            <a href="/guides?tag={{ tag }}" class="guide-tag">{{ tag }}</a>
+            {% endfor %}
+        </div>
+        
+        <!-- Resources section -->
+        {% if resources %}
+        <div class="resources-section">
+            <h3 class="resources-title">Additional Resources</h3>
+            <div class="resources-list">
+                {% for resource in resources %}
+                <div class="resource-item">
+                    <h4 class="resource-title">{{ resource.title }}</h4>
+                    <p class="resource-description">{{ resource.description }}</p>
+                    <a href="{{ resource.url }}" class="resource-link" target="_blank">{{ resource.link_text }} →</a>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+        
+        <!-- Share buttons -->
+        <div class="guide-share">
+            <h3>Share This Guide</h3>
+            <div class="share-buttons">
+                <a href="https://www.facebook.com/sharer/sharer.php?u={{ request.url }}" target="_blank" class="share-button">
+                    <i class="fab fa-facebook-f"></i>
+                </a>
+                <a href="https://twitter.com/intent/tweet?url={{ request.url }}&text={{ title }}" target="_blank" class="share-button">
+                    <i class="fab fa-twitter"></i>
+                </a>
+                <a href="https://www.linkedin.com/shareArticle?mini=true&url={{ request.url }}&title={{ title }}" target="_blank" class="share-button">
+                    <i class="fab fa-linkedin-in"></i>
+                </a>
+                <a href="mailto:?subject={{ title }}&body=Check out this guide: {{ request.url }}" class="share-button">
+                    <i class="fas fa-envelope"></i>
+                </a>
+            </div>
+        </div>
+        
+        <!-- Related guides -->
+        <div class="related-guides">
+            <h3>You May Also Like</h3>
+            <div class="related-guides-grid">
+                {% for guide in related_guides %}
+                <div class="related-guide-card">
+                    <img src="{{ guide.image_url }}" alt="{{ guide.title }}" class="related-guide-image">
+                    <div class="related-guide-content">
+                        <h4 class="related-guide-title">{{ guide.title }}</h4>
+                        <a href="{{ guide.url }}" class="related-guide-link">Read Guide →</a>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        
+        <!-- Call to action -->
+        <div class="guide-cta">
+            <a href="/form" class="cta-button">Discover Your Purpose</a>
+        </div>
+    </div>
+</section>
+{% endblock %}

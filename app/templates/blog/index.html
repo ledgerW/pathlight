@@ -1,0 +1,302 @@
+{% extends "base.html" %}
+
+{% block title %}Blog - Pathlight{% endblock %}
+
+{% block meta %}
+<meta name="description" content="Explore Pathlight's blog for insights on purpose discovery, personal growth, and finding meaning in your life journey.">
+<meta name="keywords" content="purpose discovery, personal growth, life purpose, self-discovery, meaning, blog">
+
+<!-- Open Graph / Facebook -->
+<meta property="og:type" content="website">
+<meta property="og:url" content="{{ request.url }}">
+<meta property="og:title" content="Blog - Pathlight">
+<meta property="og:description" content="Explore Pathlight's blog for insights on purpose discovery, personal growth, and finding meaning in your life journey.">
+<meta property="og:image" content="/static/images/pathlight_logo.png">
+
+<!-- Twitter -->
+<meta property="twitter:card" content="summary_large_image">
+<meta property="twitter:url" content="{{ request.url }}">
+<meta property="twitter:title" content="Blog - Pathlight">
+<meta property="twitter:description" content="Explore Pathlight's blog for insights on purpose discovery, personal growth, and finding meaning in your life journey.">
+<meta property="twitter:image" content="/static/images/pathlight_logo.png">
+{% endblock %}
+
+{% block styles %}
+<style>
+    /* Blog page specific styles */
+    .blog-hero {
+        padding: var(--spacing-xl) 0;
+        background-color: var(--cream);
+        text-align: center;
+    }
+    
+    .blog-hero-content {
+        max-width: 900px;
+        margin: 0 auto;
+        padding: 0 var(--spacing-lg);
+    }
+    
+    .blog-hero h1 {
+        font-size: 3rem;
+        margin-bottom: var(--spacing-md);
+        color: var(--teal);
+    }
+    
+    .blog-hero p {
+        font-size: 1.25rem;
+        margin-bottom: var(--spacing-lg);
+        max-width: 800px;
+        margin-left: auto;
+        margin-right: auto;
+    }
+    
+    .blog-section {
+        padding: var(--spacing-xl) 0;
+    }
+    
+    .blog-section:nth-child(odd) {
+        background-color: var(--dark-cream);
+    }
+    
+    .blog-section:nth-child(even) {
+        background-color: var(--cream);
+    }
+    
+    .blog-content {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 0 var(--spacing-lg);
+    }
+    
+    .blog-content h2 {
+        color: var(--teal);
+        margin-bottom: var(--spacing-lg);
+        font-size: 2.2rem;
+        text-align: center;
+    }
+    
+    .featured-posts {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+        gap: var(--spacing-lg);
+        margin-bottom: var(--spacing-xl);
+    }
+    
+    .post-card {
+        background-color: var(--white);
+        border-radius: var(--radius-md);
+        box-shadow: var(--shadow-md);
+        overflow: hidden;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    
+    .post-card:hover {
+        transform: translateY(-5px);
+        box-shadow: var(--shadow-lg);
+    }
+    
+    .post-image {
+        width: 100%;
+        height: 200px;
+        object-fit: cover;
+    }
+    
+    .post-content {
+        padding: var(--spacing-md);
+    }
+    
+    .post-title {
+        font-size: 1.5rem;
+        color: var(--teal);
+        margin-bottom: var(--spacing-sm);
+    }
+    
+    .post-meta {
+        font-size: 0.9rem;
+        color: var(--light-teal);
+        margin-bottom: var(--spacing-sm);
+        display: flex;
+        align-items: center;
+    }
+    
+    .post-meta i {
+        margin-right: var(--spacing-xs);
+    }
+    
+    .post-excerpt {
+        font-size: 1rem;
+        margin-bottom: var(--spacing-md);
+        line-height: 1.6;
+    }
+    
+    .post-link {
+        display: inline-block;
+        color: var(--gold);
+        font-weight: 600;
+        text-decoration: none;
+        transition: color 0.3s ease;
+    }
+    
+    .post-link:hover {
+        color: var(--teal);
+    }
+    
+    .categories {
+        display: flex;
+        flex-wrap: wrap;
+        gap: var(--spacing-sm);
+        margin-bottom: var(--spacing-lg);
+        justify-content: center;
+    }
+    
+    .category-tag {
+        background-color: var(--light-cream);
+        color: var(--teal);
+        padding: var(--spacing-xs) var(--spacing-sm);
+        border-radius: var(--radius-sm);
+        font-size: 0.9rem;
+        transition: background-color 0.3s ease, color 0.3s ease;
+        text-decoration: none;
+    }
+    
+    .category-tag:hover, .category-tag.active {
+        background-color: var(--gold);
+        color: var(--white);
+    }
+    
+    .blog-cta {
+        text-align: center;
+        margin-top: var(--spacing-xl);
+    }
+    
+    @media (max-width: 768px) {
+        .blog-hero h1 {
+            font-size: 2.5rem;
+        }
+        
+        .blog-content h2 {
+            font-size: 2rem;
+        }
+        
+        .featured-posts {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<section class="blog-hero">
+    <div class="blog-hero-content">
+        <h1>Pathlight Blog</h1>
+        <p>Insights, stories, and guidance to help you discover your purpose and live a more meaningful life.</p>
+    </div>
+</section>
+
+<section class="blog-section">
+    <div class="blog-content">
+        <h2>Featured Articles</h2>
+        
+        <div class="categories">
+            <a href="/blog" class="category-tag active">All</a>
+            <a href="/blog?category=purpose" class="category-tag">Purpose Discovery</a>
+            <a href="/blog?category=growth" class="category-tag">Personal Growth</a>
+            <a href="/blog?category=meaning" class="category-tag">Finding Meaning</a>
+            <a href="/blog?category=stories" class="category-tag">Success Stories</a>
+            <a href="/blog?category=science" class="category-tag">Science & Research</a>
+        </div>
+        
+        <div class="featured-posts">
+            <!-- Sample post cards - these would be dynamically generated in a real implementation -->
+            <div class="post-card">
+                <img src="/static/images/1TheSpark.png" alt="Finding Your Purpose" class="post-image">
+                <div class="post-content">
+                    <h3 class="post-title">Finding Your Purpose: The Journey Begins</h3>
+                    <div class="post-meta">
+                        <i class="fas fa-calendar"></i> May 1, 2025
+                    </div>
+                    <p class="post-excerpt">Discovering your life purpose is a journey that begins with asking the right questions. Learn how to start your path to purpose...</p>
+                    <a href="/blog/posts/finding-your-purpose" class="post-link">Read More →</a>
+                </div>
+            </div>
+            
+            <div class="post-card">
+                <img src="/static/images/5TheMirror.png" alt="Self-Reflection Techniques" class="post-image">
+                <div class="post-content">
+                    <h3 class="post-title">5 Powerful Self-Reflection Techniques</h3>
+                    <div class="post-meta">
+                        <i class="fas fa-calendar"></i> April 15, 2025
+                    </div>
+                    <p class="post-excerpt">Self-reflection is a crucial step in understanding your purpose. These five techniques can help you gain deeper insights into yourself...</p>
+                    <a href="/blog/posts/self-reflection-techniques" class="post-link">Read More →</a>
+                </div>
+            </div>
+            
+            <div class="post-card">
+                <img src="/static/images/11TheCompass.png" alt="Aligning Values with Purpose" class="post-image">
+                <div class="post-content">
+                    <h3 class="post-title">Aligning Your Values with Your Purpose</h3>
+                    <div class="post-meta">
+                        <i class="fas fa-calendar"></i> March 28, 2025
+                    </div>
+                    <p class="post-excerpt">When your values and purpose align, you experience greater fulfillment. Learn how to identify your core values and connect them to your purpose...</p>
+                    <a href="/blog/posts/aligning-values-with-purpose" class="post-link">Read More →</a>
+                </div>
+            </div>
+        </div>
+        
+        <div class="blog-cta">
+            <a href="/form" class="cta-button">Discover Your Purpose</a>
+        </div>
+    </div>
+</section>
+
+<section class="blog-section">
+    <div class="blog-content">
+        <h2>Recent Articles</h2>
+        
+        <div class="featured-posts">
+            <!-- More sample post cards -->
+            <div class="post-card">
+                <img src="/static/images/7TheGift.png" alt="Recognizing Your Gifts" class="post-image">
+                <div class="post-content">
+                    <h3 class="post-title">Recognizing Your Unique Gifts</h3>
+                    <div class="post-meta">
+                        <i class="fas fa-calendar"></i> March 10, 2025
+                    </div>
+                    <p class="post-excerpt">Everyone has unique talents and gifts. Learn how to identify and leverage your natural strengths in your purpose journey...</p>
+                    <a href="/blog/posts/recognizing-your-gifts" class="post-link">Read More →</a>
+                </div>
+            </div>
+            
+            <div class="post-card">
+                <img src="/static/images/16TheHorizon.png" alt="Setting Purpose-Driven Goals" class="post-image">
+                <div class="post-content">
+                    <h3 class="post-title">Setting Purpose-Driven Goals</h3>
+                    <div class="post-meta">
+                        <i class="fas fa-calendar"></i> February 22, 2025
+                    </div>
+                    <p class="post-excerpt">Goals aligned with your purpose are more motivating and fulfilling. Discover how to set and achieve purpose-driven goals...</p>
+                    <a href="/blog/posts/purpose-driven-goals" class="post-link">Read More →</a>
+                </div>
+            </div>
+            
+            <div class="post-card">
+                <img src="/static/images/22TheBridge.png" alt="Bridging Purpose and Career" class="post-image">
+                <div class="post-content">
+                    <h3 class="post-title">Bridging Purpose and Career</h3>
+                    <div class="post-meta">
+                        <i class="fas fa-calendar"></i> February 5, 2025
+                    </div>
+                    <p class="post-excerpt">Finding meaning in your work is essential for fulfillment. Learn strategies for aligning your career with your life purpose...</p>
+                    <a href="/blog/posts/purpose-and-career" class="post-link">Read More →</a>
+                </div>
+            </div>
+        </div>
+        
+        <div class="blog-cta">
+            <a href="/blog?page=2" class="cta-button">View More Articles</a>
+        </div>
+    </div>
+</section>
+{% endblock %}

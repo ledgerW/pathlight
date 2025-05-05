@@ -1,0 +1,475 @@
+{% extends "base.html" %}
+
+{% block title %}Methodology FAQs - Pathlight{% endblock %}
+
+{% block meta %}
+<meta name="description" content="Learn about the science and methodology behind Pathlight's purpose discovery process, including our research foundations and approach.">
+<meta name="keywords" content="purpose methodology, purpose discovery science, Pathlight research, purpose questions, psychology of purpose">
+
+<!-- Open Graph / Facebook -->
+<meta property="og:type" content="website">
+<meta property="og:url" content="{{ request.url }}">
+<meta property="og:title" content="Methodology FAQs - Pathlight">
+<meta property="og:description" content="Learn about the science and methodology behind Pathlight's purpose discovery process, including our research foundations and approach.">
+<meta property="og:image" content="/static/images/pathlight_logo.png">
+
+<!-- Twitter -->
+<meta property="twitter:card" content="summary_large_image">
+<meta property="twitter:url" content="{{ request.url }}">
+<meta property="twitter:title" content="Methodology FAQs - Pathlight">
+<meta property="twitter:description" content="Learn about the science and methodology behind Pathlight's purpose discovery process, including our research foundations and approach.">
+<meta property="twitter:image" content="/static/images/pathlight_logo.png">
+{% endblock %}
+
+{% block styles %}
+<style>
+    /* FAQ page specific styles */
+    .faq-hero {
+        padding: var(--spacing-xl) 0;
+        background-color: var(--cream);
+        text-align: center;
+    }
+    
+    .faq-hero-content {
+        max-width: 900px;
+        margin: 0 auto;
+        padding: 0 var(--spacing-lg);
+    }
+    
+    .faq-hero h1 {
+        font-size: 3rem;
+        margin-bottom: var(--spacing-md);
+        color: var(--teal);
+    }
+    
+    .faq-hero p {
+        font-size: 1.25rem;
+        margin-bottom: var(--spacing-lg);
+        max-width: 800px;
+        margin-left: auto;
+        margin-right: auto;
+    }
+    
+    .faq-section {
+        padding: var(--spacing-xl) 0;
+    }
+    
+    .faq-section:nth-child(odd) {
+        background-color: var(--dark-cream);
+    }
+    
+    .faq-section:nth-child(even) {
+        background-color: var(--cream);
+    }
+    
+    .faq-content {
+        max-width: 900px;
+        margin: 0 auto;
+        padding: 0 var(--spacing-lg);
+    }
+    
+    .faq-content h2 {
+        color: var(--teal);
+        margin-bottom: var(--spacing-lg);
+        font-size: 2.2rem;
+        text-align: center;
+    }
+    
+    .faq-search {
+        margin-bottom: var(--spacing-xl);
+        display: flex;
+        justify-content: center;
+    }
+    
+    .search-container {
+        position: relative;
+        width: 100%;
+        max-width: 600px;
+    }
+    
+    .search-input {
+        width: 100%;
+        padding: var(--spacing-md) var(--spacing-lg);
+        padding-left: calc(var(--spacing-lg) + 24px); /* Space for the icon */
+        border: 2px solid var(--light-teal);
+        border-radius: var(--radius-md);
+        font-size: 1.1rem;
+        color: var(--teal);
+        background-color: var(--white);
+        transition: border-color 0.3s ease, box-shadow 0.3s ease;
+    }
+    
+    .search-input:focus {
+        outline: none;
+        border-color: var(--teal);
+        box-shadow: var(--shadow-sm);
+    }
+    
+    .search-icon {
+        position: absolute;
+        left: var(--spacing-md);
+        top: 50%;
+        transform: translateY(-50%);
+        color: var(--light-teal);
+        font-size: 1.2rem;
+    }
+    
+    .categories {
+        display: flex;
+        flex-wrap: wrap;
+        gap: var(--spacing-sm);
+        margin-bottom: var(--spacing-lg);
+        justify-content: center;
+    }
+    
+    .category-tag {
+        background-color: var(--light-cream);
+        color: var(--teal);
+        padding: var(--spacing-xs) var(--spacing-sm);
+        border-radius: var(--radius-sm);
+        font-size: 0.9rem;
+        transition: background-color 0.3s ease, color 0.3s ease;
+        text-decoration: none;
+    }
+    
+    .category-tag:hover, .category-tag.active {
+        background-color: var(--gold);
+        color: var(--white);
+    }
+    
+    .faq-list {
+        margin-bottom: var(--spacing-xl);
+    }
+    
+    .faq-item {
+        margin-bottom: var(--spacing-md);
+        border-radius: var(--radius-md);
+        background-color: var(--white);
+        box-shadow: var(--shadow-sm);
+        overflow: hidden;
+    }
+    
+    .faq-question {
+        padding: var(--spacing-md) var(--spacing-lg);
+        font-size: 1.2rem;
+        font-weight: 600;
+        color: var(--teal);
+        background-color: var(--white);
+        cursor: pointer;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        transition: background-color 0.3s ease;
+    }
+    
+    .faq-question:hover {
+        background-color: var(--light-cream);
+    }
+    
+    .faq-question i {
+        transition: transform 0.3s ease;
+    }
+    
+    .faq-question.active i {
+        transform: rotate(180deg);
+    }
+    
+    .faq-answer {
+        padding: 0 var(--spacing-lg);
+        max-height: 0;
+        overflow: hidden;
+        transition: max-height 0.3s ease, padding 0.3s ease;
+    }
+    
+    .faq-answer.active {
+        padding: 0 var(--spacing-lg) var(--spacing-lg);
+        max-height: 1000px; /* Arbitrary large value */
+    }
+    
+    .faq-answer p {
+        margin-bottom: var(--spacing-md);
+        font-size: 1.1rem;
+        line-height: 1.7;
+    }
+    
+    .faq-answer ul, .faq-answer ol {
+        margin-bottom: var(--spacing-md);
+        padding-left: var(--spacing-lg);
+    }
+    
+    .faq-answer li {
+        margin-bottom: var(--spacing-sm);
+        font-size: 1.1rem;
+        line-height: 1.7;
+    }
+    
+    .faq-answer a {
+        color: var(--gold);
+        text-decoration: none;
+        transition: color 0.3s ease;
+    }
+    
+    .faq-answer a:hover {
+        color: var(--teal);
+        text-decoration: underline;
+    }
+    
+    .faq-cta {
+        text-align: center;
+        margin-top: var(--spacing-xl);
+    }
+    
+    .no-results {
+        text-align: center;
+        padding: var(--spacing-xl);
+        font-size: 1.2rem;
+        color: var(--light-teal);
+    }
+    
+    @media (max-width: 768px) {
+        .faq-hero h1 {
+            font-size: 2.5rem;
+        }
+        
+        .faq-content h2 {
+            font-size: 2rem;
+        }
+        
+        .search-input {
+            font-size: 1rem;
+            padding: var(--spacing-sm) var(--spacing-md);
+            padding-left: calc(var(--spacing-md) + 24px);
+        }
+    }
+</style>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // FAQ accordion functionality
+        const faqQuestions = document.querySelectorAll('.faq-question');
+        
+        faqQuestions.forEach(question => {
+            question.addEventListener('click', function() {
+                // Toggle active class on the question
+                this.classList.toggle('active');
+                
+                // Toggle active class on the answer
+                const answer = this.nextElementSibling;
+                answer.classList.toggle('active');
+            });
+        });
+        
+        // Search functionality
+        const searchInput = document.getElementById('faqSearch');
+        const faqItems = document.querySelectorAll('.faq-item');
+        const noResults = document.getElementById('noResults');
+        
+        searchInput.addEventListener('input', function() {
+            const searchTerm = this.value.toLowerCase();
+            let resultsFound = false;
+            
+            faqItems.forEach(item => {
+                const question = item.querySelector('.faq-question').textContent.toLowerCase();
+                const answer = item.querySelector('.faq-answer').textContent.toLowerCase();
+                
+                if (question.includes(searchTerm) || answer.includes(searchTerm)) {
+                    item.style.display = 'block';
+                    resultsFound = true;
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+            
+            // Show/hide no results message
+            if (resultsFound) {
+                noResults.style.display = 'none';
+            } else {
+                noResults.style.display = 'block';
+            }
+        });
+    });
+</script>
+{% endblock %}
+
+{% block content %}
+<section class="faq-hero">
+    <div class="faq-hero-content">
+        <h1>Methodology FAQs</h1>
+        <p>Learn about the science and methodology behind Pathlight's purpose discovery process, including our research foundations and approach.</p>
+    </div>
+</section>
+
+<section class="faq-section">
+    <div class="faq-content">
+        <div class="faq-search">
+            <div class="search-container">
+                <i class="fas fa-search search-icon"></i>
+                <input type="text" id="faqSearch" class="search-input" placeholder="Search methodology questions...">
+            </div>
+        </div>
+        
+        <div class="categories">
+            <a href="/faq" class="category-tag">All Questions</a>
+            <a href="/faq/categories/general" class="category-tag">General</a>
+            <a href="/faq/categories/methodology" class="category-tag active">Methodology</a>
+            <a href="/faq/categories/account" class="category-tag">Account & Pricing</a>
+            <a href="/faq/categories/results" class="category-tag">Results & Insights</a>
+            <a href="/faq/categories/technical" class="category-tag">Technical</a>
+        </div>
+        
+        <div class="faq-list">
+            <div class="faq-item">
+                <div class="faq-question">
+                    What's the science behind Pathlight's questions?
+                    <i class="fas fa-chevron-down"></i>
+                </div>
+                <div class="faq-answer">
+                    <p>Our 25 questions are carefully crafted based on research from multiple fields, including:</p>
+                    <ul>
+                        <li><strong>Positive Psychology</strong>: Drawing on research about strengths, values, and well-being</li>
+                        <li><strong>Jungian Psychology</strong>: Incorporating concepts of individuation and the authentic self</li>
+                        <li><strong>Logotherapy</strong>: Using Viktor Frankl's approach to finding meaning in life</li>
+                        <li><strong>Ikigai</strong>: Applying the Japanese concept of purpose at the intersection of passion, mission, vocation, and profession</li>
+                        <li><strong>Stanford's Life Design</strong>: Utilizing methods for designing a meaningful and fulfilling life</li>
+                    </ul>
+                    <p>The questions are organized in a deliberate sequence that guides you through stages of self-discovery, building upon each other to create a comprehensive picture of your authentic purpose.</p>
+                    <p>For more details about our methodology, visit our <a href="/research">Research page</a>.</p>
+                </div>
+            </div>
+            
+            <div class="faq-item">
+                <div class="faq-question">
+                    How accurate are the purpose insights?
+                    <i class="fas fa-chevron-down"></i>
+                </div>
+                <div class="faq-answer">
+                    <p>The accuracy of your purpose insights depends on the thoughtfulness and honesty of your responses to our questions. Our AI analyzes patterns in your answers to identify themes, values, and potential directions that resonate with your authentic self.</p>
+                    <p>Many users report that their purpose insights feel remarkably accurate and resonant, often articulating things they've sensed but couldn't quite put into words. However, purpose discovery is ultimately a personal journey, and our insights are meant to be a starting point for your own reflection and exploration.</p>
+                    <p>If your initial results don't feel quite right, you can always update your responses and regenerate your insights for a small fee.</p>
+                </div>
+            </div>
+            
+            <div class="faq-item">
+                <div class="faq-question">
+                    Why are there 25 questions specifically?
+                    <i class="fas fa-chevron-down"></i>
+                </div>
+                <div class="faq-answer">
+                    <p>The number 25 was carefully determined through extensive research and testing. We found that:</p>
+                    <ul>
+                        <li>Fewer than 20 questions didn't provide enough data for truly personalized insights</li>
+                        <li>More than 30 questions led to diminishing returns and user fatigue</li>
+                        <li>25 questions allows us to cover all essential aspects of purpose discovery while maintaining user engagement</li>
+                    </ul>
+                    <p>The 25 questions are organized into specific categories that build upon each other:</p>
+                    <ol>
+                        <li><strong>Questions 1-5</strong>: Core identity and passions (used for basic plan insights)</li>
+                        <li><strong>Questions 6-10</strong>: Strengths and natural talents</li>
+                        <li><strong>Questions 11-15</strong>: Values and meaning</li>
+                        <li><strong>Questions 16-20</strong>: Vision and aspirations</li>
+                        <li><strong>Questions 21-25</strong>: Contribution and impact</li>
+                    </ol>
+                    <p>This structured approach ensures a comprehensive exploration of all factors that contribute to authentic purpose.</p>
+                </div>
+            </div>
+            
+            <div class="faq-item">
+                <div class="faq-question">
+                    How does the AI generate purpose insights?
+                    <i class="fas fa-chevron-down"></i>
+                </div>
+                <div class="faq-answer">
+                    <p>Our AI uses a sophisticated process to generate your purpose insights:</p>
+                    <ol>
+                        <li><strong>Pattern Recognition</strong>: The AI identifies recurring themes, values, and interests across your responses</li>
+                        <li><strong>Contextual Analysis</strong>: It examines how different aspects of your responses relate to each other</li>
+                        <li><strong>Psychological Frameworks</strong>: The AI applies established psychological models of purpose and meaning</li>
+                        <li><strong>Structured Output</strong>: Results are generated in specific formats designed to be both insightful and actionable</li>
+                    </ol>
+                    <p>We use advanced language models (specifically GPT-4o) combined with carefully crafted prompts and output structures to ensure your insights are personalized, meaningful, and practical.</p>
+                    <p>The AI doesn't simply regurgitate your responses—it identifies deeper patterns and connections that might not be immediately obvious, helping you see yourself from a fresh perspective.</p>
+                </div>
+            </div>
+            
+            <div class="faq-item">
+                <div class="faq-question">
+                    What role does astrology play in the purpose insights?
+                    <i class="fas fa-chevron-down"></i>
+                </div>
+                <div class="faq-answer">
+                    <p>While we do collect your birth date as part of the questionnaire, astrology plays only a minor, optional role in our methodology. Here's how we approach it:</p>
+                    <ul>
+                        <li>Astrological information is used as an <strong>optional lens</strong> that some users find meaningful</li>
+                        <li>The core of our insights is based on <strong>psychological science</strong>, not astrological predictions</li>
+                        <li>We incorporate astrological themes as <strong>metaphorical frameworks</strong> rather than literal predictions</li>
+                        <li>Users who don't connect with astrological perspectives still receive fully personalized insights based on their responses</li>
+                    </ul>
+                    <p>Our primary focus is on helping you discover your authentic purpose through scientifically-grounded approaches, with astrological elements serving as optional, supplementary perspectives for those who find them meaningful.</p>
+                </div>
+            </div>
+            
+            <div class="faq-item">
+                <div class="faq-question">
+                    How does Pathlight compare to other purpose discovery methods?
+                    <i class="fas fa-chevron-down"></i>
+                </div>
+                <div class="faq-answer">
+                    <p>Pathlight offers several advantages compared to other purpose discovery methods:</p>
+                    <ul>
+                        <li><strong>Compared to books and courses</strong>: Pathlight provides personalized insights rather than general principles, tailored specifically to your unique responses</li>
+                        <li><strong>Compared to coaching</strong>: Pathlight is more affordable and accessible, available 24/7, while still providing personalized guidance</li>
+                        <li><strong>Compared to personality tests</strong>: Pathlight goes beyond categorizing you into types, focusing instead on your unique purpose and practical ways to live it out</li>
+                        <li><strong>Compared to journaling</strong>: Pathlight provides structured questions and AI-powered analysis that can reveal patterns you might miss on your own</li>
+                    </ul>
+                    <p>That said, Pathlight works well as a complement to these other methods. Many users find that Pathlight provides a valuable foundation that enhances the benefits of coaching, reading, or other personal development practices.</p>
+                </div>
+            </div>
+            
+            <div class="faq-item">
+                <div class="faq-question">
+                    Can Pathlight help with career decisions?
+                    <i class="fas fa-chevron-down"></i>
+                </div>
+                <div class="faq-answer">
+                    <p>Yes, many users find Pathlight helpful for career decisions, though it's not exclusively focused on careers. Here's how it can help:</p>
+                    <ul>
+                        <li>Identifying your core strengths and how they might translate to different career paths</li>
+                        <li>Clarifying your values to help you find work that aligns with what matters most to you</li>
+                        <li>Revealing the types of impact and contribution that would be most fulfilling for you</li>
+                        <li>Providing insights about work environments and cultures where you might thrive</li>
+                        <li>Suggesting practical next steps that could include career exploration or transition</li>
+                    </ul>
+                    <p>While Pathlight isn't a career assessment tool specifically, the purpose insights often have significant implications for career choices and professional development. Many users report gaining clarity about their career direction as part of their broader purpose discovery.</p>
+                </div>
+            </div>
+            
+            <div class="faq-item">
+                <div class="faq-question">
+                    How often should I update my purpose insights?
+                    <i class="fas fa-chevron-down"></i>
+                </div>
+                <div class="faq-answer">
+                    <p>There's no single right answer to how often you should update your purpose insights, as it depends on your personal journey. However, here are some general guidelines:</p>
+                    <ul>
+                        <li><strong>Major life transitions</strong>: Consider updating after significant changes like career shifts, relationship changes, or other major life events</li>
+                        <li><strong>Personal growth milestones</strong>: As you develop new skills, interests, or perspectives, your purpose insights may evolve</li>
+                        <li><strong>Feeling disconnected</strong>: If your current insights no longer resonate strongly, it might be time for an update</li>
+                        <li><strong>Annual reflection</strong>: Some users find value in updating annually as part of their personal review process</li>
+                    </ul>
+                    <p>Most users find that their core purpose remains relatively stable, but the specific expressions and applications of that purpose may evolve over time. Updating your insights can help you stay aligned with your authentic self as you grow and change.</p>
+                </div>
+            </div>
+        </div>
+        
+        <div id="noResults" class="no-results" style="display: none;">
+            <p>No matching questions found. Please try a different search term or <a href="/contact">contact us</a> with your specific question.</p>
+        </div>
+        
+        <div class="faq-cta">
+            <a href="/form" class="cta-button">Discover Your Purpose</a>
+        </div>
+    </div>
+</section>
+{% endblock %}

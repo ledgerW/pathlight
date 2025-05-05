@@ -35,6 +35,78 @@ async def research(request: Request):
     """Show the research page with information about the 25 questions methodology"""
     return templates.TemplateResponse("research.html", {"request": request})
 
+# Blog routes
+@router.get("/blog", response_class=HTMLResponse)
+async def blog_index(request: Request, category: str = None, tag: str = None, page: int = 1):
+    """Show the blog index page with optional category or tag filtering"""
+    return templates.TemplateResponse("blog/index.html", {
+        "request": request,
+        "category": category,
+        "tag": tag,
+        "page": page
+    })
+
+@router.get("/blog/posts/{post_slug}", response_class=HTMLResponse)
+async def blog_post(request: Request, post_slug: str):
+    """Show a specific blog post"""
+    # In a real implementation, we would fetch the post data from a database
+    # For now, we'll just render the template directly
+    try:
+        return templates.TemplateResponse(f"blog/posts/{post_slug}.html", {
+            "request": request,
+            "post_slug": post_slug
+        })
+    except Exception as e:
+        # If the post doesn't exist, redirect to the blog index
+        print(f"Blog post not found: {post_slug}, error: {str(e)}")
+        return RedirectResponse(url="/blog", status_code=303)
+
+# Guides routes
+@router.get("/guides", response_class=HTMLResponse)
+async def guides_index(request: Request, category: str = None, page: int = 1):
+    """Show the guides index page with optional category filtering"""
+    return templates.TemplateResponse("guides/index.html", {
+        "request": request,
+        "category": category,
+        "page": page
+    })
+
+@router.get("/guides/items/{guide_slug}", response_class=HTMLResponse)
+async def guide_item(request: Request, guide_slug: str):
+    """Show a specific guide"""
+    # In a real implementation, we would fetch the guide data from a database
+    # For now, we'll just render the template directly
+    try:
+        return templates.TemplateResponse(f"guides/items/{guide_slug}.html", {
+            "request": request,
+            "guide_slug": guide_slug
+        })
+    except Exception as e:
+        # If the guide doesn't exist, redirect to the guides index
+        print(f"Guide not found: {guide_slug}, error: {str(e)}")
+        return RedirectResponse(url="/guides", status_code=303)
+
+# FAQ routes
+@router.get("/faq", response_class=HTMLResponse)
+async def faq_index(request: Request):
+    """Show the FAQ index page"""
+    return templates.TemplateResponse("faq/index.html", {
+        "request": request
+    })
+
+@router.get("/faq/categories/{category}", response_class=HTMLResponse)
+async def faq_category(request: Request, category: str):
+    """Show a specific FAQ category"""
+    try:
+        return templates.TemplateResponse(f"faq/categories/{category}.html", {
+            "request": request,
+            "category": category
+        })
+    except Exception as e:
+        # If the category doesn't exist, redirect to the FAQ index
+        print(f"FAQ category not found: {category}, error: {str(e)}")
+        return RedirectResponse(url="/faq", status_code=303)
+
 @router.get("/", response_class=HTMLResponse)
 async def index(request: Request):
     """

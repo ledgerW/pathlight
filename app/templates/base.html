@@ -8,6 +8,9 @@
     <!-- SEO Meta Tags -->
     {% block meta %}{% endblock %}
     
+    <!-- Analytics and Tracking Codes -->
+    {% include 'tracking_head.html' %}
+    
     <!-- Favicon -->
     <link rel="icon" href="/static/images/pathlight_favicon.png" type="image/png">
     
@@ -43,18 +46,23 @@
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a href="/#results-preview" class="nav-link">
-                            <span class="nav-text">Examples</span>
+                        <a href="/blog" class="nav-link">
+                            <span class="nav-text">Blog</span>
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a href="/#pricing" class="nav-link">
-                            <span class="nav-text">Pricing</span>
+                        <a href="/guides" class="nav-link">
+                            <span class="nav-text">Guides</span>
                         </a>
                     </li>
                     <li class="nav-item">
                         <a href="/research" class="nav-link">
                             <span class="nav-text">Research</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="/faq" class="nav-link">
+                            <span class="nav-text">FAQ</span>
                         </a>
                     </li>
                     <li class="nav-item">
@@ -74,9 +82,10 @@
                 <div class="mobile-menu">
                     <ul>
                         <li><a href="/#about">About</a></li>
-                        <li><a href="/#results-preview">Examples</a></li>
-                        <li><a href="/#pricing">Pricing</a></li>
+                        <li><a href="/blog">Blog</a></li>
+                        <li><a href="/guides">Guides</a></li>
                         <li><a href="/research">Research</a></li>
+                        <li><a href="/faq">FAQ</a></li>
                         <li><a href="/form">Start Now</a></li>
                     </ul>
                 </div>
@@ -178,7 +187,10 @@
         <div class="footer-content">
             <div class="footer-links">
                 <a href="/" class="footer-link">Home</a>
-                <a href="/research" class="footer-link">Our Research</a>
+                <a href="/blog" class="footer-link">Blog</a>
+                <a href="/guides" class="footer-link">Guides</a>
+                <a href="/research" class="footer-link">Research</a>
+                <a href="/faq" class="footer-link">FAQ</a>
                 <a href="/form" class="footer-link">Start Your Journey</a>
             </div>
             <p>&copy; <span id="currentYear"></span> Pathlight. All rights reserved.</p>
@@ -225,5 +237,8 @@
     
     <!-- Page-specific JavaScript -->
     {% block scripts %}{% endblock %}
+    
+    <!-- Analytics Tracking (Body) -->
+    {% include 'tracking_body.html' %}
 </body>
 </html>

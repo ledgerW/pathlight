@@ -1,0 +1,587 @@
+{% extends "base.html" %}
+
+{% block title %}Frequently Asked Questions - Pathlight{% endblock %}
+
+{% block meta %}
+<meta name="description" content="Find answers to common questions about Pathlight's purpose discovery process, methodology, and how our service works.">
+<meta name="keywords" content="FAQ, frequently asked questions, purpose discovery, life purpose, Pathlight help, purpose questions">
+
+<!-- Open Graph / Facebook -->
+<meta property="og:type" content="website">
+<meta property="og:url" content="{{ request.url }}">
+<meta property="og:title" content="Frequently Asked Questions - Pathlight">
+<meta property="og:description" content="Find answers to common questions about Pathlight's purpose discovery process, methodology, and how our service works.">
+<meta property="og:image" content="/static/images/pathlight_logo.png">
+
+<!-- Twitter -->
+<meta property="twitter:card" content="summary_large_image">
+<meta property="twitter:url" content="{{ request.url }}">
+<meta property="twitter:title" content="Frequently Asked Questions - Pathlight">
+<meta property="twitter:description" content="Find answers to common questions about Pathlight's purpose discovery process, methodology, and how our service works.">
+<meta property="twitter:image" content="/static/images/pathlight_logo.png">
+{% endblock %}
+
+{% block styles %}
+<style>
+    /* FAQ page specific styles */
+    .faq-hero {
+        padding: var(--spacing-xl) 0;
+        background-color: var(--cream);
+        text-align: center;
+    }
+    
+    .faq-hero-content {
+        max-width: 900px;
+        margin: 0 auto;
+        padding: 0 var(--spacing-lg);
+    }
+    
+    .faq-hero h1 {
+        font-size: 3rem;
+        margin-bottom: var(--spacing-md);
+        color: var(--teal);
+    }
+    
+    .faq-hero p {
+        font-size: 1.25rem;
+        margin-bottom: var(--spacing-lg);
+        max-width: 800px;
+        margin-left: auto;
+        margin-right: auto;
+    }
+    
+    .faq-section {
+        padding: var(--spacing-xl) 0;
+    }
+    
+    .faq-section:nth-child(odd) {
+        background-color: var(--dark-cream);
+    }
+    
+    .faq-section:nth-child(even) {
+        background-color: var(--cream);
+    }
+    
+    .faq-content {
+        max-width: 900px;
+        margin: 0 auto;
+        padding: 0 var(--spacing-lg);
+    }
+    
+    .faq-content h2 {
+        color: var(--teal);
+        margin-bottom: var(--spacing-lg);
+        font-size: 2.2rem;
+        text-align: center;
+    }
+    
+    .faq-search {
+        margin-bottom: var(--spacing-xl);
+        display: flex;
+        justify-content: center;
+    }
+    
+    .search-container {
+        position: relative;
+        width: 100%;
+        max-width: 600px;
+    }
+    
+    .search-input {
+        width: 100%;
+        padding: var(--spacing-md) var(--spacing-lg);
+        padding-left: calc(var(--spacing-lg) + 24px); /* Space for the icon */
+        border: 2px solid var(--light-teal);
+        border-radius: var(--radius-md);
+        font-size: 1.1rem;
+        color: var(--teal);
+        background-color: var(--white);
+        transition: border-color 0.3s ease, box-shadow 0.3s ease;
+    }
+    
+    .search-input:focus {
+        outline: none;
+        border-color: var(--teal);
+        box-shadow: var(--shadow-sm);
+    }
+    
+    .search-icon {
+        position: absolute;
+        left: var(--spacing-md);
+        top: 50%;
+        transform: translateY(-50%);
+        color: var(--light-teal);
+        font-size: 1.2rem;
+    }
+    
+    .categories {
+        display: flex;
+        flex-wrap: wrap;
+        gap: var(--spacing-sm);
+        margin-bottom: var(--spacing-lg);
+        justify-content: center;
+    }
+    
+    .category-tag {
+        background-color: var(--light-cream);
+        color: var(--teal);
+        padding: var(--spacing-xs) var(--spacing-sm);
+        border-radius: var(--radius-sm);
+        font-size: 0.9rem;
+        transition: background-color 0.3s ease, color 0.3s ease;
+        text-decoration: none;
+    }
+    
+    .category-tag:hover, .category-tag.active {
+        background-color: var(--gold);
+        color: var(--white);
+    }
+    
+    .faq-list {
+        margin-bottom: var(--spacing-xl);
+    }
+    
+    .faq-item {
+        margin-bottom: var(--spacing-md);
+        border-radius: var(--radius-md);
+        background-color: var(--white);
+        box-shadow: var(--shadow-sm);
+        overflow: hidden;
+    }
+    
+    .faq-question {
+        padding: var(--spacing-md) var(--spacing-lg);
+        font-size: 1.2rem;
+        font-weight: 600;
+        color: var(--teal);
+        background-color: var(--white);
+        cursor: pointer;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        transition: background-color 0.3s ease;
+    }
+    
+    .faq-question:hover {
+        background-color: var(--light-cream);
+    }
+    
+    .faq-question i {
+        transition: transform 0.3s ease;
+    }
+    
+    .faq-question.active i {
+        transform: rotate(180deg);
+    }
+    
+    .faq-answer {
+        padding: 0 var(--spacing-lg);
+        max-height: 0;
+        overflow: hidden;
+        transition: max-height 0.3s ease, padding 0.3s ease;
+    }
+    
+    .faq-answer.active {
+        padding: 0 var(--spacing-lg) var(--spacing-lg);
+        max-height: 1000px; /* Arbitrary large value */
+    }
+    
+    .faq-answer p {
+        margin-bottom: var(--spacing-md);
+        font-size: 1.1rem;
+        line-height: 1.7;
+    }
+    
+    .faq-answer ul, .faq-answer ol {
+        margin-bottom: var(--spacing-md);
+        padding-left: var(--spacing-lg);
+    }
+    
+    .faq-answer li {
+        margin-bottom: var(--spacing-sm);
+        font-size: 1.1rem;
+        line-height: 1.7;
+    }
+    
+    .faq-answer a {
+        color: var(--gold);
+        text-decoration: none;
+        transition: color 0.3s ease;
+    }
+    
+    .faq-answer a:hover {
+        color: var(--teal);
+        text-decoration: underline;
+    }
+    
+    .faq-cta {
+        text-align: center;
+        margin-top: var(--spacing-xl);
+    }
+    
+    .no-results {
+        text-align: center;
+        padding: var(--spacing-xl);
+        font-size: 1.2rem;
+        color: var(--light-teal);
+    }
+    
+    @media (max-width: 768px) {
+        .faq-hero h1 {
+            font-size: 2.5rem;
+        }
+        
+        .faq-content h2 {
+            font-size: 2rem;
+        }
+        
+        .search-input {
+            font-size: 1rem;
+            padding: var(--spacing-sm) var(--spacing-md);
+            padding-left: calc(var(--spacing-md) + 24px);
+        }
+    }
+</style>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // FAQ accordion functionality
+        const faqQuestions = document.querySelectorAll('.faq-question');
+        
+        faqQuestions.forEach(question => {
+            question.addEventListener('click', function() {
+                // Toggle active class on the question
+                this.classList.toggle('active');
+                
+                // Toggle active class on the answer
+                const answer = this.nextElementSibling;
+                answer.classList.toggle('active');
+            });
+        });
+        
+        // Search functionality
+        const searchInput = document.getElementById('faqSearch');
+        const faqItems = document.querySelectorAll('.faq-item');
+        const noResults = document.getElementById('noResults');
+        
+        searchInput.addEventListener('input', function() {
+            const searchTerm = this.value.toLowerCase();
+            let resultsFound = false;
+            
+            faqItems.forEach(item => {
+                const question = item.querySelector('.faq-question').textContent.toLowerCase();
+                const answer = item.querySelector('.faq-answer').textContent.toLowerCase();
+                
+                if (question.includes(searchTerm) || answer.includes(searchTerm)) {
+                    item.style.display = 'block';
+                    resultsFound = true;
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+            
+            // Show/hide no results message
+            if (resultsFound) {
+                noResults.style.display = 'none';
+            } else {
+                noResults.style.display = 'block';
+            }
+        });
+        
+        // Category filtering
+        const categoryTags = document.querySelectorAll('.category-tag');
+        
+        categoryTags.forEach(tag => {
+            tag.addEventListener('click', function(e) {
+                e.preventDefault();
+                
+                // Remove active class from all tags
+                categoryTags.forEach(t => t.classList.remove('active'));
+                
+                // Add active class to clicked tag
+                this.classList.add('active');
+                
+                const category = this.getAttribute('data-category');
+                let resultsFound = false;
+                
+                faqItems.forEach(item => {
+                    if (category === 'all') {
+                        item.style.display = 'block';
+                        resultsFound = true;
+                    } else if (item.getAttribute('data-category') === category) {
+                        item.style.display = 'block';
+                        resultsFound = true;
+                    } else {
+                        item.style.display = 'none';
+                    }
+                });
+                
+                // Show/hide no results message
+                if (resultsFound) {
+                    noResults.style.display = 'none';
+                } else {
+                    noResults.style.display = 'block';
+                }
+                
+                // Clear search input
+                searchInput.value = '';
+            });
+        });
+    });
+</script>
+{% endblock %}
+
+{% block content %}
+<section class="faq-hero">
+    <div class="faq-hero-content">
+        <h1>Frequently Asked Questions</h1>
+        <p>Find answers to common questions about Pathlight's purpose discovery process, methodology, and how our service works.</p>
+    </div>
+</section>
+
+<section class="faq-section">
+    <div class="faq-content">
+        <div class="faq-search">
+            <div class="search-container">
+                <i class="fas fa-search search-icon"></i>
+                <input type="text" id="faqSearch" class="search-input" placeholder="Search for questions...">
+            </div>
+        </div>
+        
+        <div class="categories">
+            <a href="#" class="category-tag active" data-category="all">All Questions</a>
+            <a href="#" class="category-tag" data-category="general">General</a>
+            <a href="#" class="category-tag" data-category="methodology">Methodology</a>
+            <a href="#" class="category-tag" data-category="account">Account & Pricing</a>
+            <a href="#" class="category-tag" data-category="results">Results & Insights</a>
+            <a href="#" class="category-tag" data-category="technical">Technical</a>
+        </div>
+        
+        <div class="faq-list">
+            <!-- General FAQs -->
+            <div class="faq-item" data-category="general">
+                <div class="faq-question">
+                    What is Pathlight?
+                    <i class="fas fa-chevron-down"></i>
+                </div>
+                <div class="faq-answer">
+                    <p>Pathlight is a web application that uses AI to generate custom life purpose insights and guidance based on your responses to 25 carefully crafted questions. Our platform helps you discover your authentic purpose and provides practical guidance for living it out in your daily life.</p>
+                    <p>We combine psychological principles, philosophical wisdom, and cutting-edge AI technology to create a personalized purpose discovery experience that's both insightful and actionable.</p>
+                </div>
+            </div>
+            
+            <div class="faq-item" data-category="general">
+                <div class="faq-question">
+                    How does Pathlight work?
+                    <i class="fas fa-chevron-down"></i>
+                </div>
+                <div class="faq-answer">
+                    <p>Pathlight works through a simple but powerful process:</p>
+                    <ol>
+                        <li>You create an account and begin answering our 25 purpose discovery questions.</li>
+                        <li>After answering the first 5 questions, you can pay $0.99 to receive your basic purpose insights (purpose statement and personal mantra).</li>
+                        <li>You then continue answering the remaining 20 questions.</li>
+                        <li>After completing all 25 questions, you can pay $4.99 to receive your comprehensive purpose guidance, including strengths analysis, potential life purposes, practical next steps, daily plan, and strategies for overcoming obstacles.</li>
+                        <li>You can access your results anytime through your account and even regenerate them if your responses change over time.</li>
+                    </ol>
+                    <p>Our AI analyzes your responses to identify patterns, themes, and insights that reveal your authentic purpose and provide practical guidance for living it out.</p>
+                </div>
+            </div>
+            
+            <div class="faq-item" data-category="general">
+                <div class="faq-question">
+                    Is Pathlight right for me?
+                    <i class="fas fa-chevron-down"></i>
+                </div>
+                <div class="faq-answer">
+                    <p>Pathlight is designed for anyone seeking greater clarity, meaning, and direction in their life. It's particularly helpful if you:</p>
+                    <ul>
+                        <li>Feel uncertain about your life direction or purpose</li>
+                        <li>Are at a transition point in your life or career</li>
+                        <li>Want to align your daily actions with your deeper values</li>
+                        <li>Seek more fulfillment and meaning in your work and relationships</li>
+                        <li>Are curious about your authentic self and potential</li>
+                    </ul>
+                    <p>Our approach is grounded in psychological research and philosophical wisdom, making it suitable for people of all backgrounds, beliefs, and life stages.</p>
+                </div>
+            </div>
+            
+            <!-- Methodology FAQs -->
+            <div class="faq-item" data-category="methodology">
+                <div class="faq-question">
+                    What's the science behind Pathlight's questions?
+                    <i class="fas fa-chevron-down"></i>
+                </div>
+                <div class="faq-answer">
+                    <p>Our 25 questions are carefully crafted based on research from multiple fields, including:</p>
+                    <ul>
+                        <li><strong>Positive Psychology</strong>: Drawing on research about strengths, values, and well-being</li>
+                        <li><strong>Jungian Psychology</strong>: Incorporating concepts of individuation and the authentic self</li>
+                        <li><strong>Logotherapy</strong>: Using Viktor Frankl's approach to finding meaning in life</li>
+                        <li><strong>Ikigai</strong>: Applying the Japanese concept of purpose at the intersection of passion, mission, vocation, and profession</li>
+                        <li><strong>Stanford's Life Design</strong>: Utilizing methods for designing a meaningful and fulfilling life</li>
+                    </ul>
+                    <p>The questions are organized in a deliberate sequence that guides you through stages of self-discovery, building upon each other to create a comprehensive picture of your authentic purpose.</p>
+                    <p>For more details about our methodology, visit our <a href="/research">Research page</a>.</p>
+                </div>
+            </div>
+            
+            <div class="faq-item" data-category="methodology">
+                <div class="faq-question">
+                    How accurate are the purpose insights?
+                    <i class="fas fa-chevron-down"></i>
+                </div>
+                <div class="faq-answer">
+                    <p>The accuracy of your purpose insights depends on the thoughtfulness and honesty of your responses to our questions. Our AI analyzes patterns in your answers to identify themes, values, and potential directions that resonate with your authentic self.</p>
+                    <p>Many users report that their purpose insights feel remarkably accurate and resonant, often articulating things they've sensed but couldn't quite put into words. However, purpose discovery is ultimately a personal journey, and our insights are meant to be a starting point for your own reflection and exploration.</p>
+                    <p>If your initial results don't feel quite right, you can always update your responses and regenerate your insights for a small fee.</p>
+                </div>
+            </div>
+            
+            <!-- Account & Pricing FAQs -->
+            <div class="faq-item" data-category="account">
+                <div class="faq-question">
+                    How much does Pathlight cost?
+                    <i class="fas fa-chevron-down"></i>
+                </div>
+                <div class="faq-answer">
+                    <p>Pathlight uses a simple, transparent pricing model:</p>
+                    <ul>
+                        <li><strong>Basic Plan</strong>: $0.99 - Provides your purpose statement and personal mantra after answering the first 5 questions</li>
+                        <li><strong>Premium Plan</strong>: $4.99 - Provides comprehensive guidance including strengths analysis, potential life purposes, practical next steps, daily plan, and strategies for overcoming obstacles after answering all 25 questions</li>
+                    </ul>
+                    <p>There are no hidden fees or subscription costs. You pay only for the insights you want to receive.</p>
+                    <p>If you want to regenerate your results after updating your responses, there is a small fee equal to the original plan cost.</p>
+                </div>
+            </div>
+            
+            <div class="faq-item" data-category="account">
+                <div class="faq-question">
+                    How do I create an account?
+                    <i class="fas fa-chevron-down"></i>
+                </div>
+                <div class="faq-answer">
+                    <p>Creating an account with Pathlight is simple:</p>
+                    <ol>
+                        <li>Click the "Start Now" button on our homepage</li>
+                        <li>Begin answering the questions</li>
+                        <li>After question 5, you'll be prompted to create an account with your email address</li>
+                        <li>We'll send you a magic link to your email (no passwords required)</li>
+                        <li>Click the link to verify your email and complete your account setup</li>
+                    </ol>
+                    <p>You can also start by clicking "Start Now" and then create an account later when prompted.</p>
+                </div>
+            </div>
+            
+            <!-- Results & Insights FAQs -->
+            <div class="faq-item" data-category="results">
+                <div class="faq-question">
+                    What kind of results will I receive?
+                    <i class="fas fa-chevron-down"></i>
+                </div>
+                <div class="faq-answer">
+                    <p>The results you receive depend on your plan:</p>
+                    <p><strong>Basic Plan ($0.99):</strong></p>
+                    <ul>
+                        <li>Purpose Statement: A concise articulation of your life purpose</li>
+                        <li>Personal Mantra: A meaningful phrase to guide and inspire you</li>
+                    </ul>
+                    <p><strong>Premium Plan ($4.99):</strong></p>
+                    <ul>
+                        <li>Everything in the Basic Plan</li>
+                        <li>Strengths Analysis: Insights into your natural talents and abilities</li>
+                        <li>Potential Life Purposes: Multiple ways your purpose might express itself</li>
+                        <li>Next Steps: Practical actions for 7, 30, and 180 days</li>
+                        <li>Daily Plan: Specific practices to align with your purpose daily</li>
+                        <li>Obstacles & Solutions: Strategies for overcoming common challenges</li>
+                    </ul>
+                    <p>All results are personalized based on your unique responses to our questions.</p>
+                </div>
+            </div>
+            
+            <div class="faq-item" data-category="results">
+                <div class="faq-question">
+                    Can I update my results if my answers change?
+                    <i class="fas fa-chevron-down"></i>
+                </div>
+                <div class="faq-answer">
+                    <p>Yes! We understand that personal growth is an ongoing journey, and your responses may evolve over time. You can update your answers to any of the 25 questions at any time.</p>
+                    <p>If you want to generate new results based on your updated responses, you can do so for a small regeneration fee (equal to the original plan cost). This helps cover the AI processing costs for generating your new insights.</p>
+                    <p>To update your results:</p>
+                    <ol>
+                        <li>Log in to your account</li>
+                        <li>Go to the Questions section</li>
+                        <li>Update your responses as needed</li>
+                        <li>Click the "Update Purpose" or "Update Plan" button</li>
+                        <li>Confirm the regeneration payment</li>
+                    </ol>
+                    <p>Your new results will be generated based on your updated responses.</p>
+                </div>
+            </div>
+            
+            <!-- Technical FAQs -->
+            <div class="faq-item" data-category="technical">
+                <div class="faq-question">
+                    Is my data secure and private?
+                    <i class="fas fa-chevron-down"></i>
+                </div>
+                <div class="faq-answer">
+                    <p>Yes, we take data security and privacy very seriously. Here's how we protect your information:</p>
+                    <ul>
+                        <li>All data is encrypted in transit and at rest</li>
+                        <li>We use secure authentication through Stytch with magic links (no passwords to be compromised)</li>
+                        <li>Your responses and results are visible only to you</li>
+                        <li>We never sell or share your personal data with third parties</li>
+                        <li>Our AI processing follows strict data protection protocols</li>
+                    </ul>
+                    <p>You can delete your account and all associated data at any time from your account settings.</p>
+                </div>
+            </div>
+            
+            <div class="faq-item" data-category="technical">
+                <div class="faq-question">
+                    What if I forget my password?
+                    <i class="fas fa-chevron-down"></i>
+                </div>
+                <div class="faq-answer">
+                    <p>Pathlight uses a passwordless authentication system with magic links, so you don't need to worry about forgetting a password!</p>
+                    <p>To log in:</p>
+                    <ol>
+                        <li>Click the "Login" button</li>
+                        <li>Enter your email address</li>
+                        <li>We'll send you a magic link via email</li>
+                        <li>Click the link to log in securely</li>
+                    </ol>
+                    <p>This system is both more secure and more convenient than traditional passwords.</p>
+                </div>
+            </div>
+            
+            <div class="faq-item" data-category="technical">
+                <div class="faq-question">
+                    What devices and browsers are supported?
+                    <i class="fas fa-chevron-down"></i>
+                </div>
+                <div class="faq-answer">
+                    <p>Pathlight is designed to work on all modern devices and browsers, including:</p>
+                    <ul>
+                        <li><strong>Devices</strong>: Desktop computers, laptops, tablets, and smartphones</li>
+                        <li><strong>Browsers</strong>: Chrome, Firefox, Safari, Edge (latest versions)</li>
+                    </ul>
+                    <p>For the best experience, we recommend using a device with a screen size of at least 5 inches and a modern browser updated to the latest version.</p>
+                    <p>If you encounter any technical issues, please contact our support team at support@pathlight.com.</p>
+                </div>
+            </div>
+        </div>
+        
+        <div id="noResults" class="no-results" style="display: none;">
+            <p>No matching questions found. Please try a different search term or <a href="/contact">contact us</a> with your specific question.</p>
+        </div>
+        
+        <div class="faq-cta">
+            <a href="/form" class="cta-button">Discover Your Purpose</a>
+        </div>
+    </div>
+</section>
+{% endblock %}

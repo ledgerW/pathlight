@@ -1,0 +1,398 @@
+{% extends "base.html" %}
+
+{% block title %}{{ title }} - Pathlight Blog{% endblock %}
+
+{% block meta %}
+<meta name="description" content="{{ description }}">
+<meta name="keywords" content="{{ keywords }}">
+
+<!-- Open Graph / Facebook -->
+<meta property="og:type" content="article">
+<meta property="og:url" content="{{ request.url }}">
+<meta property="og:title" content="{{ title }} - Pathlight Blog">
+<meta property="og:description" content="{{ description }}">
+<meta property="og:image" content="{{ image_url }}">
+
+<!-- Twitter -->
+<meta property="twitter:card" content="summary_large_image">
+<meta property="twitter:url" content="{{ request.url }}">
+<meta property="twitter:title" content="{{ title }} - Pathlight Blog">
+<meta property="twitter:description" content="{{ description }}">
+<meta property="twitter:image" content="{{ image_url }}">
+
+<!-- Article Specific -->
+<meta property="article:published_time" content="{{ published_date }}">
+<meta property="article:author" content="{{ author }}">
+<meta property="article:section" content="{{ category }}">
+{% for tag in tags %}
+<meta property="article:tag" content="{{ tag }}">
+{% endfor %}
+
+<!-- Schema.org markup for Google -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "{{ title }}",
+  "image": "{{ image_url }}",
+  "datePublished": "{{ published_date }}",
+  "dateModified": "{{ modified_date }}",
+  "author": {
+    "@type": "Person",
+    "name": "{{ author }}"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "Pathlight",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "/static/images/pathlight_logo.png"
+    }
+  },
+  "description": "{{ description }}"
+}
+</script>
+{% endblock %}
+
+{% block styles %}
+<style>
+    /* Blog post specific styles */
+    .post-hero {
+        padding: var(--spacing-xl) 0;
+        background-color: var(--cream);
+        text-align: center;
+    }
+    
+    .post-hero-content {
+        max-width: 900px;
+        margin: 0 auto;
+        padding: 0 var(--spacing-lg);
+    }
+    
+    .post-hero h1 {
+        font-size: 3rem;
+        margin-bottom: var(--spacing-md);
+        color: var(--teal);
+    }
+    
+    .post-meta-header {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: var(--spacing-md);
+        margin-bottom: var(--spacing-lg);
+        font-size: 1rem;
+        color: var(--light-teal);
+    }
+    
+    .post-meta-item {
+        display: flex;
+        align-items: center;
+    }
+    
+    .post-meta-item i {
+        margin-right: var(--spacing-xs);
+    }
+    
+    .post-featured-image {
+        max-width: 100%;
+        height: auto;
+        border-radius: var(--radius-md);
+        box-shadow: var(--shadow-md);
+        margin-bottom: var(--spacing-lg);
+    }
+    
+    .post-section {
+        padding: var(--spacing-xl) 0;
+        background-color: var(--white);
+    }
+    
+    .post-content {
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 0 var(--spacing-lg);
+    }
+    
+    .post-content h2 {
+        color: var(--teal);
+        margin: var(--spacing-xl) 0 var(--spacing-md);
+        font-size: 2.2rem;
+    }
+    
+    .post-content h3 {
+        color: var(--teal);
+        margin: var(--spacing-lg) 0 var(--spacing-md);
+        font-size: 1.8rem;
+    }
+    
+    .post-content p {
+        margin-bottom: var(--spacing-md);
+        font-size: 1.1rem;
+        line-height: 1.7;
+    }
+    
+    .post-content ul, .post-content ol {
+        margin-bottom: var(--spacing-md);
+        padding-left: var(--spacing-lg);
+    }
+    
+    .post-content li {
+        margin-bottom: var(--spacing-sm);
+        font-size: 1.1rem;
+        line-height: 1.7;
+    }
+    
+    .post-content blockquote {
+        border-left: 4px solid var(--gold);
+        padding-left: var(--spacing-md);
+        margin: var(--spacing-lg) 0;
+        font-style: italic;
+        color: var(--teal);
+    }
+    
+    .post-content blockquote p {
+        font-size: 1.2rem;
+    }
+    
+    .post-content .citation {
+        font-size: 0.9rem;
+        color: var(--light-teal);
+        text-align: right;
+        margin-top: var(--spacing-xs);
+    }
+    
+    .post-content img {
+        max-width: 100%;
+        height: auto;
+        border-radius: var(--radius-md);
+        box-shadow: var(--shadow-md);
+        margin: var(--spacing-lg) 0;
+    }
+    
+    .post-content a {
+        color: var(--gold);
+        text-decoration: none;
+        transition: color 0.3s ease;
+    }
+    
+    .post-content a:hover {
+        color: var(--teal);
+        text-decoration: underline;
+    }
+    
+    .post-tags {
+        display: flex;
+        flex-wrap: wrap;
+        gap: var(--spacing-sm);
+        margin: var(--spacing-lg) 0;
+    }
+    
+    .post-tag {
+        background-color: var(--light-cream);
+        color: var(--teal);
+        padding: var(--spacing-xs) var(--spacing-sm);
+        border-radius: var(--radius-sm);
+        font-size: 0.9rem;
+        text-decoration: none;
+    }
+    
+    .post-tag:hover {
+        background-color: var(--gold);
+        color: var(--white);
+    }
+    
+    .post-share {
+        margin: var(--spacing-xl) 0;
+        text-align: center;
+    }
+    
+    .post-share h3 {
+        margin-bottom: var(--spacing-md);
+        font-size: 1.5rem;
+        color: var(--teal);
+    }
+    
+    .share-buttons {
+        display: flex;
+        justify-content: center;
+        gap: var(--spacing-md);
+    }
+    
+    .share-button {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background-color: var(--teal);
+        color: var(--white);
+        font-size: 1.2rem;
+        transition: background-color 0.3s ease;
+    }
+    
+    .share-button:hover {
+        background-color: var(--gold);
+    }
+    
+    .related-posts {
+        margin-top: var(--spacing-xl);
+    }
+    
+    .related-posts h3 {
+        text-align: center;
+        margin-bottom: var(--spacing-lg);
+        font-size: 1.8rem;
+        color: var(--teal);
+    }
+    
+    .related-posts-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+        gap: var(--spacing-lg);
+    }
+    
+    .related-post-card {
+        background-color: var(--light-cream);
+        border-radius: var(--radius-md);
+        overflow: hidden;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    
+    .related-post-card:hover {
+        transform: translateY(-5px);
+        box-shadow: var(--shadow-md);
+    }
+    
+    .related-post-image {
+        width: 100%;
+        height: 150px;
+        object-fit: cover;
+    }
+    
+    .related-post-content {
+        padding: var(--spacing-md);
+    }
+    
+    .related-post-title {
+        font-size: 1.2rem;
+        color: var(--teal);
+        margin-bottom: var(--spacing-sm);
+    }
+    
+    .related-post-link {
+        display: inline-block;
+        color: var(--gold);
+        font-weight: 600;
+        text-decoration: none;
+        transition: color 0.3s ease;
+    }
+    
+    .related-post-link:hover {
+        color: var(--teal);
+    }
+    
+    .post-cta {
+        text-align: center;
+        margin: var(--spacing-xl) 0;
+    }
+    
+    @media (max-width: 768px) {
+        .post-hero h1 {
+            font-size: 2.5rem;
+        }
+        
+        .post-meta-header {
+            flex-direction: column;
+            gap: var(--spacing-sm);
+        }
+        
+        .post-content h2 {
+            font-size: 2rem;
+        }
+        
+        .post-content h3 {
+            font-size: 1.5rem;
+        }
+        
+        .related-posts-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<section class="post-hero">
+    <div class="post-hero-content">
+        <h1>{{ title }}</h1>
+        <div class="post-meta-header">
+            <div class="post-meta-item">
+                <i class="fas fa-user"></i> {{ author }}
+            </div>
+            <div class="post-meta-item">
+                <i class="fas fa-calendar"></i> {{ published_date }}
+            </div>
+            <div class="post-meta-item">
+                <i class="fas fa-folder"></i> {{ category }}
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="post-section">
+    <div class="post-content">
+        <img src="{{ image_url }}" alt="{{ title }}" class="post-featured-image">
+        
+        <!-- Post content will be included here -->
+        {% block post_content %}{% endblock %}
+        
+        <!-- Tags -->
+        <div class="post-tags">
+            {% for tag in tags %}
+            <a href="/blog?tag={{ tag }}" class="post-tag">{{ tag }}</a>
+            {% endfor %}
+        </div>
+        
+        <!-- Share buttons -->
+        <div class="post-share">
+            <h3>Share This Article</h3>
+            <div class="share-buttons">
+                <a href="https://www.facebook.com/sharer/sharer.php?u={{ request.url }}" target="_blank" class="share-button">
+                    <i class="fab fa-facebook-f"></i>
+                </a>
+                <a href="https://twitter.com/intent/tweet?url={{ request.url }}&text={{ title }}" target="_blank" class="share-button">
+                    <i class="fab fa-twitter"></i>
+                </a>
+                <a href="https://www.linkedin.com/shareArticle?mini=true&url={{ request.url }}&title={{ title }}" target="_blank" class="share-button">
+                    <i class="fab fa-linkedin-in"></i>
+                </a>
+                <a href="mailto:?subject={{ title }}&body=Check out this article: {{ request.url }}" class="share-button">
+                    <i class="fas fa-envelope"></i>
+                </a>
+            </div>
+        </div>
+        
+        <!-- Related posts -->
+        <div class="related-posts">
+            <h3>You May Also Like</h3>
+            <div class="related-posts-grid">
+                {% for post in related_posts %}
+                <div class="related-post-card">
+                    <img src="{{ post.image_url }}" alt="{{ post.title }}" class="related-post-image">
+                    <div class="related-post-content">
+                        <h4 class="related-post-title">{{ post.title }}</h4>
+                        <a href="{{ post.url }}" class="related-post-link">Read More →</a>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        
+        <!-- Call to action -->
+        <div class="post-cta">
+            <a href="/form" class="cta-button">Discover Your Purpose</a>
+        </div>
+    </div>
+</section>
+{% endblock %}

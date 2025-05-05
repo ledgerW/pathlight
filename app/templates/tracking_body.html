@@ -1,0 +1,29 @@
+<!-- Additional tracking code for the body section -->
+<script>
+  // Event tracking code can go here
+  document.addEventListener('DOMContentLoaded', function() {
+    // Track outbound links
+    document.querySelectorAll('a[href^="http"]').forEach(function(link) {
+      link.addEventListener('click', function(e) {
+        if (typeof gtag === 'function') {
+          gtag('event', 'click', {
+            'event_category': 'outbound',
+            'event_label': link.href
+          });
+        }
+      });
+    });
+    
+    // Track form submissions
+    document.querySelectorAll('form').forEach(function(form) {
+      form.addEventListener('submit', function(e) {
+        if (typeof gtag === 'function') {
+          gtag('event', 'form_submit', {
+            'event_category': 'engagement',
+            'event_label': form.getAttribute('id') || 'unknown'
+          });
+        }
+      });
+    });
+  });
+</script>
