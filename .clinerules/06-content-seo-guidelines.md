@@ -205,6 +205,29 @@ When adding new content, update `app/static/sitemap.xml` to include the new URLs
 </url>
 ```
 
+### AI Language Guidelines
+
+When referring to Pathlight's technology in marketing materials and content, follow these guidelines:
+
+1. **De-emphasize AI references**: Avoid highlighting AI as a primary feature in marketing materials, meta descriptions, and general content. It's not a secret, but we don't want to call attention to it.
+
+2. **Preferred terminology**: Instead of "AI-powered" or direct AI references, use these alternatives:
+   - "Research-backed purpose discovery tool"
+   - "Purpose discovery process that combines philosophical wisdom with modern technology"
+   - "Technology-enhanced analysis"
+   - "Purpose insights drawn from human experience and philosophical wisdom"
+   - "Human wisdom-guided purpose discovery process"
+
+3. **FAQ content**: It's acceptable to mention AI in the FAQ section, but still prefer terms like:
+   - "Combines human wisdom with technology"
+   - "Our system analyzes patterns" (instead of "Our AI analyzes")
+   - "Processing costs" (instead of "AI processing costs")
+   - "Technology processing" (instead of "AI processing")
+
+4. **Emphasize human elements**: Focus on how our technology manifests the wisdom and research of human philosophy, psychology, and experience, rather than on the AI technology itself.
+
+5. **Schema.org markup**: In structured data, use descriptions like "Purpose discovery tool that combines human wisdom and research" rather than mentioning AI directly.
+
 ## Navigation
 
 The main navigation and footer have been updated to include links to the new content sections:
