@@ -273,6 +273,22 @@ async function loadUserData() {
             const progressState = parseInt(user.progress_state);
             console.log('User progress state:', progressState);
             
+            // Check if user has Plan or Pursuit tier but no responses yet
+            // This is likely a user who just signed up and paid but hasn't answered questions
+            const isPlanOrPursuit = user.payment_tier === 'plan' || user.payment_tier === 'pursuit';
+            const hasNoResponses = responsesData.length === 0;
+            
+            if (isPlanOrPursuit && hasNoResponses) {
+                console.log('Plan or Pursuit tier user with no responses - starting at question 1');
+                
+                // Force the slide to be shown - start at question 1
+                setTimeout(() => {
+                    showSlide(1);
+                    resolve(); // Resolve the promise after showing the slide
+                }, 100);
+                return;
+            }
+            
             // Check if we have a specific slide to start at
             if (window.startAtSlide === 0) {
                 console.log('Starting at first question (slide 1) instead of profile slide (slide 0)');
@@ -433,8 +449,10 @@ async function checkExistingResults() {
 
 // Create user from anonymous responses
 // Make this function globally accessible so it can be called from form-core.js
-window.createUserFromAnonymous = async function(dobValue) {
+window.createUserFromAnonymous = async function(dobValue, tier = 'purpose') {
     try {
+        console.log('createUserFromAnonymous in form-api.js called with tier:', tier);
+        
         // Show loading overlay
         const loadingOverlay = document.getElementById('loadingOverlay');
         const loadingMessage = document.getElementById('loadingMessage');
@@ -454,16 +472,31 @@ window.createUserFromAnonymous = async function(dobValue) {
         const dobString = dob.toISOString();
         
         // Step 1: Create the new user account
+        // For Plan and Pursuit tiers, set progress_state to 0 since no questions have been answered
+        const progress_state = (tier === 'plan' || tier === 'pursuit') ? '0' : BASIC_TIER_QUESTIONS.toString();
+        
+        // For Pursuit tier, set payment_tier to 'pursuit' directly
+        const payment_tier = tier === 'pursuit' ? 'pursuit' : 'none';
+        
         const userData = {
             name: user.name,
             email: user.email,
             dob: dobString,
-            progress_state: BASIC_TIER_QUESTIONS.toString(),
-            payment_tier: 'none',
+            progress_state: progress_state,
+            payment_tier: payment_tier,
             anonymous_session_id: anonymousSessionId
         };
         
+        // For Pursuit tier, also set subscription fields
+        if (tier === 'pursuit') {
+            // Set subscription fields directly to active
+            userData.subscription_id = `subscription-${Date.now()}`;
+            userData.subscription_status = 'active';
+            userData.subscription_end_date = new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString(); // 1 year from now
+        }
+        
         console.log('Creating user from anonymous data:', userData);
+        console.log('Selected tier:', tier);
         
         const response = await fetch('/api/users/from-anonymous', {
             method: 'POST',
@@ -485,37 +518,36 @@ window.createUserFromAnonymous = async function(dobValue) {
         
         // Update user object with new user ID
         user.id = data.id;
+        console.log('User created with ID:', user.id);
         
-        // Step 2: Save form responses to the user
-        loadingMessage.textContent = 'Saving your responses...';
-        
-        // Get anonymous responses from localStorage
-        const savedResponses = localStorage.getItem('anonymousResponses');
-        if (!savedResponses) {
-            console.error('No anonymous responses found in localStorage');
-            showNotification('No responses found. Please answer the questions before proceeding.', 'error');
-            loadingOverlay.style.display = 'none';
-            return;
-        }
-        
-        // Parse responses
-        const responses = JSON.parse(savedResponses);
-        
-        // Save each response individually using the standard saveResponse function
-        for (const [questionNum, responseText] of Object.entries(responses)) {
-            if (responseText && responseText.trim()) {
-                try {
-                    const questionNumber = parseInt(questionNum);
-                    await saveResponse(questionNumber, responseText.trim());
-                    console.log(`Saved response for question ${questionNum}`);
-                } catch (err) {
-                    console.error(`Error saving response for question ${questionNum}:`, err);
+        // Step 2: Save form responses to the user if we have any and we're not in Plan or Pursuit tier
+        if (tier !== 'plan' && tier !== 'pursuit') {
+            const savedResponses = localStorage.getItem('anonymousResponses');
+            if (savedResponses) {
+                loadingMessage.textContent = 'Saving your responses...';
+                
+                // Parse responses
+                const responses = JSON.parse(savedResponses);
+                
+                // Save each response individually using the standard saveResponse function
+                for (const [questionNum, responseText] of Object.entries(responses)) {
+                    if (responseText && responseText.trim()) {
+                        try {
+                            const questionNumber = parseInt(questionNum);
+                            await saveResponse(questionNumber, responseText.trim());
+                            console.log(`Saved response for question ${questionNum}`);
+                        } catch (err) {
+                            console.error(`Error saving response for question ${questionNum}:`, err);
+                        }
+                    }
                 }
+                
+                // Clear anonymous responses from localStorage
+                localStorage.removeItem('anonymousResponses');
             }
+        } else {
+            console.log('Skipping response saving for Plan/Pursuit tier');
         }
-        
-        // Clear anonymous responses from localStorage
-        localStorage.removeItem('anonymousResponses');
         
         // Step 3: Email the stytch magic link but don't show notification yet
         loadingMessage.textContent = 'Preparing your account...';
@@ -523,6 +555,7 @@ window.createUserFromAnonymous = async function(dobValue) {
         
         // Set a flag to indicate that a magic link has been sent
         localStorage.setItem('magic_link_sent', 'true');
+        console.log('Magic link sent flag set in localStorage');
         
         // Store authentication data in localStorage for immediate use
         localStorage.setItem('pathlight_session', 'true');
@@ -537,8 +570,17 @@ window.createUserFromAnonymous = async function(dobValue) {
         // Step 4: Proceed directly to payment without showing email notification
         loadingMessage.textContent = 'Preparing payment...';
         
-        // Proceed to payment
-        initiatePayment('basic');
+        // Proceed to payment based on tier
+        if (tier === 'plan') {
+            console.log('Initiating payment for Plan tier');
+            initiatePayment('plan');
+        } else if (tier === 'pursuit') {
+            console.log('Initiating payment for Pursuit tier (subscription)');
+            initiatePayment('pursuit', false, true); // Pass true for subscription
+        } else {
+            console.log('Initiating payment for Purpose tier');
+            initiatePayment('purpose');
+        }
         
     } catch (error) {
         console.error('Error creating user from anonymous:', error);

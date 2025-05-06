@@ -169,10 +169,16 @@
         
         <div class="tier-badge-container">
             <span id="tierBadge" class="tier-badge {% if payment_tier %}{{ payment_tier }}{% endif %}">
-                {% if payment_tier %}
+                {% if payment_tier == 'pursuit' %}
+                    Pursuit Tier
+                {% elif payment_tier == 'plan' %}
+                    Plan Tier
+                {% elif payment_tier == 'purpose' or payment_tier == 'basic' %}
+                    Purpose Tier
+                {% elif payment_tier %}
                     {{ payment_tier|title }} Tier
                 {% else %}
-                    Basic Tier
+                    Free Tier
                 {% endif %}
             </span>
         </div>

@@ -67,17 +67,53 @@ function updateTierBadge() {
     const tierBadge = document.getElementById('tierBadge');
     const totalQuestionsSpan = document.getElementById('totalQuestions');
     
+    // Check URL parameters for tier
+    const urlParams = new URLSearchParams(window.location.search);
+    const urlTier = urlParams.get('tier');
+    
+    // Get the actual tier - use URL parameter, user's payment tier, or default to 'free'
+    let actualTier = 'free';
+    
+    if (user.payment_tier && user.payment_tier !== 'none') {
+        // Use the user's payment tier if it exists
+        actualTier = user.payment_tier;
+    } else if (urlTier) {
+        // Otherwise use the URL parameter if it exists
+        actualTier = urlTier;
+    }
+    
+    console.log('Updating tier badge with actual tier:', actualTier);
+    
+    // If tier badge doesn't exist, just update the total questions span
     if (!tierBadge) {
-        console.error('Tier badge element not found');
+        console.log('Tier badge element not found, updating only total questions');
+        if (totalQuestionsSpan) {
+            if (actualTier === 'premium' || actualTier === 'pursuit' || actualTier === 'plan') {
+                totalQuestionsSpan.textContent = PREMIUM_TIER_QUESTIONS;
+            } else {
+                totalQuestionsSpan.textContent = BASIC_TIER_QUESTIONS;
+            }
+        }
         return;
     }
     
-    if (user.payment_tier === 'premium') {
-        tierBadge.textContent = 'Premium Tier';
+    // Make sure the progress tier badge is hidden
+    const progressTierBadge = document.getElementById('progressTierBadge');
+    if (progressTierBadge) {
+        progressTierBadge.style.display = 'none';
+    }
+    
+    // Update tier badge text and class based on the actual tier
+    if (actualTier === 'pursuit') {
+        tierBadge.textContent = 'Pursuit Tier';
         tierBadge.className = 'tier-badge premium';
         if (totalQuestionsSpan) totalQuestionsSpan.textContent = PREMIUM_TIER_QUESTIONS;
-    } else if (user.payment_tier === 'basic' || progress >= BASIC_TIER_QUESTIONS) {
-        tierBadge.textContent = 'Basic Tier';
+    } else if (actualTier === 'plan' || actualTier === 'premium') {
+        tierBadge.textContent = 'Plan Tier';
+        tierBadge.className = 'tier-badge premium';
+        if (totalQuestionsSpan) totalQuestionsSpan.textContent = PREMIUM_TIER_QUESTIONS;
+    } else if (actualTier === 'basic' || actualTier === 'purpose' || progress >= BASIC_TIER_QUESTIONS) {
+        tierBadge.textContent = 'Purpose Tier';
         tierBadge.className = 'tier-badge basic';
         if (totalQuestionsSpan) totalQuestionsSpan.textContent = BASIC_TIER_QUESTIONS;
     } else {
@@ -118,6 +154,37 @@ function setupTextareaListeners() {
 function updateSubmitButtonState() {
     console.log('Updating submit button state');
     const submitButton = document.getElementById('submitButton');
+    
+    // Check if we're in Plan or Pursuit tier mode
+    const urlParams = new URLSearchParams(window.location.search);
+    const urlTier = urlParams.get('tier');
+    
+    // Get server tier from the modal if available
+    const accountCreationModal = document.getElementById('accountCreationModal');
+    let serverTier = '';
+    if (accountCreationModal && accountCreationModal.style.display === 'flex') {
+        const modalTitle = accountCreationModal.querySelector('h2');
+        if (modalTitle) {
+            if (modalTitle.textContent.includes('Plan')) {
+                serverTier = 'plan';
+            } else if (modalTitle.textContent.includes('Pursuit')) {
+                serverTier = 'pursuit';
+            }
+        }
+    }
+    
+    // Determine the actual tier to use
+    const actualTier = serverTier || urlTier || '';
+    console.log('Actual tier for validation:', actualTier);
+    
+    // If we're in Plan or Pursuit tier mode, always enable the submit button
+    if (actualTier === 'plan' || actualTier === 'pursuit') {
+        console.log('Plan or Pursuit tier detected, bypassing validation');
+        submitButton.disabled = false;
+        submitButton.classList.remove('disabled');
+        submitButton.title = 'Submit your information';
+        return;
+    }
     
     // First, save any unsaved responses from textareas
     for (let i = 1; i <= BASIC_TIER_QUESTIONS; i++) {
@@ -166,21 +233,38 @@ function updateSubmitButtonState() {
 
 // Show a specific slide
 function showSlide(slideIndex) {
+    console.log('showSlide called with index:', slideIndex);
+    
     // Hide all slides
     const slides = document.querySelectorAll('.form-slide');
     console.log('Found slides:', slides.length);
     
+    // Debug: List all slides
+    slides.forEach((slide, index) => {
+        console.log(`Slide ${index + 1} data-slide:`, slide.getAttribute('data-slide'));
+    });
+    
     slides.forEach(slide => {
         slide.classList.remove('active');
+        slide.style.display = 'none'; // Explicitly hide all slides
     });
     
     // Show the current slide using data-slide attribute
     const targetSlide = document.querySelector(`.form-slide[data-slide="${slideIndex}"]`);
     if (targetSlide) {
         targetSlide.classList.add('active');
+        targetSlide.style.display = 'block'; // Explicitly show the target slide
         console.log('Activated slide with data-slide:', slideIndex);
     } else {
         console.error('Slide not found with data-slide:', slideIndex);
+        
+        // Fallback: Try to show the first slide if target not found
+        const firstSlide = document.querySelector('.form-slide');
+        if (firstSlide) {
+            firstSlide.classList.add('active');
+            firstSlide.style.display = 'block';
+            console.log('Fallback: Showing first slide');
+        }
     }
     
     // Handle progress display for question slides

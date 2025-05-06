@@ -54,8 +54,8 @@ async function loadFullPlan() {
         
         const statusData = await statusResponse.json();
         
-        // If user doesn't have premium tier, don't show loading spinner
-        if (statusData.payment_tier !== 'premium') {
+        // If user doesn't have plan or pursuit tier, don't show loading spinner
+        if (statusData.payment_tier !== 'plan' && statusData.payment_tier !== 'pursuit') {
             // Hide loading spinner
             const loadingPlaceholder = document.querySelector('#fullContent .loading-placeholder');
             if (loadingPlaceholder) {

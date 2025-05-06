@@ -1,4 +1,4 @@
-from typing import Optional, List
+from typing import Optional, List, Union
 from datetime import datetime
 from sqlmodel import Field, SQLModel, Relationship
 import uuid
@@ -14,7 +14,10 @@ class User(SQLModel, table=True):
     progress_state: str = Field(default="0")  # Stores the current question number
     created_at: datetime = Field(default_factory=datetime.utcnow)
     updated_at: datetime = Field(default_factory=datetime.utcnow)
-    payment_tier: str = Field(default="none")  # none, basic, premium
+    payment_tier: str = Field(default="none")  # none, purpose, plan, pursuit
+    subscription_id: Optional[str] = Field(default=None)  # Stripe subscription ID
+    subscription_status: Optional[str] = Field(default=None)  # active, canceled, past_due
+    subscription_end_date: Optional[datetime] = Field(default=None)  # When subscription ends
     
     # Relationships
     form_responses: List["FormResponse"] = Relationship(back_populates="user")

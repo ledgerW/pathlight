@@ -178,15 +178,26 @@
     <div class="modal-content">
         <span class="close-modal">&times;</span>
         <h2>Update Your Life Plan</h2>
-        <p>Regenerating your plan will provide fresh insights and guidance based on your responses.</p>
-        <div class="regeneration-details">
-            <div class="regeneration-info">
-                <p><strong>Cost:</strong> $4.99</p>
-                <p><strong>What you'll get:</strong> A completely new life plan with updated insights, next steps, daily plan, and strategies.</p>
+        
+        <div id="subscriptionRegenerationContent" style="display: none;">
+            <p>As a Pursuit subscriber, you have unlimited plan regenerations!</p>
+            <p>Regenerating your plan will provide fresh insights and guidance based on your responses.</p>
+            <div class="regeneration-actions">
+                <button id="confirmSubscriptionRegenerationButton" class="cta-button">Update My Plan (Free)</button>
             </div>
         </div>
-        <div class="regeneration-actions">
-            <button id="confirmRegenerationButton" class="cta-button">Update My Plan ($4.99)</button>
+        
+        <div id="oneTimeRegenerationContent">
+            <p>Regenerating your plan will provide fresh insights and guidance based on your responses.</p>
+            <div class="regeneration-details">
+                <div class="regeneration-info">
+                    <p><strong>Cost:</strong> $4.99</p>
+                    <p><strong>What you'll get:</strong> A completely new life plan with updated insights, next steps, daily plan, and strategies.</p>
+                </div>
+            </div>
+            <div class="regeneration-actions">
+                <button id="confirmRegenerationButton" class="cta-button">Update My Plan ($4.99)</button>
+            </div>
         </div>
     </div>
 </div>

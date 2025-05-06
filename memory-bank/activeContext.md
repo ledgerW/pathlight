@@ -1,9 +1,22 @@
 # Active Context
 
 ## Current Focus
-Implementing and refining the database schema, AI integration, and user authentication flow for the life purpose application. The focus is on supporting the two-tier payment model, improving result generation, enhancing the user experience, and streamlining the authentication process.
+Implementing and refining the database schema, AI integration, and user authentication flow for the life purpose application. The focus is on supporting the three-tier payment model (including subscription option), improving result generation, enhancing the user experience, and streamlining the authentication process.
 
 ## Recent Changes
+- Implemented subscription payment model:
+  - Added subscription tier ("Pursuit") at $4.99/month
+  - Updated database schema to support subscriptions (subscription_id, subscription_status, subscription_end_date)
+  - Created migration script for adding subscription-related columns
+  - Modified payment flow to handle subscriptions
+  - Added subscription management endpoints (cancel subscription, check status)
+  - Updated UI to show subscription options
+  - Added subscription management in account page
+  - Implemented free regeneration for subscription users
+  - Updated pricing display on marketing pages
+  - Renamed tiers from basic/premium to purpose/plan/pursuit for clarity
+  - Added option to purchase Plan tier upfront without going through Purpose tier first
+
 - Implemented content marketing and SEO strategy:
   - Created templates for blog posts, guides, and FAQ content
   - Integrated analytics tracking with Google Analytics, Google Search Console, and Microsoft Clarity
@@ -106,6 +119,23 @@ Implementing and refining the database schema, AI integration, and user authenti
 - Monitor SEO performance and make adjustments as needed
 - Consider adding a search functionality for content pages
 
+- Fix the Plan and Pursuit tier account creation flow:
+  - Debug and fix the issue with questions not appearing after selecting Plan or Pursuit tier
+  - Fix the account creation process to properly handle the subscription flow
+  - Ensure proper authentication after account creation
+  - Fix magic link email sending
+  - Ensure results are generated after payment
+  - Implement proper error handling and user feedback
+
+- Improve subscription management:
+  - Replace browser alert boxes with nicer looking modals or overlays for subscription cancellation confirmation and success messages
+  - Fix database handling when a user cancels their subscription:
+    - Properly downgrade user from "pursuit" to "plan" tier
+    - Null out the subscription_id field
+    - Update subscription_status appropriately
+  - Add visual confirmation of subscription changes in the account page
+  - Consider adding a "resubscribe" option for users who previously canceled
+
 - ~~Fix the new user arrival flow issues~~ (Completed):
   - ~~Debug and fix the anonymous response transfer functionality~~ (Fixed by saving responses individually)
   - ~~Ensure proper authentication after account creation~~ (Fixed with proper token handling)
@@ -131,7 +161,7 @@ Implementing and refining the database schema, AI integration, and user authenti
 - Using a consistent URL structure for content pages
 
 - Using structured JSON data for storing AI-generated results
-- Implementing a two-tier payment model (basic: $0.99, premium: $4.99)
+- Implementing a three-tier payment model (purpose: $0.99, plan: $4.99, pursuit: $4.99/month subscription)
 - Using database migrations for schema evolution
 - Incorporating astrological signs and Stoic philosophy in AI guidance
 - Using Pydantic models for structured AI output
@@ -178,7 +208,7 @@ Implementing and refining the database schema, AI integration, and user authenti
 
 ## Learnings and Insights
 - The application is an AI-powered life purpose guidance system
-- The two-tier payment model allows users to get basic insights before committing to the full experience
+- The three-tier payment model allows users to get basic insights before committing to the full experience, with a subscription option for ongoing benefits
 - Astrological signs provide personalization without being explicitly mentioned to users
 - Stoic philosophy underpins the guidance provided
 - Database schema evolution requires careful migration planning

@@ -151,15 +151,56 @@
         <div class="tier-info">
             <div class="account-info-label">Current Tier:</div>
             <div class="tier-badge {{ user.payment_tier }}">
-                {% if user.payment_tier == 'premium' %}
-                    Premium Tier
-                {% elif user.payment_tier == 'basic' %}
-                    Basic Tier
+                {% if user.payment_tier == 'pursuit' %}
+                    Pursuit Tier
+                {% elif user.payment_tier == 'plan' %}
+                    Plan Tier
+                {% elif user.payment_tier == 'purpose' or user.payment_tier == 'basic' %}
+                    Purpose Tier
                 {% else %}
                     Free Tier
                 {% endif %}
             </div>
         </div>
+        
+        {% if user.subscription_id or user.payment_tier == 'pursuit' %}
+        <div class="subscription-info">
+            <div class="account-info">
+                <div class="account-info-label">Subscription Status:</div>
+                <div class="account-info-value">
+                    {% if user.subscription_status == 'active' %}
+                        Active
+                    {% elif user.subscription_status == 'canceled' %}
+                        Canceled (ends on {{ user.subscription_end_date.strftime('%B %d, %Y') }})
+                    {% elif user.subscription_status == 'past_due' %}
+                        Past Due (please update payment method)
+                    {% else %}
+                        {{ user.subscription_status|capitalize }}
+                    {% endif %}
+                </div>
+                
+                {% if user.subscription_status == 'active' %}
+                <div class="account-info-label">Next Billing:</div>
+                <div class="account-info-value">{{ user.subscription_end_date.strftime('%B %d, %Y') }}</div>
+                
+                <div class="account-info-label">Subscription Benefits:</div>
+                <div class="account-info-value">
+                    <ul class="subscription-benefits">
+                        <li>Unlimited plan regenerations</li>
+                        <li>Checkbox tracking for plan items</li>
+                        <li>Access to all future premium features</li>
+                    </ul>
+                </div>
+                {% endif %}
+            </div>
+            
+            {% if user.subscription_status == 'active' %}
+            <div class="subscription-actions">
+                <button id="cancelSubscriptionButton" class="account-button secondary-button">Cancel Subscription</button>
+            </div>
+            {% endif %}
+        </div>
+        {% endif %}
         
         <div class="account-info">
             <div class="account-info-label">Progress:</div>
@@ -200,6 +241,30 @@
             <button id="logoutButton" class="account-button secondary-button">Logout</button>
         </div>
     </div>
+    
+    <style>
+        .subscription-info {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #f9f9f9;
+            border-radius: 8px;
+            border-left: 3px solid var(--teal, #3a80d2);
+        }
+        
+        .subscription-benefits {
+            margin-top: 5px;
+            padding-left: 20px;
+        }
+        
+        .subscription-benefits li {
+            margin-bottom: 5px;
+        }
+        
+        .subscription-actions {
+            margin-top: 15px;
+            text-align: right;
+        }
+    </style>
 </div>
 {% endblock %}
 
@@ -212,6 +277,35 @@
             logoutButton.addEventListener('click', function() {
                 // Redirect to the logout endpoint
                 window.location.href = '/auth/logout';
+            });
+        }
+        
+        // Add event listener for cancel subscription button
+        const cancelSubscriptionButton = document.getElementById('cancelSubscriptionButton');
+        if (cancelSubscriptionButton) {
+            cancelSubscriptionButton.addEventListener('click', async function() {
+                if (confirm('Are you sure you want to cancel your subscription? You will still have access until the end of your current billing period.')) {
+                    try {
+                        const response = await fetch('/api/payments/{{ user.id }}/cancel-subscription', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            }
+                        });
+                        
+                        if (response.ok) {
+                            const data = await response.json();
+                            alert(data.message);
+                            window.location.reload();
+                        } else {
+                            const error = await response.json();
+                            alert('Error: ' + error.detail);
+                        }
+                    } catch (error) {
+                        console.error('Error canceling subscription:', error);
+                        alert('An error occurred while canceling your subscription. Please try again.');
+                    }
+                }
             });
         }
     });

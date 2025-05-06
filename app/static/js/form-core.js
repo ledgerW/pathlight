@@ -67,6 +67,40 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Initialize form
     function initForm() {
+        console.log('Initializing form...');
+        
+        // Debug: Check if questions array is defined and has content
+        if (!questions || !questions.length) {
+            console.error('Questions array is empty or undefined!');
+            // Try to recover by defining a default questions array
+            if (typeof questions === 'undefined') {
+                console.log('Attempting to recover by defining questions array');
+                window.questions = [
+                    "What activities make you feel most alive, most \"you,\" like time disappears while you're doing them?",
+                    "What did you love doing as a child? What were you drawn to naturally, before anyone told you who to be?",
+                    "Think of a moment you felt proud of yourself—not for how it looked on the outside, but how it felt on the inside. What was happening?",
+                    "Are there sides of yourself you rarely show others? What are they, and why are they hidden?",
+                    "When do you feel most authentically yourself? And when do you feel like you're wearing a mask?"
+                ];
+            }
+        } else {
+            console.log('Questions array is defined with', questions.length, 'items');
+        }
+        
+        // Debug: Check if imageNames array is defined and has content
+        if (!imageNames || !imageNames.length) {
+            console.error('ImageNames array is empty or undefined!');
+            // Try to recover by defining a default imageNames array
+            if (typeof imageNames === 'undefined') {
+                console.log('Attempting to recover by defining imageNames array');
+                window.imageNames = [
+                    "1TheSpark.png", "2TheRoot.png", "3TheFlame.png", "4TheVeil.png", "5TheMirror.png"
+                ];
+            }
+        } else {
+            console.log('ImageNames array is defined with', imageNames.length, 'items');
+        }
+        
         // Preload images
         preloadImages();
         
@@ -125,39 +159,48 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Account creation modal buttons
         const accountCreationModal = document.getElementById('accountCreationModal');
-        document.getElementById('createAccountAndPay').addEventListener('click', () => {
-            const name = document.getElementById('createUserName').value.trim();
-            const email = document.getElementById('createUserEmail').value.trim();
-            const dob = document.getElementById('createUserDob').value;
-            
-            if (!name) {
-                showNotification('Please enter your name.', 'error');
-                return;
-            }
-            
-            if (!email || !isValidEmail(email)) {
-                showNotification('Please enter a valid email address.', 'error');
-                return;
-            }
-            
-            if (!dob) {
-                showNotification('Please enter your date of birth.', 'error');
-                return;
-            }
-            
-            // Save user info to global user object
-            user.name = name;
-            user.email = email;
-            
-            // Create user account and proceed to payment
-            createUserFromAnonymous(dob);
-            accountCreationModal.style.display = 'none';
-        });
+        const createAccountButton = document.getElementById('createAccountAndPay');
         
-        // Add close button for account creation modal
-        document.querySelector('#accountCreationModal .close-modal').addEventListener('click', () => {
-            accountCreationModal.style.display = 'none';
-        });
+        if (accountCreationModal) {
+            if (createAccountButton) {
+                createAccountButton.addEventListener('click', () => {
+                    const name = document.getElementById('createUserName').value.trim();
+                    const email = document.getElementById('createUserEmail').value.trim();
+                    const dob = document.getElementById('createUserDob').value;
+                    
+                    if (!name) {
+                        showNotification('Please enter your name.', 'error');
+                        return;
+                    }
+                    
+                    if (!email || !isValidEmail(email)) {
+                        showNotification('Please enter a valid email address.', 'error');
+                        return;
+                    }
+                    
+                    if (!dob) {
+                        showNotification('Please enter your date of birth.', 'error');
+                        return;
+                    }
+                    
+                    // Save user info to global user object
+                    user.name = name;
+                    user.email = email;
+                    
+                    // Create user account and proceed to payment
+                    createUserFromAnonymous(dob);
+                    accountCreationModal.style.display = 'none';
+                });
+            }
+            
+            // Add close button for account creation modal
+            const closeModalButton = accountCreationModal.querySelector('.close-modal');
+            if (closeModalButton) {
+                closeModalButton.addEventListener('click', () => {
+                    accountCreationModal.style.display = 'none';
+                });
+            }
+        }
         
         // Copy URL button
         copyUrlButton.addEventListener('click', () => {
@@ -169,31 +212,54 @@ document.addEventListener('DOMContentLoaded', function() {
         });
         
         // Payment buttons
-        document.getElementById('proceedToBasicPayment').addEventListener('click', () => {
-            initiatePayment('basic');
-        });
+        const proceedToBasicPayment = document.getElementById('proceedToBasicPayment');
+        if (proceedToBasicPayment) {
+            proceedToBasicPayment.addEventListener('click', () => {
+                initiatePayment('basic');
+            });
+        }
         
-        document.getElementById('proceedToPremiumPayment').addEventListener('click', () => {
-            initiatePayment('premium');
-        });
+        const proceedToPremiumPayment = document.getElementById('proceedToPremiumPayment');
+        if (proceedToPremiumPayment) {
+            proceedToPremiumPayment.addEventListener('click', () => {
+                initiatePayment('premium');
+            });
+        }
         
-        document.getElementById('saveAndExitBasic').addEventListener('click', () => {
-            basicPaymentModal.style.display = 'none';
-            showSaveUrlModal();
-        });
+        const saveAndExitBasic = document.getElementById('saveAndExitBasic');
+        if (saveAndExitBasic) {
+            saveAndExitBasic.addEventListener('click', () => {
+                if (basicPaymentModal) {
+                    basicPaymentModal.style.display = 'none';
+                }
+                showSaveUrlModal();
+            });
+        }
         
-        document.getElementById('saveAndExitPremium').addEventListener('click', () => {
-            premiumPaymentModal.style.display = 'none';
-            showSaveUrlModal();
-        });
+        const saveAndExitPremium = document.getElementById('saveAndExitPremium');
+        if (saveAndExitPremium) {
+            saveAndExitPremium.addEventListener('click', () => {
+                if (premiumPaymentModal) {
+                    premiumPaymentModal.style.display = 'none';
+                }
+                showSaveUrlModal();
+            });
+        }
         
         // Regeneration payment modal button
-        document.getElementById('confirmRegenerationButton').addEventListener('click', () => {
-            // Check if user is premium tier to determine which tier to regenerate
-            const tier = user.payment_tier === 'premium' ? 'premium' : 'basic';
-            initiatePayment(tier, true); // Pass true for regeneration
-            document.getElementById('regenerationModal').style.display = 'none';
-        });
+        const confirmRegenerationButton = document.getElementById('confirmRegenerationButton');
+        if (confirmRegenerationButton) {
+            confirmRegenerationButton.addEventListener('click', () => {
+                // Check if user is premium tier to determine which tier to regenerate
+                const tier = user.payment_tier === 'premium' ? 'premium' : 'basic';
+                initiatePayment(tier, true); // Pass true for regeneration
+                
+                const regenerationModal = document.getElementById('regenerationModal');
+                if (regenerationModal) {
+                    regenerationModal.style.display = 'none';
+                }
+            });
+        }
         
         // Set initial tier badge
         updateTierBadge();
@@ -207,6 +273,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 user.id = userId;
             }
         }
+        
+        // Set up pricing options modal event listeners
+        setupPricingOptionsModal();
         
         // If user ID exists, load saved responses
         if (userId) {
@@ -226,8 +295,81 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             });
         } else {
-            // Show first slide for new users
-            showSlide(currentSlide);
+            // Check if we have a tier parameter in the URL
+            const urlTier = urlParams.get('tier');
+            
+            if (urlTier) {
+                // If we have a tier parameter, show the appropriate content
+                console.log('URL has tier parameter:', urlTier);
+                
+                if (urlTier === 'purpose') {
+                    // Show first slide for Purpose tier
+                    showSlide(currentSlide);
+                } else if (urlTier === 'plan' || urlTier === 'pursuit') {
+                    // Show account creation modal for Plan or Pursuit tier
+                    const accountCreationModal = document.getElementById('accountCreationModal');
+                    if (accountCreationModal) {
+                        // Update the modal title and button text based on tier
+                        const modalTitle = accountCreationModal.querySelector('h2');
+                        const modalButton = accountCreationModal.querySelector('#createAccountAndPay');
+                        const paymentSection = accountCreationModal.querySelector('.payment-section');
+                        
+                        if (modalTitle && modalButton && paymentSection) {
+                            if (urlTier === 'plan') {
+                                modalTitle.textContent = 'Create Your Account for Plan';
+                                modalButton.textContent = 'Create Account & Continue ($4.99)';
+                                
+                                // Update payment section content for Plan tier
+                                const paymentSectionTitle = paymentSection.querySelector('h3');
+                                const paymentSectionText = paymentSection.querySelector('p');
+                                const paymentSectionList = paymentSection.querySelector('ul');
+                                
+                                if (paymentSectionTitle && paymentSectionText && paymentSectionList) {
+                                    paymentSectionTitle.textContent = 'Get Your Complete Life Plan';
+                                    paymentSectionText.textContent = 'For just $4.99, you\'ll receive:';
+                                    paymentSectionList.innerHTML = `
+                                        <li>A comprehensive analysis of your authentic self</li>
+                                        <li>Practical next steps for 7, 30, and 180 days</li>
+                                        <li>A daily plan to set you up for success</li>
+                                        <li>Strategies for overcoming obstacles</li>
+                                    `;
+                                }
+                            } else if (urlTier === 'pursuit') {
+                                modalTitle.textContent = 'Create Your Account for Pursuit';
+                                modalButton.textContent = 'Create Account & Continue ($4.99/month)';
+                                
+                                // Update payment section content for Pursuit tier
+                                const paymentSectionTitle = paymentSection.querySelector('h3');
+                                const paymentSectionText = paymentSection.querySelector('p');
+                                const paymentSectionList = paymentSection.querySelector('ul');
+                                
+                                if (paymentSectionTitle && paymentSectionText && paymentSectionList) {
+                                    paymentSectionTitle.textContent = 'Start Your Pursuit Subscription';
+                                    paymentSectionText.textContent = 'For just $4.99/month, you\'ll receive:';
+                                    paymentSectionList.innerHTML = `
+                                        <li>Everything in the Plan tier</li>
+                                        <li>Unlimited plan regenerations</li>
+                                        <li>Checkbox tracking for plan items</li>
+                                        <li>Access to all future premium features</li>
+                                    `;
+                                }
+                            }
+                        }
+                        
+                        // Show the modal
+                        accountCreationModal.style.display = 'flex';
+                    }
+                }
+            } else {
+                // If no tier parameter and no user ID, show pricing options modal for new visitors
+                const pricingOptionsModal = document.getElementById('pricingOptionsModal');
+                if (pricingOptionsModal) {
+                    pricingOptionsModal.style.display = 'flex';
+                } else {
+                    // Fallback to showing first slide if modal doesn't exist
+                    showSlide(currentSlide);
+                }
+            }
         }
     }
     
@@ -272,24 +414,51 @@ document.addEventListener('DOMContentLoaded', function() {
         // Update submit button state
         updateSubmitButtonState();
         
-        // Count responses to verify we have all required answers
-        let answeredQuestions = 0;
-        const targetQuestions = user.payment_tier === 'premium' ? PREMIUM_TIER_QUESTIONS : BASIC_TIER_QUESTIONS;
+        // Check if we're in Plan or Pursuit tier mode
+        const urlParams = new URLSearchParams(window.location.search);
+        const urlTier = urlParams.get('tier');
         
-        // Count responses for questions 1 through targetQuestions
-        for (let i = 1; i <= targetQuestions; i++) {
-            if (userResponses[i]) {
-                answeredQuestions++;
+        // Get server tier from the modal if available
+        const accountCreationModal = document.getElementById('accountCreationModal');
+        let serverTier = '';
+        if (accountCreationModal && accountCreationModal.style.display === 'flex') {
+            const modalTitle = accountCreationModal.querySelector('h2');
+            if (modalTitle) {
+                if (modalTitle.textContent.includes('Plan')) {
+                    serverTier = 'plan';
+                } else if (modalTitle.textContent.includes('Pursuit')) {
+                    serverTier = 'pursuit';
+                }
             }
         }
         
-        console.log(`Submit check: Answered ${answeredQuestions} of ${targetQuestions} questions`);
-        const allQuestionsAnswered = answeredQuestions >= targetQuestions;
+        // Determine the actual tier to use
+        const actualTier = serverTier || urlTier || '';
+        console.log('Actual tier for validation in continueSubmitProcess:', actualTier);
         
-        // If not all questions are answered, show error and don't proceed
-        if (!allQuestionsAnswered) {
-            showNotification(`Please answer all questions. You've completed ${answeredQuestions} of ${targetQuestions}.`, 'error');
-            return;
+        // If we're not in Plan or Pursuit tier mode, check if all questions are answered
+        if (actualTier !== 'plan' && actualTier !== 'pursuit') {
+            // Count responses to verify we have all required answers
+            let answeredQuestions = 0;
+            const targetQuestions = user.payment_tier === 'premium' ? PREMIUM_TIER_QUESTIONS : BASIC_TIER_QUESTIONS;
+            
+            // Count responses for questions 1 through targetQuestions
+            for (let i = 1; i <= targetQuestions; i++) {
+                if (userResponses[i]) {
+                    answeredQuestions++;
+                }
+            }
+            
+            console.log(`Submit check: Answered ${answeredQuestions} of ${targetQuestions} questions`);
+            const allQuestionsAnswered = answeredQuestions >= targetQuestions;
+            
+            // If not all questions are answered, show error and don't proceed
+            if (!allQuestionsAnswered) {
+                showNotification(`Please answer all questions. You've completed ${answeredQuestions} of ${targetQuestions}.`, 'error');
+                return;
+            }
+        } else {
+            console.log('Plan or Pursuit tier detected in continueSubmitProcess, bypassing validation');
         }
         
         // Check if we're at question 5 with basic results and the submit button says "Update Purpose"
@@ -433,7 +602,41 @@ document.addEventListener('DOMContentLoaded', function() {
     // Create user from anonymous responses
     async function createUserFromAnonymous(dob) {
         try {
-            // First, make sure we have responses in localStorage
+            console.log('createUserFromAnonymous called with dob:', dob);
+            
+            // Check if we're creating an account for Plan or Pursuit tier
+            const urlParams = new URLSearchParams(window.location.search);
+            const tier = urlParams.get('tier');
+            console.log('URL tier parameter:', tier);
+            
+            // Get server tier from the modal if available
+            const accountCreationModal = document.getElementById('accountCreationModal');
+            let serverTier = '';
+            if (accountCreationModal) {
+                const modalTitle = accountCreationModal.querySelector('h2');
+                if (modalTitle) {
+                    if (modalTitle.textContent.includes('Plan')) {
+                        serverTier = 'plan';
+                    } else if (modalTitle.textContent.includes('Pursuit')) {
+                        serverTier = 'pursuit';
+                    }
+                }
+            }
+            console.log('Server tier from modal:', serverTier);
+            
+            // Determine the actual tier to use
+            const actualTier = serverTier || tier || 'purpose';
+            console.log('Actual tier to use:', actualTier);
+            
+            // If we're creating an account for Plan or Pursuit tier, we don't need to check for responses
+            if (actualTier === 'plan' || actualTier === 'pursuit') {
+                console.log('Creating account for Plan or Pursuit tier, skipping response check');
+                // Call the createUserFromAnonymous function from form-api.js
+                await window.createUserFromAnonymous(dob, actualTier);
+                return;
+            }
+            
+            // For other tiers, check for responses in localStorage
             const savedResponses = localStorage.getItem('anonymousResponses');
             if (!savedResponses) {
                 console.error('No anonymous responses found in localStorage');
@@ -466,7 +669,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }
             
             // Call the createUserFromAnonymous function from form-api.js
-            await window.createUserFromAnonymous(dob);
+            await window.createUserFromAnonymous(dob, 'purpose');
             
         } catch (error) {
             console.error('Error in createUserFromAnonymous wrapper:', error);
@@ -479,6 +682,65 @@ document.addEventListener('DOMContentLoaded', function() {
         if (user.id) {
             uniqueUrlInput.value = `${window.location.origin}/form/${user.id}`;
             saveUrlModal.style.display = 'flex';
+        }
+    }
+    
+    // Set up pricing options modal event listeners
+    function setupPricingOptionsModal() {
+        const pricingOptionsModal = document.getElementById('pricingOptionsModal');
+        if (!pricingOptionsModal) {
+            console.log('Pricing options modal not found');
+            return;
+        }
+        
+        // Close button
+        const closeButton = pricingOptionsModal.querySelector('.close-modal');
+        if (closeButton) {
+            closeButton.addEventListener('click', () => {
+                pricingOptionsModal.style.display = 'none';
+                // Show first slide
+                showSlide(currentSlide);
+            });
+        }
+        
+        // Purpose tier button
+        const purposeButton = document.getElementById('choosePurposeTier');
+        if (purposeButton) {
+            purposeButton.addEventListener('click', () => {
+                pricingOptionsModal.style.display = 'none';
+                // Redirect to form with purpose tier parameter
+                window.location.href = '/form?tier=purpose';
+            });
+        }
+        
+        // Plan tier button
+        const planButton = document.getElementById('choosePlanTier');
+        if (planButton) {
+            planButton.addEventListener('click', () => {
+                pricingOptionsModal.style.display = 'none';
+                // Redirect to form with plan tier parameter
+                window.location.href = '/form?tier=plan';
+            });
+        }
+        
+        // Pursuit tier button
+        const pursuitButton = document.getElementById('choosePursuitTier');
+        if (pursuitButton) {
+            pursuitButton.addEventListener('click', () => {
+                pricingOptionsModal.style.display = 'none';
+                // Redirect to form with pursuit tier parameter
+                window.location.href = '/form?tier=pursuit';
+            });
+        }
+        
+        // Skip button
+        const skipButton = document.getElementById('skipPricingSelection');
+        if (skipButton) {
+            skipButton.addEventListener('click', () => {
+                pricingOptionsModal.style.display = 'none';
+                // Show first slide
+                showSlide(currentSlide);
+            });
         }
     }
     

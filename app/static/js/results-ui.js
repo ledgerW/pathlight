@@ -204,9 +204,143 @@ function setLoading(isLoading) {
 }
 
 // Show regeneration modal
-function showRegenerationModal() {
+async function showRegenerationModal() {
     const regenerationModal = document.getElementById('regenerationModal');
     if (regenerationModal) {
+        // Check if user is a subscription user
+        try {
+            const response = await fetch(`/api/payments/${userId}/payment-status`);
+            if (!response.ok) {
+                throw new Error('Failed to check payment status');
+            }
+            
+            const statusData = await response.json();
+            const isSubscriptionUser = statusData.payment_tier === 'pursuit';
+            
+            // Check if user has a subscription
+            let hasActiveSubscription = false;
+            if (isSubscriptionUser) {
+                const subscriptionResponse = await fetch(`/api/payments/${userId}/subscription-status`);
+                if (subscriptionResponse.ok) {
+                    const subscriptionData = await subscriptionResponse.json();
+                    hasActiveSubscription = subscriptionData.has_subscription && 
+                                           subscriptionData.subscription_status === 'active';
+                }
+            }
+            
+            // Update the modal content based on subscription status
+            if (hasActiveSubscription) {
+                // Create subscription content if it doesn't exist
+                let subscriptionContent = document.getElementById('subscriptionRegenerationContent');
+                if (!subscriptionContent) {
+                    // Create subscription content
+                    subscriptionContent = document.createElement('div');
+                    subscriptionContent.id = 'subscriptionRegenerationContent';
+                    subscriptionContent.innerHTML = `
+                        <p>As a Pursuit subscriber, you have unlimited plan regenerations!</p>
+                        <p>Regenerating your plan will provide fresh insights and guidance based on your responses.</p>
+                        <div class="regeneration-actions">
+                            <button id="confirmSubscriptionRegenerationButton" class="cta-button">Update My Plan (Free)</button>
+                        </div>
+                    `;
+                    
+                    // Replace the existing content
+                    const existingContent = regenerationModal.querySelector('.modal-content');
+                    existingContent.innerHTML = `
+                        <span class="close-modal">&times;</span>
+                        <h2>Update Your Life Plan</h2>
+                    `;
+                    existingContent.appendChild(subscriptionContent);
+                } else {
+                    subscriptionContent.style.display = 'block';
+                    const oneTimeContent = document.getElementById('oneTimeRegenerationContent');
+                    if (oneTimeContent) {
+                        oneTimeContent.style.display = 'none';
+                    }
+                }
+                
+                // Add event listener for subscription regeneration button
+                const confirmSubscriptionButton = document.getElementById('confirmSubscriptionRegenerationButton');
+                if (confirmSubscriptionButton) {
+                    // Remove any existing event listeners
+                    const newButton = confirmSubscriptionButton.cloneNode(true);
+                    confirmSubscriptionButton.parentNode.replaceChild(newButton, confirmSubscriptionButton);
+                    
+                    // Add new event listener
+                    newButton.addEventListener('click', initiateSubscriptionRegeneration);
+                }
+            } else {
+                // Show one-time regeneration content
+                let oneTimeContent = document.getElementById('oneTimeRegenerationContent');
+                if (!oneTimeContent) {
+                    // Create one-time content
+                    oneTimeContent = document.createElement('div');
+                    oneTimeContent.id = 'oneTimeRegenerationContent';
+                    oneTimeContent.innerHTML = `
+                        <p>Regenerating your plan will provide fresh insights and guidance based on your responses.</p>
+                        <div class="regeneration-details">
+                            <div class="regeneration-info">
+                                <p><strong>Cost:</strong> $4.99</p>
+                                <p><strong>What you'll get:</strong> A completely new life plan with updated insights, next steps, daily plan, and strategies.</p>
+                            </div>
+                        </div>
+                        <div class="regeneration-actions">
+                            <button id="confirmRegenerationButton" class="cta-button">Update My Plan ($4.99)</button>
+                        </div>
+                    `;
+                    
+                    // Replace the existing content
+                    const existingContent = regenerationModal.querySelector('.modal-content');
+                    existingContent.innerHTML = `
+                        <span class="close-modal">&times;</span>
+                        <h2>Update Your Life Plan</h2>
+                    `;
+                    existingContent.appendChild(oneTimeContent);
+                } else {
+                    oneTimeContent.style.display = 'block';
+                    const subscriptionContent = document.getElementById('subscriptionRegenerationContent');
+                    if (subscriptionContent) {
+                        subscriptionContent.style.display = 'none';
+                    }
+                }
+                
+                // Add event listener for one-time regeneration button
+                const confirmButton = document.getElementById('confirmRegenerationButton');
+                if (confirmButton) {
+                    // Remove any existing event listeners
+                    const newButton = confirmButton.cloneNode(true);
+                    confirmButton.parentNode.replaceChild(newButton, confirmButton);
+                    
+                    // Add new event listener
+                    newButton.addEventListener('click', initiateRegenerationPayment);
+                }
+            }
+        } catch (error) {
+            console.error('Error checking subscription status:', error);
+            // Default to showing one-time content if there's an error
+            const existingContent = regenerationModal.querySelector('.modal-content');
+            existingContent.innerHTML = `
+                <span class="close-modal">&times;</span>
+                <h2>Update Your Life Plan</h2>
+                <p>Regenerating your plan will provide fresh insights and guidance based on your responses.</p>
+                <div class="regeneration-details">
+                    <div class="regeneration-info">
+                        <p><strong>Cost:</strong> $4.99</p>
+                        <p><strong>What you'll get:</strong> A completely new life plan with updated insights, next steps, daily plan, and strategies.</p>
+                    </div>
+                </div>
+                <div class="regeneration-actions">
+                    <button id="confirmRegenerationButton" class="cta-button">Update My Plan ($4.99)</button>
+                </div>
+            `;
+            
+            // Add event listener for regeneration button
+            const confirmButton = document.getElementById('confirmRegenerationButton');
+            if (confirmButton) {
+                confirmButton.addEventListener('click', initiateRegenerationPayment);
+            }
+        }
+        
         regenerationModal.style.display = 'flex';
         
         // Add event listeners for close buttons
@@ -222,15 +356,56 @@ function showRegenerationModal() {
             });
         });
         
-        // Add event listener for confirm button
+        // Add event listener for one-time regeneration button
         const confirmButton = document.getElementById('confirmRegenerationButton');
         if (confirmButton) {
             confirmButton.addEventListener('click', initiateRegenerationPayment);
         }
+        
+        // Add event listener for subscription regeneration button
+        const confirmSubscriptionButton = document.getElementById('confirmSubscriptionRegenerationButton');
+        if (confirmSubscriptionButton) {
+            confirmSubscriptionButton.addEventListener('click', initiateSubscriptionRegeneration);
+        }
     }
 }
 
-// Initiate regeneration payment
+// Initiate free regeneration for subscription users
+async function initiateSubscriptionRegeneration() {
+    try {
+        // Show loading overlay
+        const loadingMessage = showGeneratingResultsMessage();
+        
+        // Hide regeneration modal
+        document.getElementById('regenerationModal').style.display = 'none';
+        
+        // Call the regenerate endpoint directly (no payment needed for subscribers)
+        const response = await fetch(`/api/ai/${userId}/regenerate-premium`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+        
+        if (!response.ok) {
+            throw new Error('Failed to regenerate plan');
+        }
+        
+        // Reload the page to show the new plan
+        window.location.reload();
+        
+    } catch (error) {
+        console.error('Error regenerating plan:', error);
+        // Remove loading message
+        const loadingMessage = document.querySelector('.generating-results-message');
+        if (loadingMessage) {
+            loadingMessage.remove();
+        }
+        showNotification('Error regenerating plan. Please try again.', 'error');
+    }
+}
+
+// Initiate regeneration payment for one-time users
 async function initiateRegenerationPayment() {
     try {
         // Show payment modal

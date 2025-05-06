@@ -100,9 +100,11 @@
             <div class="current-marker" id="currentMarker"></div>
         </div>
         <div class="end-marker"></div>
-        <div class="progress-text">
-            <span id="progressText">Question <span id="currentQuestion">1</span> of <span id="totalQuestions">5</span></span>
-        </div>
+    <div class="progress-text">
+        <span id="progressText">Question <span id="currentQuestion">1</span> of <span id="totalQuestions">5</span></span>
+        <!-- Main tier badge is in the header, so we don't need this one -->
+        <span id="progressTierBadge" class="tier-badge free" style="display: none;">Free Tier</span>
+    </div>
     </div>
     
     <div class="form-content">
@@ -272,22 +274,110 @@
 <div id="premiumPaymentModal" class="modal" style="display: none;">
     <div class="modal-content">
         <span class="close-modal">&times;</span>
-        <h2>Unlock Your Full Life Path</h2>
-        <p>Ready to discover your complete life path and purpose?</p>
-        <p>For $7.49, you'll receive:</p>
-        <ul>
-            <li>A comprehensive analysis of your authentic self</li>
-            <li>Clear identification of potential life purposes</li>
-            <li>Practical next steps for 7, 30, and 180 days</li>
-            <li>A daily plan to set you up for success</li>
-            <li>Strategies for overcoming obstacles</li>
-        </ul>
-        <div class="payment-buttons">
-            <button id="proceedToPremiumPayment" class="btn-primary">Continue ($7.49)</button>
+        <h2>Choose Your Path</h2>
+        
+        <div class="payment-options">
+            <div class="payment-option">
+                <h3>Plan</h3>
+                <p class="price">$4.99 (one-time)</p>
+                <ul>
+                    <li>A comprehensive analysis of your authentic self</li>
+                    <li>Clear identification of potential life purposes</li>
+                    <li>Practical next steps for 7, 30, and 180 days</li>
+                    <li>A daily plan to set you up for success</li>
+                    <li>Strategies for overcoming obstacles</li>
+                </ul>
+                <button id="proceedToPlanPayment" class="btn-primary">Choose Plan ($4.99)</button>
+            </div>
+            
+            <div class="payment-option highlighted">
+                <div class="option-badge">Best Value</div>
+                <h3>Pursuit</h3>
+                <p class="price">$4.99/month</p>
+                <ul>
+                    <li>Everything in the Plan option</li>
+                    <li>Unlimited plan regenerations</li>
+                    <li>Checkbox tracking for plan items</li>
+                    <li>Access to all future premium features</li>
+                </ul>
+                <button id="proceedToPursuitPayment" class="btn-primary">Choose Pursuit ($4.99/mo)</button>
+            </div>
+        </div>
+        
+        <div class="payment-footer">
             <button id="saveAndExitPremium" class="btn-secondary">Save & Exit</button>
         </div>
     </div>
 </div>
+
+<style>
+    .payment-options {
+        display: flex;
+        gap: 20px;
+        margin: 20px 0;
+    }
+    
+    .payment-option {
+        flex: 1;
+        padding: 20px;
+        border-radius: 8px;
+        border: 1px solid #e0e0e0;
+        position: relative;
+    }
+    
+    .payment-option.highlighted {
+        border: 2px solid var(--gold, #4a90e2);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+    
+    .option-badge {
+        position: absolute;
+        top: -10px;
+        right: -10px;
+        background-color: var(--gold, #4a90e2);
+        color: var(--teal, #333);
+        padding: 5px 10px;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        font-weight: bold;
+    }
+    
+    .payment-option h3 {
+        margin-top: 0;
+        color: var(--teal, #333);
+    }
+    
+    .payment-option .price {
+        font-size: 1.2rem;
+        font-weight: bold;
+        margin-bottom: 15px;
+    }
+    
+    .payment-option ul {
+        margin-bottom: 20px;
+        padding-left: 20px;
+    }
+    
+    .payment-option li {
+        margin-bottom: 8px;
+    }
+    
+    .payment-option button {
+        width: 100%;
+    }
+    
+    .payment-footer {
+        margin-top: 20px;
+        text-align: center;
+    }
+    
+    /* Responsive adjustments */
+    @media (max-width: 768px) {
+        .payment-options {
+            flex-direction: column;
+        }
+    }
+</style>
 
 <!-- Account Creation Modal -->
 <div id="accountCreationModal" class="modal" style="display: none;">
@@ -327,6 +417,62 @@
     </div>
 </div>
 
+<!-- Pricing Options Modal for New Visitors -->
+<div id="pricingOptionsModal" class="modal" style="display: none;">
+    <div class="modal-content pricing-options-modal">
+        <span class="close-modal">&times;</span>
+        <h2>Choose Your Path</h2>
+        <p>Select the option that best fits your journey to purpose and agency</p>
+        
+        <div class="pricing-options">
+            <div class="pricing-option">
+                <h3>Purpose</h3>
+                <p class="price">$0.99 (one-time)</p>
+                <ul>
+                    <li>5 foundational reflection questions</li>
+                    <li>Personalized purpose statement</li>
+                    <li>Guiding mantra</li>
+                    <li>Core values identification</li>
+                    <li>Unlimited access to your purpose insights</li>
+                </ul>
+                <button id="choosePurposeTier" class="btn-primary">Start with Purpose</button>
+            </div>
+            
+            <div class="pricing-option">
+                <h3>Plan</h3>
+                <p class="price">$4.99 (one-time)</p>
+                <ul>
+                    <li>Everything in Purpose plan</li>
+                    <li>20 additional in-depth questions</li>
+                    <li>Practical next steps guidance</li>
+                    <li>Customized daily routine</li>
+                    <li>Obstacle-overcoming strategies</li>
+                    <li>Personalized action plan</li>
+                </ul>
+                <button id="choosePlanTier" class="btn-primary">Get Your Plan</button>
+            </div>
+            
+            <div class="pricing-option highlighted">
+                <div class="option-badge">Best Value</div>
+                <h3>Pursuit</h3>
+                <p class="price">$4.99/month</p>
+                <ul>
+                    <li>Everything in Plan tier</li>
+                    <li>Unlimited plan regenerations</li>
+                    <li>Checkbox tracking for plan items</li>
+                    <li>Access to all future premium features</li>
+                    <li>Cancel anytime</li>
+                </ul>
+                <button id="choosePursuitTier" class="btn-primary">Start Your Pursuit</button>
+            </div>
+        </div>
+        
+        <div class="pricing-footer">
+            <button id="skipPricingSelection" class="btn-secondary">Skip & Start for Free</button>
+        </div>
+    </div>
+</div>
+
 <!-- Regeneration confirmation modal -->
 <div id="regenerationModal" class="modal" style="display: none;">
     <div class="modal-content">
@@ -344,10 +490,300 @@
         </div>
     </div>
 </div>
+
+<style>
+    /* Pricing Options Modal Styles */
+    .pricing-options-modal {
+        max-width: 900px;
+    }
+    
+    .pricing-options {
+        display: flex;
+        gap: 20px;
+        margin: 20px 0;
+    }
+    
+    .pricing-option {
+        flex: 1;
+        padding: 20px;
+        border-radius: 8px;
+        border: 1px solid #e0e0e0;
+        position: relative;
+        transition: transform 0.3s, box-shadow 0.3s;
+    }
+    
+    .pricing-option:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+    }
+    
+    .pricing-option.highlighted {
+        border: 2px solid var(--gold, #4a90e2);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+    
+    .pricing-option h3 {
+        margin-top: 0;
+        color: var(--teal, #333);
+        font-size: 1.5rem;
+    }
+    
+    .pricing-option .price {
+        font-size: 1.2rem;
+        font-weight: bold;
+        margin-bottom: 15px;
+    }
+    
+    .pricing-option ul {
+        margin-bottom: 20px;
+        padding-left: 20px;
+    }
+    
+    .pricing-option li {
+        margin-bottom: 8px;
+    }
+    
+    .pricing-option button {
+        width: 100%;
+    }
+    
+    .pricing-footer {
+        margin-top: 20px;
+        text-align: center;
+    }
+    
+    /* Responsive adjustments */
+    @media (max-width: 768px) {
+        .pricing-options {
+            flex-direction: column;
+        }
+    }
+</style>
 {% endblock %}
 
 {% block scripts %}
 <script>
+    // Get URL parameters
+    const urlParams = new URLSearchParams(window.location.search);
+    const tier = urlParams.get('tier');
+    const paid = urlParams.get('paid') === 'true';
+    
+    // If tier and paid parameters are present, show appropriate message
+    document.addEventListener('DOMContentLoaded', function() {
+        if (tier && paid) {
+            // Create a notification element
+            const notification = document.createElement('div');
+            notification.className = 'notification success';
+            
+            if (tier === 'plan') {
+                notification.textContent = 'You have already paid for the Plan tier. Complete the questions to generate your plan.';
+            } else if (tier === 'pursuit') {
+                notification.textContent = 'You have a Pursuit subscription. Complete the questions to generate your plan with unlimited regenerations.';
+            }
+            
+            // Insert the notification at the top of the form
+            const formContainer = document.querySelector('.form-container');
+            formContainer.insertBefore(notification, formContainer.firstChild);
+            
+            // Add styles for the notification
+            const style = document.createElement('style');
+            style.textContent = `
+                .notification {
+                    padding: 15px;
+                    margin-bottom: 20px;
+                    border-radius: 8px;
+                    text-align: center;
+                    font-weight: bold;
+                }
+                
+                .notification.success {
+                    background-color: #d4edda;
+                    color: #155724;
+                    border: 1px solid #c3e6cb;
+                }
+            `;
+            document.head.appendChild(style);
+        } else if (tier === 'purpose') {
+            // Create a notification for Purpose tier
+            const notification = document.createElement('div');
+            notification.className = 'notification info';
+            notification.textContent = 'Start for free with the Purpose tier. Answer 5 questions to get your personalized purpose statement.';
+            
+            // Insert the notification at the top of the form
+            const formContainer = document.querySelector('.form-container');
+            formContainer.insertBefore(notification, formContainer.firstChild);
+            
+            // Add styles for the notification
+            const style = document.createElement('style');
+            style.textContent = `
+                .notification {
+                    padding: 15px;
+                    margin-bottom: 20px;
+                    border-radius: 8px;
+                    text-align: center;
+                    font-weight: bold;
+                }
+                
+                .notification.info {
+                    background-color: #d1ecf1;
+                    color: #0c5460;
+                    border: 1px solid #bee5eb;
+                }
+            `;
+            document.head.appendChild(style);
+        }
+        
+        // Get server variables
+        const showAccountCreation = Boolean("{{ show_account_creation or 'False' }}".toLowerCase() === "true");
+        const serverTier = "{{ tier or '' }}";
+        
+        // If show_account_creation is true, show the account creation modal
+        if (showAccountCreation) {
+            // Show account creation modal
+            const accountCreationModal = document.getElementById('accountCreationModal');
+            if (accountCreationModal) {
+                accountCreationModal.style.display = 'flex';
+                
+                // Update the modal title and button text based on tier
+                const modalTitle = accountCreationModal.querySelector('h2');
+                const modalButton = accountCreationModal.querySelector('#createAccountAndPay');
+                
+                if (modalTitle && modalButton) {
+                    if (serverTier === 'plan') {
+                        modalTitle.textContent = 'Create Your Account for Plan';
+                        modalButton.textContent = 'Create Account & Continue ($4.99)';
+                    } else if (serverTier === 'pursuit') {
+                        modalTitle.textContent = 'Create Your Account for Pursuit';
+                        modalButton.textContent = 'Create Account & Continue ($4.99/month)';
+                    }
+                }
+                
+                // Add event listener for the create account button
+                if (modalButton) {
+                    modalButton.addEventListener('click', function() {
+                        console.log('Create account button clicked');
+                        console.log('Server tier:', serverTier);
+                        
+                        // Get form values
+                        const name = document.getElementById('createUserName').value;
+                        const email = document.getElementById('createUserEmail').value;
+                        const dob = document.getElementById('createUserDob').value;
+                        
+                        if (!name || !email || !dob) {
+                            alert('Please fill in all fields');
+                            return;
+                        }
+                        
+                        // Show loading overlay
+                        const loadingOverlay = document.getElementById('loadingOverlay');
+                        const loadingMessage = document.getElementById('loadingMessage');
+                        if (loadingOverlay && loadingMessage) {
+                            loadingOverlay.style.display = 'flex';
+                            loadingMessage.textContent = 'Creating your account...';
+                        }
+                        
+                        // Format date as ISO string
+                        const dobDate = new Date(dob);
+                        const dobString = dobDate.toISOString();
+                        
+                        // Get anonymous session ID
+                        const anonymousSessionId = localStorage.getItem('anonymousSessionId') || 'anonymous-' + Date.now() + '-' + Math.random().toString(36).substring(2, 15);
+                        
+                        // Create user account using the from-anonymous endpoint
+                        fetch('/api/users/from-anonymous', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({
+                                name: name,
+                                email: email,
+                                dob: dobString,
+                                progress_state: '5',
+                                payment_tier: 'none',
+                                anonymous_session_id: anonymousSessionId
+                            })
+                        })
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.id) {
+                                // Store authentication data in localStorage for immediate use
+                                localStorage.setItem('pathlight_session', 'true');
+                                localStorage.setItem('pathlight_session_created', new Date().toISOString());
+                                localStorage.setItem('pathlight_user_id', data.id);
+                                localStorage.setItem('pathlight_user_email', email);
+                                
+                                // Set up authentication for future requests
+                                const tempAuthToken = `temp-token-${data.id}`;
+                                localStorage.setItem('stytch_session_token', tempAuthToken);
+                                
+                                // Set a flag to indicate that a magic link has been sent
+                                localStorage.setItem('magic_link_sent', 'true');
+                                
+                                // Send magic link but don't show notification yet
+                                fetch('/auth/login_or_create_user', {
+                                    method: 'POST',
+                                    headers: {
+                                        'Content-Type': 'application/json'
+                                    },
+                                    body: JSON.stringify({ email: email })
+                                })
+                                .then(response => response.json())
+                                .then(() => {
+                                    // Redirect to payment
+                                    if (serverTier === 'plan') {
+                                        window.location.href = `/api/payments/${data.id}/create-checkout-session/plan?is_magic_link_sent=true`;
+                                    } else if (serverTier === 'pursuit') {
+                                        window.location.href = `/api/payments/${data.id}/create-checkout-session/pursuit?is_subscription=true&is_magic_link_sent=true`;
+                                    } else {
+                                        // Hide loading overlay if no redirect
+                                        if (loadingOverlay) {
+                                            loadingOverlay.style.display = 'none';
+                                        }
+                                        
+                                        // Show success message
+                                        alert('Account created! Check your email for a magic link to continue.');
+                                    }
+                                })
+                                .catch(error => {
+                                    console.error('Error sending magic link:', error);
+                                    // Still redirect to payment even if magic link fails
+                                    if (serverTier === 'plan') {
+                                        window.location.href = `/api/payments/${data.id}/create-checkout-session/plan?is_magic_link_sent=true`;
+                                    } else if (serverTier === 'pursuit') {
+                                        window.location.href = `/api/payments/${data.id}/create-checkout-session/pursuit?is_subscription=true&is_magic_link_sent=true`;
+                                    } else {
+                                        // Hide loading overlay if no redirect
+                                        if (loadingOverlay) {
+                                            loadingOverlay.style.display = 'none';
+                                        }
+                                    }
+                                });
+                            } else {
+                                // Hide loading overlay
+                                if (loadingOverlay) {
+                                    loadingOverlay.style.display = 'none';
+                                }
+                                
+                                alert('Error creating account: ' + (data.detail || 'Unknown error'));
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Error creating account:', error);
+                            
+                            // Hide loading overlay
+                            if (loadingOverlay) {
+                                loadingOverlay.style.display = 'none';
+                            }
+                            
+                            alert('Error creating account. Please try again.');
+                        });
+                    });
+                }
+            }
+        }
+    });
+    
     // Questions data
     const questions = [
         "What activities make you feel most alive, most \"you,\" like time disappears while you're doing them?",

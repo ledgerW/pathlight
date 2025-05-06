@@ -57,6 +57,8 @@ def get_stripe_config():
             "basic_product_id": os.getenv("STRIPE_BASIC_PRODUCT_ID"),
             "full_price_id": os.getenv("STRIPE_FULL_PRICE_ID"),
             "full_product_id": os.getenv("STRIPE_FULL_PRODUCT_ID"),
+            "subscription_price_id": os.getenv("STRIPE_SUBSCRIPTION_PRICE_ID"),
+            "subscription_product_id": os.getenv("STRIPE_SUBSCRIPTION_PRODUCT_ID"),
             "environment": "production"
         }
     else:
@@ -68,6 +70,8 @@ def get_stripe_config():
             "basic_product_id": os.getenv("STRIPE_BASIC_PRODUCT_ID_TEST"),
             "full_price_id": os.getenv("STRIPE_FULL_PRICE_ID_TEST"),
             "full_product_id": os.getenv("STRIPE_FULL_PRODUCT_ID_TEST"),
+            "subscription_price_id": os.getenv("STRIPE_SUBSCRIPTION_PRICE_ID_TEST"),
+            "subscription_product_id": os.getenv("STRIPE_SUBSCRIPTION_PRODUCT_ID_TEST"),
             "environment": "test"
         }
     

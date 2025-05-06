@@ -107,12 +107,64 @@
             });
         }
         
-        // Custom function to generate results without redirecting
-        async function generateResultsInBackground() {
+        // Custom function to verify payment and update subscription status
+        async function verifyPaymentInBackground() {
             try {
-                // Call the appropriate AI endpoint based on tier
+                // Get the tier from the template
                 const userId = '{{ user_id }}';
                 const tier = '{{ tier }}';
+                
+                console.log(`Verifying payment for ${tier} tier for user ${userId}`);
+                
+                // For Pursuit tier, make sure subscription status is updated
+                if (tier === 'pursuit') {
+                    console.log('Updating subscription status for Pursuit tier');
+                    
+                    // Call subscription status endpoint to update user's subscription status
+                    const response = await fetch(`/api/payments/${userId}/subscription-status`, {
+                        method: 'GET',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        }
+                    });
+                    
+                    if (response.ok) {
+                        const data = await response.json();
+                        console.log('Subscription status updated:', data);
+                    } else {
+                        console.error('Failed to update subscription status');
+                    }
+                    
+                    // Also call a special endpoint to ensure the user's payment tier is set to pursuit
+                    // and subscription status is set to active
+                    const updateResponse = await fetch(`/api/payments/${userId}/verify-payment`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            session_id: 'direct-update',
+                            tier: 'pursuit',
+                            force_active: true
+                        })
+                    });
+                    
+                    if (updateResponse.ok) {
+                        const updateData = await updateResponse.json();
+                        console.log('Payment tier updated:', updateData);
+                    } else {
+                        console.error('Failed to update payment tier');
+                    }
+                }
+                
+                // For Plan and Pursuit tiers, don't generate results yet
+                // They need to answer questions first
+                if (tier === 'plan' || tier === 'pursuit') {
+                    console.log(`Skipping result generation for ${tier} tier - user needs to answer questions first`);
+                    return;
+                }
+                
+                // Only generate results for Purpose tier
                 const endpoint = tier === 'premium' ? 'generate-premium' : 'generate-basic';
                 
                 console.log(`Generating ${tier} results in the background for user ${userId}`);
@@ -136,12 +188,12 @@
                 
                 // Do NOT redirect to results page - user needs to click magic link first
             } catch (error) {
-                console.error('Error generating results in background:', error);
+                console.error('Error in background processing:', error);
             }
         }
         
-        // Start background generation after a short delay
-        setTimeout(generateResultsInBackground, 1000);
+        // Start background processing after a short delay
+        setTimeout(verifyPaymentInBackground, 1000);
     });
 </script>
 {% endblock %}

@@ -16,9 +16,11 @@ The core functionality of the application has been implemented:
   - Premium plan generation after all 25 questions
   - Structured output using Pydantic models
 - **Payment Processing**: 
-  - Two-tier payment model ($0.99 for basic, $4.99 for premium)
-  - Support for plan regeneration payments
+  - Three-tier payment model ($0.99 for Purpose, $4.99 for Plan, $4.99/month for Pursuit subscription)
+  - Support for plan regeneration payments (free for subscription users)
   - Tracking of regeneration count and timestamps
+  - Subscription management with cancel option
+  - Automatic subscription status updates
 - **Results Display**: 
   - Enhanced visualization with structured sections
   - Intelligent parsing of AI-generated content
@@ -29,6 +31,19 @@ The core functionality of the application has been implemented:
   - Collapsible sections for better mobile experience
 
 ## Latest Improvements
+- Implemented subscription payment model:
+  - Added subscription tier ("Pursuit") at $4.99/month
+  - Updated database schema to support subscriptions (subscription_id, subscription_status, subscription_end_date)
+  - Created migration script for adding subscription-related columns
+  - Modified payment flow to handle subscriptions
+  - Added subscription management endpoints (cancel subscription, check status)
+  - Updated UI to show subscription options
+  - Added subscription management in account page
+  - Implemented free regeneration for subscription users
+  - Updated pricing display on marketing pages
+  - Renamed tiers from basic/premium to purpose/plan/pursuit for clarity
+  - Added option to purchase Plan tier upfront without going through Purpose tier first
+
 - Implemented content marketing and SEO strategy:
   - Created templates for blog posts, guides, and FAQ content
   - Integrated analytics tracking with Google Analytics, Google Search Console, and Microsoft Clarity
@@ -141,13 +156,29 @@ The core functionality of the application has been implemented:
 - Progress tracking for completed plan items
 
 ## Current Status
-The application is functional with the core features implemented. Recent work has focused on implementing a content marketing and SEO strategy, fixing the UI/UX issues with the Next Steps and Daily Plan sections, fixing the broken authentication flow with a comprehensive solution, fixing the redirection issue in the user authentication flow, improving the mobile experience with responsive design and collapsible sections, as well as fixing the "Update My Plan" button functionality for users with premium plans and improving modal handling across the application. 
+The application is functional with the core features implemented. Recent work has focused on implementing a subscription payment model, implementing a content marketing and SEO strategy, fixing the UI/UX issues with the Next Steps and Daily Plan sections, fixing the broken authentication flow with a comprehensive solution, fixing the redirection issue in the user authentication flow, improving the mobile experience with responsive design and collapsible sections, as well as fixing the "Update My Plan" button functionality for users with premium plans and improving modal handling across the application. 
 
-The content marketing and SEO implementation includes templates for blog posts, guides, and FAQ content, with analytics tracking integration, schema.org markup for rich search results, and a file-based approach for easy content management. The checkbox UI/UX fixes implement consistent IDs for timeframe cards to ensure checkbox states persist between sessions, prioritize category-based icon selection over timeframe icons, and provide fallback to 'anonymous' user for cookie storage when userId is missing. The authentication flow fix implements a multi-layered approach using localStorage, Authorization headers, and cookies to ensure users remain logged in across all scenarios, with robust error handling and recovery mechanisms. The redirection fix ensures existing users are properly redirected to the login page instead of an invalid URL. 
+The subscription implementation adds a new "Pursuit" tier at $4.99/month with unlimited regenerations, checkbox tracking, and access to future premium features. It includes database schema updates, subscription management endpoints, and UI updates to show subscription options and status. The content marketing and SEO implementation includes templates for blog posts, guides, and FAQ content, with analytics tracking integration, schema.org markup for rich search results, and a file-based approach for easy content management. The checkbox UI/UX fixes implement consistent IDs for timeframe cards to ensure checkbox states persist between sessions, prioritize category-based icon selection over timeframe icons, and provide fallback to 'anonymous' user for cookie storage when userId is missing. The authentication flow fix implements a multi-layered approach using localStorage, Authorization headers, and cookies to ensure users remain logged in across all scenarios, with robust error handling and recovery mechanisms. The redirection fix ensures existing users are properly redirected to the login page instead of an invalid URL. 
 
-These changes have significantly improved the user experience by ensuring seamless authentication, making the application more usable on mobile devices, ensuring consistency between different parts of the application, fixing issues with loading spinners and checkbox functionality, and providing valuable content to help users understand the purpose discovery process.
+These changes have significantly improved the user experience by offering more flexible payment options, ensuring seamless authentication, making the application more usable on mobile devices, ensuring consistency between different parts of the application, fixing issues with loading spinners and checkbox functionality, and providing valuable content to help users understand the purpose discovery process.
 
 ## Known Issues
+- Plan and Pursuit tier account creation flow has several unresolved issues:
+  - Questions are not appearing after selecting Plan or Pursuit tier from the pricing options
+  - Account creation process is not properly handling the subscription flow
+  - Authentication is not working correctly after account creation
+  - Magic link emails are not being sent consistently
+  - Results are not being generated after payment
+  - The implementation requires significant debugging and rework
+  - Users are being redirected to login page after payment instead of seeing email instructions
+
+- Subscription management has several issues:
+  - Cancel subscription process uses browser alert boxes instead of nicer looking modals or overlays
+  - When a user cancels their subscription, their database entry still shows them as having the pursuit plan when they should downgrade to plan
+  - Subscription ID is not nulled out when a subscription is canceled
+  - No visual confirmation of subscription changes in the account page
+  - No option for users to resubscribe after cancellation
+
 - ~~New user arrival flow has several unresolved issues~~ (Fixed):
   - ~~Anonymous responses are not being properly transferred to new user accounts~~ (Fixed by saving responses individually)
   - ~~Authentication is not working correctly after account creation~~ (Fixed with proper token handling)
@@ -171,7 +202,7 @@ These changes have significantly improved the user experience by ensuring seamle
 - **Content Management**: Implemented a file-based approach for simplicity and ease of updates
 - **Database Schema**: Evolved from simple text storage to structured JSON for results
 - **AI Integration**: Enhanced with structured output using Pydantic models
-- **Payment Model**: Implemented two-tier system with support for regeneration payments
+- **Payment Model**: Evolved from two-tier system to three-tier model with subscription option, free regenerations for subscribers, and upfront Plan purchase option
 - **User Flow**: Evolved from simple linear flow to context-aware flow with dedicated pages for different user states
 - **Authentication Flow**: Evolved from simple cookie-based auth to a robust multi-layered approach with localStorage, Authorization headers, and cookies, with comprehensive error handling and recovery mechanisms
 - **Form Navigation**: Improved to provide clear options for users with existing results

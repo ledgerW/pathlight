@@ -17,8 +17,10 @@ async function getStripePublishableKey() {
 }
 
 // Initiate payment process
-async function initiatePayment(tier, isRegeneration = false) {
+async function initiatePayment(tier, isRegeneration = false, isSubscription = false) {
     try {
+        console.log(`Initiating payment for tier: ${tier}, isRegeneration: ${isRegeneration}, isSubscription: ${isSubscription}`);
+        
         // Store current tier
         currentTier = tier;
         
@@ -35,6 +37,12 @@ async function initiatePayment(tier, isRegeneration = false) {
         // Check if a magic link has been sent
         const magicLinkSent = localStorage.getItem('magic_link_sent') === 'true';
         
+        // For Pursuit tier, always set isSubscription to true
+        if (tier === 'pursuit') {
+            isSubscription = true;
+            console.log('Pursuit tier detected, setting isSubscription to true');
+        }
+        
         // Call payment API to create checkout session
         // Add is_regeneration and is_magic_link_sent parameters if needed
         let url = `/api/payments/${user.id}/create-checkout-session/${tier}`;
@@ -47,6 +55,9 @@ async function initiatePayment(tier, isRegeneration = false) {
         if (magicLinkSent) {
             params.append('is_magic_link_sent', 'true');
         }
+        if (isSubscription) {
+            params.append('is_subscription', 'true');
+        }
         
         // Append parameters to URL if any exist
         if (params.toString()) {
@@ -56,6 +67,8 @@ async function initiatePayment(tier, isRegeneration = false) {
         // Get authentication token
         const authToken = localStorage.getItem('stytch_session_token');
         console.log('Using auth token for payment initiation:', authToken ? `${authToken.substring(0, 10)}...` : 'none');
+        console.log('Magic link sent:', magicLinkSent);
+        console.log('Payment URL:', url);
         
         const response = await fetch(url, {
             method: 'POST',
@@ -143,12 +156,17 @@ async function verifyPayment(sessionId, tier) {
             // Update user object
             user.payment_tier = tier;
             
+            // If this is a subscription, update the UI to reflect that
+            if (data.is_subscription) {
+                showNotification(`Subscription successful! Your ${tier} tier is now active.`, 'success');
+            }
+            
             // Update tier badge
             updateTierBadge();
             
             // Generate results based on tier
             if (loadingMessage) {
-                if (tier === 'premium') {
+                if (tier === 'plan' || tier === 'pursuit') {
                     loadingOverlay.style.display = 'flex'; // Show loading overlay again
                     loadingMessage.textContent = 'Generating your comprehensive life plan...';
                     await generatePremiumResults();
@@ -159,7 +177,7 @@ async function verifyPayment(sessionId, tier) {
                 }
             } else {
                 // If premium tier, show all questions
-                if (tier === 'premium') {
+                if (tier === 'plan' || tier === 'pursuit') {
                     // Redirect to form with all questions
                     window.location.href = `/form/${user.id}`;
                 } else {
@@ -183,3 +201,30 @@ async function verifyPayment(sessionId, tier) {
         showNotification('Error verifying payment. Please try again.', 'error');
     }
 }
+
+// Add event listeners for payment buttons when the document is loaded
+document.addEventListener('DOMContentLoaded', function() {
+    // Plan payment button
+    const planButton = document.getElementById('proceedToPlanPayment');
+    if (planButton) {
+        planButton.addEventListener('click', function() {
+            initiatePayment('plan');
+        });
+    }
+    
+    // Pursuit (subscription) payment button
+    const pursuitButton = document.getElementById('proceedToPursuitPayment');
+    if (pursuitButton) {
+        pursuitButton.addEventListener('click', function() {
+            initiatePayment('pursuit', false, true);
+        });
+    }
+    
+    // Update the basic payment button to use 'purpose' tier instead of 'basic'
+    const basicButton = document.getElementById('proceedToBasicPayment');
+    if (basicButton) {
+        basicButton.addEventListener('click', function() {
+            initiatePayment('purpose');
+        });
+    }
+});

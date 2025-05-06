@@ -169,6 +169,9 @@ class AnonymousUserRequest(BaseModel):
     progress_state: str
     payment_tier: str = "none"
     anonymous_session_id: str
+    subscription_id: Optional[str] = None
+    subscription_status: Optional[str] = None
+    subscription_end_date: Optional[datetime] = None
 
 @router.get("/find-by-email")
 def find_user_by_email(email: Optional[str] = Query(None), session: Session = Depends(get_session)):
@@ -258,6 +261,25 @@ def create_user_from_anonymous(user_data: AnonymousUserRequest, session: Session
             progress_state=user_data.progress_state,
             payment_tier=user_data.payment_tier
         )
+        
+        # Add subscription fields if provided
+        if user_data.subscription_id:
+            new_user.subscription_id = user_data.subscription_id
+        if user_data.subscription_status:
+            new_user.subscription_status = user_data.subscription_status
+        if user_data.subscription_end_date:
+            new_user.subscription_end_date = user_data.subscription_end_date
+            
+        # For Pursuit tier, ensure subscription fields are set
+        if user_data.payment_tier == "pursuit" and not new_user.subscription_id:
+            # Set subscription fields directly to active
+            new_user.subscription_id = f"subscription-{uuid.uuid4()}"
+            new_user.subscription_status = "active"
+            # Set subscription end date to 1 year from now
+            from datetime import datetime, timedelta
+            new_user.subscription_end_date = datetime.utcnow() + timedelta(days=365)
+            
+            print(f"Set subscription fields for Pursuit tier user: {new_user.subscription_id}, {new_user.subscription_status}")
         
         session.add(new_user)
         session.commit()

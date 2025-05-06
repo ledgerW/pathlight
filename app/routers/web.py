@@ -422,6 +422,87 @@ async def account(request: Request, user_id: uuid.UUID, session: Session = Depen
         }
     )
 
+@router.get("/start-purpose", response_class=HTMLResponse)
+async def start_purpose(request: Request):
+    """
+    Start with the Purpose tier (free)
+    Redirects to the form with a query parameter indicating it's the Purpose tier
+    """
+    return RedirectResponse(url="/form?tier=purpose", status_code=303)
+
+@router.get("/start-plan", response_class=HTMLResponse)
+async def start_plan(request: Request):
+    """
+    Start with the Plan tier ($4.99 one-time)
+    Redirects to account creation with Plan payment
+    """
+    # Check if user is authenticated
+    stytch_user = await get_authenticated_user(request)
+    
+    if stytch_user and hasattr(stytch_user, 'emails') and stytch_user.emails:
+        # User is authenticated, check if they exist in our database
+        db = next(get_session())
+        user_email = stytch_user.emails[0].email
+        
+        statement = select(User).where(User.email == user_email)
+        db_user = db.exec(statement).first()
+        
+        if db_user:
+            # Check if user has already paid for Plan or Pursuit
+            if db_user.payment_tier in ["plan", "pursuit"]:
+                # User has already paid, redirect to form
+                return RedirectResponse(url=f"/form/{db_user.id}?tier=plan&paid=true", status_code=303)
+            else:
+                # User exists but hasn't paid for Plan, redirect to payment
+                return RedirectResponse(url=f"/api/payments/{db_user.id}/create-checkout-session/plan", status_code=303)
+    
+    # User is not authenticated or doesn't exist, show account creation form with Plan payment
+    return templates.TemplateResponse(
+        "form.html", 
+        {
+            "request": request,
+            "tier": "plan",
+            "show_account_creation": True
+        }
+    )
+
+@router.get("/start-pursuit", response_class=HTMLResponse)
+async def start_pursuit(request: Request):
+    """
+    Start with the Pursuit tier ($4.99/month subscription)
+    Redirects to account creation with Pursuit subscription payment
+    """
+    # Check if user is authenticated
+    stytch_user = await get_authenticated_user(request)
+    
+    if stytch_user and hasattr(stytch_user, 'emails') and stytch_user.emails:
+        # User is authenticated, check if they exist in our database
+        db = next(get_session())
+        user_email = stytch_user.emails[0].email
+        
+        statement = select(User).where(User.email == user_email)
+        db_user = db.exec(statement).first()
+        
+        if db_user:
+            # Check if user has already paid for Pursuit
+            if db_user.payment_tier == "pursuit":
+                # User has already paid for Pursuit, redirect to form
+                return RedirectResponse(url=f"/form/{db_user.id}?tier=pursuit&paid=true", status_code=303)
+            else:
+                # User exists but hasn't paid for Pursuit, redirect to payment
+                return RedirectResponse(url=f"/api/payments/{db_user.id}/create-checkout-session/pursuit?is_subscription=true", status_code=303)
+    
+    # User is not authenticated or doesn't exist, show account creation form with Pursuit payment
+    return templates.TemplateResponse(
+        "form.html", 
+        {
+            "request": request,
+            "tier": "pursuit",
+            "show_account_creation": True,
+            "is_subscription": True
+        }
+    )
+
 @router.get("/cancel", response_class=HTMLResponse)
 async def cancel(request: Request, user_id: uuid.UUID):
     return templates.TemplateResponse(
