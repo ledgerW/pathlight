@@ -138,6 +138,17 @@ The core functionality of the application has been implemented:
   - Standardized modal design and behavior
   - Enhanced close button functionality to properly hide all related modals
   - Improved loading state management to only show spinners when appropriate
+- Fixed subscription management UI and database issues:
+  - Replaced browser alert boxes with modern modal dialogs for subscription actions
+  - Updated the cancel_subscription endpoint to properly downgrade users from "pursuit" to "plan" tier
+  - Added null checks for subscription_end_date in the account template to prevent errors
+  - Improved the webhook handler to properly clear subscription fields when a subscription is deleted
+  - Added visual confirmation of subscription changes with status notifications
+  - Added a "Resubscribe" button for users who previously canceled their subscription
+  - Added a "Subscribe to Pursuit Tier" button for users on the Plan tier
+  - Fixed the resubscribe modal formatting with better styling and layout
+  - Modified the success page to skip results generation for resubscription flows
+  - Added proper verification of payment before redirecting after subscription changes
 
 ## What's Left to Build
 - Create additional content for blog, guides, and FAQ sections
@@ -163,36 +174,9 @@ The subscription implementation adds a new "Pursuit" tier at $4.99/month with un
 These changes have significantly improved the user experience by offering more flexible payment options, ensuring seamless authentication, making the application more usable on mobile devices, ensuring consistency between different parts of the application, fixing issues with loading spinners and checkbox functionality, and providing valuable content to help users understand the purpose discovery process.
 
 ## Known Issues
-- Plan and Pursuit tier account creation flow has several unresolved issues:
-  - Questions are not appearing after selecting Plan or Pursuit tier from the pricing options
-  - Account creation process is not properly handling the subscription flow
-  - Authentication is not working correctly after account creation
-  - Magic link emails are not being sent consistently
-  - Results are not being generated after payment
-  - The implementation requires significant debugging and rework
-  - Users are being redirected to login page after payment instead of seeing email instructions
-
-- Subscription management has several issues:
-  - Cancel subscription process uses browser alert boxes instead of nicer looking modals or overlays
-  - When a user cancels their subscription, their database entry still shows them as having the pursuit plan when they should downgrade to plan
-  - Subscription ID is not nulled out when a subscription is canceled
-  - No visual confirmation of subscription changes in the account page
-  - No option for users to resubscribe after cancellation
-
-- ~~New user arrival flow has several unresolved issues~~ (Fixed):
-  - ~~Anonymous responses are not being properly transferred to new user accounts~~ (Fixed by saving responses individually)
-  - ~~Authentication is not working correctly after account creation~~ (Fixed with proper token handling)
-  - ~~Magic link emails are not being sent consistently~~ (Fixed with improved email sending)
-  - ~~Results are not being generated after payment~~ (Fixed with proper flow implementation)
-  - ~~The implementation requires significant debugging and rework~~ (Completed)
-  - ~~Users are being redirected to login page after payment instead of seeing email instructions~~ (Fixed with dedicated payment success page)
-- Database migrations should only use PostgreSQL (not SQLite)
-- Error handling for AI generation could be improved
-- The payment flow UX could be enhanced for better conversion
-- AI content parsing may need refinement for edge cases where content doesn't follow expected patterns
-- Mobile responsiveness improvements are currently limited to the results page
-- Collapsible sections might need additional testing on older mobile browsers
-- Some UI elements may need further size adjustments for very small screens
+- Subscription management has a few remaining issues:
+  - The subscribe button for Plan tier users and the resubscribe button for users with canceled subscriptions aren't properly updating the user's status in the database table
+  - The verification process for subscription payments needs to be improved to ensure database fields are consistently updated
 
 ## Evolution of Project Decisions
 - **Content Strategy**: Evolved from a purely application-focused approach to a comprehensive content marketing and SEO strategy with blog posts, guides, and FAQ content
@@ -217,5 +201,6 @@ These changes have significantly improved the user experience by offering more f
 - **Checkbox Functionality**: Evolved from basic implementation to robust solution with persistent state across sessions, category-based icons, and fallback mechanisms
 - **Icon Selection**: Evolved from timeframe-based to category-based with multiple fallback strategies
 - **State Persistence**: Evolved from simple cookie storage to robust solution with anonymous user fallback and consistent IDs
+- **Subscription Management**: Evolved from basic implementation to comprehensive solution with modal dialogs, visual feedback, and resubscription options
 
 This document will be continuously updated as work progresses and new insights are gained.

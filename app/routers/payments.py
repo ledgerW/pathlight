@@ -303,23 +303,47 @@ async def cancel_subscription(
         raise HTTPException(status_code=400, detail="User does not have an active subscription")
     
     try:
+        # Store the subscription ID for Stripe API call
+        subscription_id = user.subscription_id
+        
         # Cancel the subscription at period end
         subscription = stripe.Subscription.modify(
-            user.subscription_id,
+            subscription_id,
             cancel_at_period_end=True
         )
         
         # Update user's subscription status
         user.subscription_status = "canceled"
+        
+        # Downgrade payment tier from "pursuit" to "plan"
+        if user.payment_tier == "pursuit":
+            user.payment_tier = "plan"
+        
+        # Store the subscription end date from Stripe
+        if subscription.cancel_at_period_end and subscription.current_period_end:
+            # If canceling at period end, keep the end date
+            user.subscription_end_date = datetime.fromtimestamp(subscription.current_period_end)
+        else:
+            # Otherwise, clear the subscription end date
+            user.subscription_end_date = None
+        
+        # Keep track of when the subscription was canceled
+        print(f"Canceling subscription {subscription_id} for user {user_id}")
+        print(f"Downgrading user from pursuit to plan tier")
+        
         session.add(user)
         session.commit()
         
         return {
             "success": True,
-            "message": "Subscription will be canceled at the end of the billing period"
+            "message": "Subscription will be canceled at the end of the billing period",
+            "payment_tier": user.payment_tier,
+            "subscription_status": user.subscription_status,
+            "subscription_end_date": user.subscription_end_date.isoformat() if user.subscription_end_date else None
         }
     
     except Exception as e:
+        print(f"Error canceling subscription: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.get("/{user_id}/subscription-status", response_model=Dict)
@@ -347,18 +371,84 @@ async def get_subscription_status(
                 "has_subscription": True,
                 "subscription_status": subscription.status,
                 "current_period_end": datetime.fromtimestamp(subscription.current_period_end).isoformat(),
-                "cancel_at_period_end": subscription.cancel_at_period_end
+                "cancel_at_period_end": subscription.cancel_at_period_end,
+                "payment_tier": user.payment_tier
             }
         
         except Exception as e:
             return {
                 "has_subscription": False,
-                "error": str(e)
+                "error": str(e),
+                "payment_tier": user.payment_tier
             }
     
     return {
-        "has_subscription": False
+        "has_subscription": False,
+        "payment_tier": user.payment_tier
     }
+
+@router.post("/{user_id}/resubscribe", response_model=Dict)
+async def resubscribe(
+    user_id: uuid.UUID,
+    session: Session = Depends(get_session)
+):
+    """
+    Endpoint to resubscribe a user who previously canceled their subscription.
+    Creates a new checkout session for the pursuit tier.
+    """
+    # Check if user exists
+    user = session.get(User, user_id)
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    # Check if user had a subscription before
+    if not user.subscription_id or user.subscription_status != "canceled":
+        raise HTTPException(
+            status_code=400, 
+            detail="User does not have a canceled subscription to reactivate"
+        )
+    
+    try:
+        # Get domain for success URL
+        domain = os.getenv('PROD_DOMAIN') if is_production() else os.getenv('DEV_DOMAIN')
+        
+        # Create a custom success URL that includes is_resubscription=true
+        success_url = f"{domain}/success?session_id={{CHECKOUT_SESSION_ID}}&user_id={user_id}&tier=pursuit&is_resubscription=true"
+        
+        # Create a Stripe checkout session directly (not using create_checkout_session)
+        # This allows us to customize the success URL with the is_resubscription parameter
+        checkout_session = stripe.checkout.Session.create(
+            payment_method_types=["card"],
+            line_items=[
+                {
+                    "price": stripe_subscription_price_id,
+                    "quantity": 1,
+                },
+            ],
+            mode="subscription",
+            success_url=success_url,
+            cancel_url=f"{domain}/account/{user_id}",
+            client_reference_id=f"{user_id}:pursuit",
+            metadata={
+                "tier": "pursuit",
+                "is_regeneration": "false",
+                "is_magic_link_sent": "false",
+                "is_subscription": "true",
+                "is_resubscription": "true"
+            },
+        )
+        
+        print(f"Created resubscription checkout session for user {user_id}")
+        
+        return {
+            "success": True,
+            "message": "Resubscription checkout session created",
+            "checkout_url": checkout_session.url
+        }
+    
+    except Exception as e:
+        print(f"Error creating resubscription checkout session: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
 
 @router.post("/webhook", status_code=200)
 async def webhook(request: Request, session: Session = Depends(get_session)):
@@ -439,13 +529,22 @@ async def webhook(request: Request, session: Session = Depends(get_session)):
         user = session.exec(statement).first()
         
         if user:
+            # Store the old subscription ID for logging
+            old_subscription_id = user.subscription_id
+            
             # Update user to indicate subscription has ended
             user.subscription_status = "canceled"
             user.payment_tier = "plan"  # Downgrade to plan tier
+            
+            # Clear the subscription_id and subscription_end_date
+            user.subscription_id = None
+            user.subscription_end_date = None
+            
             session.add(user)
             session.commit()
             
-            print(f"Webhook: Subscription canceled for user {user.id}")
+            print(f"Webhook: Subscription {old_subscription_id} deleted for user {user.id}")
+            print(f"Webhook: User downgraded from pursuit to plan tier, subscription fields cleared")
     
     return {"status": "success"}
 

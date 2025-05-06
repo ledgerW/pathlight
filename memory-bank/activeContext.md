@@ -111,6 +111,17 @@ Implementing and refining the database schema, AI integration, and user authenti
   - Standardized modal design and behavior
   - Enhanced close button functionality to properly hide all related modals
   - Improved loading state management to only show spinners when appropriate
+- Fixed subscription management UI and database issues:
+  - Replaced browser alert boxes with modern modal dialogs for subscription actions
+  - Updated the cancel_subscription endpoint to properly downgrade users from "pursuit" to "plan" tier
+  - Added null checks for subscription_end_date in the account template to prevent errors
+  - Improved the webhook handler to properly clear subscription fields when a subscription is deleted
+  - Added visual confirmation of subscription changes with status notifications
+  - Added a "Resubscribe" button for users who previously canceled their subscription
+  - Added a "Subscribe to Pursuit Tier" button for users on the Plan tier
+  - Fixed the resubscribe modal formatting with better styling and layout
+  - Modified the success page to skip results generation for resubscription flows
+  - Added proper verification of payment before redirecting after subscription changes
 
 ## Next Steps
 - Create additional content for blog, guides, and FAQ sections
@@ -128,20 +139,11 @@ Implementing and refining the database schema, AI integration, and user authenti
   - Implement proper error handling and user feedback
 
 - Improve subscription management:
-  - Replace browser alert boxes with nicer looking modals or overlays for subscription cancellation confirmation and success messages
-  - Fix database handling when a user cancels their subscription:
-    - Properly downgrade user from "pursuit" to "plan" tier
-    - Null out the subscription_id field
-    - Update subscription_status appropriately
-  - Add visual confirmation of subscription changes in the account page
-  - Consider adding a "resubscribe" option for users who previously canceled
-
-- ~~Fix the new user arrival flow issues~~ (Completed):
-  - ~~Debug and fix the anonymous response transfer functionality~~ (Fixed by saving responses individually)
-  - ~~Ensure proper authentication after account creation~~ (Fixed with proper token handling)
-  - ~~Fix magic link email sending~~ (Fixed with improved email sending)
-  - ~~Ensure results are generated after payment~~ (Fixed with proper flow implementation)
-  - ~~Consider simplifying the implementation if needed~~ (Implemented a simpler approach)
+  - Fix the remaining issues with the subscribe and resubscribe buttons:
+    - Ensure the user's status is properly updated in the database table
+    - Improve the verification process for subscription payments
+  - Add more comprehensive error handling for subscription-related operations
+  - Consider adding more detailed logging for subscription status changes
 - Continue improving mobile responsiveness across the entire application
 - Consider adding tablet-specific optimizations for mid-size screens
 - Refine the user experience for the payment flow
@@ -246,5 +248,8 @@ Implementing and refining the database schema, AI integration, and user authenti
 - File-based content management is simpler to implement and maintain than a database-driven CMS
 - Consistent URL structure improves SEO and user experience
 - Content organization into distinct sections (Blog, Guides, FAQ) helps users find relevant information
+- Subscription management requires careful handling of database fields and user interface elements
+- NULL values in database fields need to be handled gracefully in templates to prevent errors
+- Resubscription flows need special handling to avoid unnecessary results generation
 
 This document will be continuously updated as work progresses and new insights are gained.

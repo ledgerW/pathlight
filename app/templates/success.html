@@ -28,28 +28,64 @@
 
 {% block scripts %}
 <script>
-    // Verify payment on page load and immediately redirect to results page
+    // Verify payment on page load and handle appropriate next steps
     document.addEventListener('DOMContentLoaded', async () => {
         const urlParams = new URLSearchParams(window.location.search);
         const sessionId = urlParams.get('session_id');
         const userId = urlParams.get('user_id');
         const tier = urlParams.get('tier');
+        const isResubscription = urlParams.get('is_resubscription') === 'true';
         
-        // Show generating message
+        // Show appropriate message
         const paymentContent = document.querySelector('.payment-content');
         if (paymentContent) {
-            paymentContent.innerHTML = `
-                <img src="/static/images/16TheHorizon.png" alt="The Horizon" class="payment-image">
-                <h1>Payment Successful!</h1>
-                <p>Thank you for your purchase. We're now generating your ${tier === 'premium' ? 'complete life plan' : 'personal insights'}...</p>
-                <div class="loading-spinner"></div>
-                <p class="generating-message">This may take a few moments. Please don't refresh the page.</p>
-            `;
+            if (isResubscription) {
+                paymentContent.innerHTML = `
+                    <img src="/static/images/16TheHorizon.png" alt="The Horizon" class="payment-image">
+                    <h1>Subscription Renewed!</h1>
+                    <p>Thank you for resubscribing to the Pursuit tier. We're updating your account...</p>
+                    <div class="loading-spinner"></div>
+                    <p class="generating-message">This will only take a moment. Please don't refresh the page.</p>
+                `;
+            } else {
+                paymentContent.innerHTML = `
+                    <img src="/static/images/16TheHorizon.png" alt="The Horizon" class="payment-image">
+                    <h1>Payment Successful!</h1>
+                    <p>Thank you for your purchase. We're now generating your ${tier === 'premium' || tier === 'plan' ? 'complete life plan' : 'personal insights'}...</p>
+                    <div class="loading-spinner"></div>
+                    <p class="generating-message">This may take a few moments. Please don't refresh the page.</p>
+                `;
+            }
         }
         
         try {
-            // Call the appropriate AI endpoint based on tier
-            const endpoint = tier === 'premium' ? 'generate-premium' : 'generate-basic';
+            // First, always verify the payment with our backend
+            const verifyResponse = await fetch(`/api/payments/${userId}/verify-payment`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    session_id: sessionId,
+                    tier: tier
+                })
+            });
+            
+            if (!verifyResponse.ok) {
+                throw new Error('Failed to verify payment');
+            }
+            
+            const verifyData = await verifyResponse.json();
+            console.log('Payment verified:', verifyData);
+            
+            // For resubscription, we don't need to generate results, just redirect to account page
+            if (isResubscription) {
+                window.location.href = `/account/${userId}?subscription_active=true`;
+                return;
+            }
+            
+            // For regular purchases, generate results
+            const endpoint = tier === 'premium' || tier === 'plan' ? 'generate-premium' : 'generate-basic';
             const response = await fetch(`/api/ai/${userId}/${endpoint}`, {
                 method: 'POST',
                 headers: {
@@ -67,10 +103,15 @@
             // Redirect to results page with payment success parameter
             window.location.href = `/results/${userId}?payment_success=true&tier=${tier}`;
         } catch (error) {
-            console.error('Error generating results:', error);
+            console.error('Error processing payment:', error);
             
-            // Still redirect to results page, but with error parameter
-            window.location.href = `/results/${userId}?payment_success=true&tier=${tier}&generation_error=true`;
+            if (isResubscription) {
+                // For resubscription, redirect to account page even on error
+                window.location.href = `/account/${userId}?subscription_error=true`;
+            } else {
+                // For regular purchases, redirect to results page with error parameter
+                window.location.href = `/results/${userId}?payment_success=true&tier=${tier}&generation_error=true`;
+            }
         }
     });
 </script>
