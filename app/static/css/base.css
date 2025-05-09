@@ -563,4 +563,15 @@ footer {
     .has-mobile-nav main {
         padding-bottom: 80px;
     }
+    
+    /* Footer responsive styling */
+    .footer-links {
+        flex-direction: column;
+        gap: var(--spacing-md);
+        align-items: center;
+    }
+    
+    .footer-link {
+        padding: var(--spacing-xs) 0;
+    }
 }
