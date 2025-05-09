@@ -54,6 +54,14 @@ async function loadFullPlan() {
         
         const statusData = await statusResponse.json();
         
+        // Hide payment section for plan and pursuit tier users regardless of plan data
+        if (statusData.payment_tier === 'plan' || statusData.payment_tier === 'pursuit') {
+            const paymentSection = document.getElementById('paymentSection');
+            if (paymentSection) {
+                paymentSection.style.display = 'none';
+            }
+        }
+        
         // If user doesn't have plan or pursuit tier, don't show loading spinner
         if (statusData.payment_tier !== 'plan' && statusData.payment_tier !== 'pursuit') {
             // Hide loading spinner
@@ -64,15 +72,59 @@ async function loadFullPlan() {
             return false;
         }
         
-        // User has premium tier, proceed to load full plan
+        // Check if the user has completed all 25 questions
+        // We can do this by checking the progress_state from the user's data
+        // First, get the user's progress
+        const userProgressResponse = await fetch(`/api/users/${userId}/progress`);
+        if (userProgressResponse.ok) {
+            const progressData = await userProgressResponse.json();
+            const progress = parseInt(progressData.progress_state || "0");
+            
+            // If the user hasn't completed all 25 questions, show a message and don't try to load plan
+            if (progress < 25) {
+                // Hide the loading placeholder
+                const loadingPlaceholder = document.querySelector('#fullContent .loading-placeholder');
+                if (loadingPlaceholder) {
+                    loadingPlaceholder.style.display = 'none';
+                }
+                
+                // Show a message that plan results are not yet available
+                const fullContent = document.getElementById('fullContent');
+                if (fullContent) {
+                    fullContent.innerHTML = '<p class="info-message">Your plan results will be available after you complete all 25 questions.</p>';
+                }
+                
+                return false;
+            }
+        }
+        
+        // User has premium tier and has completed all questions, proceed to load full plan
         const response = await fetch(`/api/results/${userId}/full`);
         
         if (!response.ok) {
-            if (response.status === 403) {
-                // Payment required
-                return false;
+            // Hide the loading placeholder
+            const loadingPlaceholder = document.querySelector('#fullContent .loading-placeholder');
+            if (loadingPlaceholder) {
+                loadingPlaceholder.style.display = 'none';
             }
-            throw new Error('Failed to load full plan');
+            
+            // Show appropriate message based on error type
+            const fullContent = document.getElementById('fullContent');
+            if (fullContent) {
+                if (response.status === 403) {
+                    // This can happen if the backend doesn't recognize the user's tier
+                    // or if there's a mismatch between frontend and backend state
+                    fullContent.innerHTML = '<p class="info-message">Your plan results are being prepared. Please check back in a few minutes or contact support if this persists.</p>';
+                } else {
+                    // Other errors
+                    fullContent.innerHTML = '<p class="info-message">Your plan results will be available after you complete all 25 questions.</p>';
+                }
+            }
+            
+            if (response.status !== 403) {
+                throw new Error('Failed to load full plan');
+            }
+            return false;
         }
         
         const data = await response.json();
@@ -86,12 +138,6 @@ async function loadFullPlan() {
         // Display structured plan sections
         displayStructuredPlan(data.full_plan);
         
-        // Hide payment section for premium users
-        const paymentSection = document.getElementById('paymentSection');
-        if (paymentSection) {
-            paymentSection.style.display = 'none';
-        }
-        
         // Dispatch the resultsLoaded event
         if (window.resultsLoadedEvent) {
             document.dispatchEvent(window.resultsLoadedEvent);
@@ -101,7 +147,7 @@ async function loadFullPlan() {
         
     } catch (error) {
         console.error('Error loading full plan:', error);
-        document.getElementById('fullContent').innerHTML = '<p class="error-message">Error loading your plan. Please try again later.</p>';
+        // Error message is already displayed for 403 errors
         return false;
     }
 }

@@ -1,0 +1,339 @@
+<!-- Simple Modal Implementation -->
+<style>
+    /* Reset any conflicting styles */
+    #subscription-modals * {
+        box-sizing: border-box;
+    }
+    
+    /* Modal container */
+    .subscription-modal-overlay {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.5);
+        z-index: 9999;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    /* Modal box */
+    .subscription-modal {
+        background-color: white;
+        border-radius: 8px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        width: 90%;
+        max-width: 500px;
+        padding: 25px;
+        position: relative;
+    }
+    
+    /* Modal header */
+    .subscription-modal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+        border-bottom: 1px solid #eee;
+        padding-bottom: 15px;
+    }
+    
+    .subscription-modal-title {
+        font-size: 22px;
+        font-weight: 600;
+        color: #333;
+        margin: 0;
+    }
+    
+    .subscription-modal-close {
+        background: none;
+        border: none;
+        font-size: 24px;
+        cursor: pointer;
+        color: #999;
+    }
+    
+    /* Modal content */
+    .subscription-modal-body {
+        margin-bottom: 25px;
+    }
+    
+    .subscription-modal-icon {
+        float: left;
+        margin-right: 15px;
+        width: 40px;
+        height: 40px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+    }
+    
+    .subscription-modal-icon.warning {
+        color: #e67e22;
+        background-color: rgba(230, 126, 34, 0.1);
+    }
+    
+    .subscription-modal-icon.success {
+        color: #27ae60;
+        background-color: rgba(39, 174, 96, 0.1);
+    }
+    
+    .subscription-modal-question {
+        font-size: 18px;
+        font-weight: 600;
+        margin-bottom: 20px;
+        color: #333;
+        margin-left: 55px;
+    }
+    
+    .subscription-modal-info {
+        background-color: #f8f9fa;
+        border-radius: 8px;
+        padding: 15px;
+        margin: 15px 0;
+        font-size: 14px;
+        line-height: 1.5;
+        clear: both;
+    }
+    
+    .subscription-modal-info p {
+        margin: 0 0 10px 0;
+    }
+    
+    .subscription-modal-info p:last-child {
+        margin-bottom: 0;
+    }
+    
+    /* Price display */
+    .subscription-price-display {
+        margin: 15px 0;
+        padding: 10px 15px;
+        background-color: #f0f7ff;
+        border-radius: 8px;
+        display: inline-block;
+        text-align: center;
+    }
+    
+    .subscription-price-amount {
+        font-size: 24px;
+        font-weight: bold;
+        color: #3a80d2;
+        margin-right: 5px;
+    }
+    
+    .subscription-price-period {
+        font-size: 14px;
+        color: #666;
+    }
+    
+    /* Benefits list */
+    .subscription-benefits-title {
+        font-weight: 600;
+        margin-bottom: 8px;
+        color: #333;
+    }
+    
+    .subscription-benefits-list {
+        padding-left: 25px;
+        margin: 10px 0;
+    }
+    
+    .subscription-benefits-list li {
+        margin-bottom: 8px;
+        position: relative;
+    }
+    
+    .subscription-benefits-list li::before {
+        content: "✓";
+        color: #3a80d2;
+        font-weight: bold;
+        display: inline-block;
+        margin-right: 8px;
+    }
+    
+    /* Modal footer */
+    .subscription-modal-footer {
+        display: flex;
+        justify-content: space-between;
+        gap: 15px;
+    }
+    
+    /* Button styles */
+    .subscription-button {
+        padding: 12px 20px;
+        border-radius: 6px;
+        font-size: 16px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        text-align: center;
+        flex: 1;
+        border: none;
+    }
+    
+    .subscription-button-primary {
+        background-color: #4a90e2;
+        color: #333;
+    }
+    
+    .subscription-button-primary:hover {
+        background-color: #3a80d2;
+        color: white;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+        transform: translateY(-2px);
+    }
+    
+    .subscription-button-secondary {
+        background-color: #f0f0f0;
+        color: #555;
+        border: 1px solid #ddd;
+    }
+    
+    .subscription-button-secondary:hover {
+        background-color: #e0e0e0;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    }
+    
+    /* Responsive adjustments */
+    @media (max-width: 480px) {
+        .subscription-modal {
+            width: 95%;
+            padding: 20px;
+        }
+        
+        .subscription-modal-footer {
+            flex-direction: column;
+        }
+        
+        .subscription-button {
+            width: 100%;
+            margin-bottom: 10px;
+        }
+    }
+</style>
+
+<div id="subscription-modals">
+    <!-- Cancel Subscription Modal -->
+    <div id="cancelSubscriptionModal" class="subscription-modal-overlay">
+        <div class="subscription-modal">
+            <div class="subscription-modal-header">
+                <h3 class="subscription-modal-title">Cancel Subscription</h3>
+                <button class="subscription-modal-close" data-dismiss="modal">&times;</button>
+            </div>
+            <div class="subscription-modal-body">
+                <div class="subscription-modal-icon warning">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <line x1="12" y1="8" x2="12" y2="12"></line>
+                        <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                    </svg>
+                </div>
+                <h4 class="subscription-modal-question">Are you sure you want to cancel your subscription?</h4>
+                <div class="subscription-modal-info">
+                    {% if user.subscription_end_date %}
+                        <p>You will still have access to all Pursuit tier features until the end of your current billing period on <strong>{{ user.subscription_end_date.strftime('%B %d, %Y') }}</strong>.</p>
+                        <p>After that date, your account will be downgraded to the Plan tier.</p>
+                    {% else %}
+                        <p>You will still have access to all Pursuit tier features until the end of your current billing period.</p>
+                        <p>After that, your account will be downgraded to the Plan tier.</p>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="subscription-modal-footer">
+                <button class="subscription-button subscription-button-secondary" data-dismiss="modal">No, Keep My Subscription</button>
+                <button id="confirmCancelSubscription" class="subscription-button subscription-button-primary">Yes, Cancel Subscription</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Resubscribe Modal -->
+    <div id="resubscribeModal" class="subscription-modal-overlay">
+        <div class="subscription-modal">
+            <div class="subscription-modal-header">
+                <h3 class="subscription-modal-title">Resubscribe to Pursuit Tier</h3>
+                <button class="subscription-modal-close" data-dismiss="modal">&times;</button>
+            </div>
+            <div class="subscription-modal-body">
+                <div class="subscription-modal-icon success">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                        <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                    </svg>
+                </div>
+                <h4 class="subscription-modal-question">Would you like to resubscribe to the Pursuit tier?</h4>
+                
+                <div class="subscription-price-display">
+                    <span class="subscription-price-amount">$4.99</span>
+                    <span class="subscription-price-period">per month</span>
+                </div>
+                
+                <div class="subscription-modal-info">
+                    <p class="subscription-benefits-title">You'll get access to:</p>
+                    <ul class="subscription-benefits-list">
+                        <li>Unlimited plan regenerations</li>
+                        <li>Checkbox tracking for plan items</li>
+                        <li>Access to all future premium features</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="subscription-modal-footer">
+                <button class="subscription-button subscription-button-secondary" data-dismiss="modal">Cancel</button>
+                <button id="confirmResubscribe" class="subscription-button subscription-button-primary">Yes, Resubscribe</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Update JavaScript to work with new modal classes -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Update modal functions to work with new class names
+    function openModal(modalId) {
+        const modal = document.getElementById(modalId);
+        if (modal) {
+            modal.style.display = 'flex';
+        }
+    }
+    
+    function closeAllModals() {
+        const modals = document.querySelectorAll('.subscription-modal-overlay');
+        modals.forEach(modal => {
+            modal.style.display = 'none';
+        });
+    }
+    
+    // Add event listeners to close buttons
+    const closeButtons = document.querySelectorAll('.subscription-modal-close, [data-dismiss="modal"]');
+    closeButtons.forEach(button => {
+        button.addEventListener('click', closeAllModals);
+    });
+    
+    // Close modal when clicking outside
+    document.querySelectorAll('.subscription-modal-overlay').forEach(overlay => {
+        overlay.addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeAllModals();
+            }
+        });
+    });
+    
+    // Connect cancel subscription button
+    const cancelSubscriptionButton = document.getElementById('cancelSubscriptionButton');
+    if (cancelSubscriptionButton) {
+        cancelSubscriptionButton.addEventListener('click', function() {
+            openModal('cancelSubscriptionModal');
+        });
+    }
+    
+    // Connect resubscribe button
+    const resubscribeButton = document.getElementById('resubscribeButton');
+    if (resubscribeButton) {
+        resubscribeButton.addEventListener('click', function() {
+            openModal('resubscribeModal');
+        });
+    }
+});
+</script>

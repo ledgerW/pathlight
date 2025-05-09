@@ -1,0 +1,13 @@
+<div class="account-section">
+    <h2>Personal Information</h2>
+    <div class="account-info">
+        <div class="account-info-label">Name:</div>
+        <div class="account-info-value">{{ user.name }}</div>
+        
+        <div class="account-info-label">Email:</div>
+        <div class="account-info-value">{{ user.email }}</div>
+        
+        <div class="account-info-label">Date of Birth:</div>
+        <div class="account-info-value">{{ user.dob.strftime('%B %d, %Y') }}</div>
+    </div>
+</div>

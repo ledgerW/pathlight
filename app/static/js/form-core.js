@@ -516,37 +516,59 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         
         // Check if we're at the end of premium tier and need to show payment modal
-        if (currentSlide === PREMIUM_TIER_QUESTIONS && user.payment_tier !== 'premium') {
+        if (currentSlide === PREMIUM_TIER_QUESTIONS && user.payment_tier !== 'premium' && user.payment_tier !== 'pursuit') {
             // Show premium payment modal
             premiumPaymentModal.style.display = 'flex';
+            return;
+        }
+        
+        // If we're at the end of premium tier and the user is on Pursuit tier, generate results directly
+        if (currentSlide === PREMIUM_TIER_QUESTIONS && user.payment_tier === 'pursuit') {
+            // Show loading overlay
+            loadingOverlay.style.display = 'flex';
+            loadingMessage.textContent = 'Generating your comprehensive life plan...';
+            generatePremiumResults();
             return;
         }
         
         // Check if we're at the end of premium tier and the submit button says "Update Plan"
         const isAtPremiumTier = currentSlide === PREMIUM_TIER_QUESTIONS;
         const hasPremiumResults = user.payment_tier === 'premium';
+        const isPursuitTier = user.payment_tier === 'pursuit';
         
-        if (isAtPremiumTier && hasPremiumResults && submitButton.textContent === 'Update Plan') {
+        if (isAtPremiumTier && submitButton.textContent === 'Update Plan') {
             // User wants to update their premium results
-            // Check if results already exist
-            checkExistingResults().then(resultsData => {
-                if (resultsData.has_results) {
-                    // Show regeneration payment modal
-                    showRegenerationPaymentModal(resultsData.last_generated_at, resultsData.regeneration_count);
-                } else {
-                    // Show loading overlay
-                    loadingOverlay.style.display = 'flex';
-                    loadingMessage.textContent = 'Generating your comprehensive life plan...';
-                    generatePremiumResults();
-                }
-            }).catch(error => {
-                console.error('Error checking existing results:', error);
-                // Fallback to direct generation
+            
+            // If user is on Pursuit tier, they can regenerate for free
+            if (isPursuitTier) {
+                // Show loading overlay
                 loadingOverlay.style.display = 'flex';
                 loadingMessage.textContent = 'Generating your comprehensive life plan...';
                 generatePremiumResults();
-            });
-            return;
+                return;
+            }
+            
+            // For Premium tier users, check if results already exist
+            if (hasPremiumResults) {
+                checkExistingResults().then(resultsData => {
+                    if (resultsData.has_results) {
+                        // Show regeneration payment modal
+                        showRegenerationPaymentModal(resultsData.last_generated_at, resultsData.regeneration_count);
+                    } else {
+                        // Show loading overlay
+                        loadingOverlay.style.display = 'flex';
+                        loadingMessage.textContent = 'Generating your comprehensive life plan...';
+                        generatePremiumResults();
+                    }
+                }).catch(error => {
+                    console.error('Error checking existing results:', error);
+                    // Fallback to direct generation
+                    loadingOverlay.style.display = 'flex';
+                    loadingMessage.textContent = 'Generating your comprehensive life plan...';
+                    generatePremiumResults();
+                });
+                return;
+            }
         }
         
         // Show loading overlay for other cases

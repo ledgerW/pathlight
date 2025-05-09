@@ -21,6 +21,8 @@ function generateRemainingSlides() {
     }
     
     console.log('Template found:', templateDiv);
+    console.log('Questions array length:', questions.length);
+    console.log('Image names array length:', imageNames.length);
     
     // Start from index 5 (question 6) since we've hardcoded questions 1-5
     for (let i = 5; i < questions.length; i++) {
@@ -56,7 +58,23 @@ function generateRemainingSlides() {
         
         // Append the new slide to the form slides container
         document.getElementById('formSlides').appendChild(newSlide);
+        
+        // Special logging for question 24 and 25
+        if (questionNumber === 24 || questionNumber === 25) {
+            console.log(`Slide ${questionNumber} created with data-slide="${questionNumber}"`);
+            console.log(`Question ${questionNumber} text: "${questionText}"`);
+        }
     }
+    
+    // Verify all slides were created
+    const slides = document.querySelectorAll('.form-slide');
+    console.log(`Total slides created: ${slides.length}`);
+    
+    // Specifically check for slide 24 and 25
+    const slide24 = document.querySelector('.form-slide[data-slide="24"]');
+    const slide25 = document.querySelector('.form-slide[data-slide="25"]');
+    console.log(`Slide 24 exists: ${slide24 !== null}`);
+    console.log(`Slide 25 exists: ${slide25 !== null}`);
     
     console.log('Remaining slides generated.');
 }
@@ -177,17 +195,15 @@ function updateSubmitButtonState() {
     const actualTier = serverTier || urlTier || '';
     console.log('Actual tier for validation:', actualTier);
     
-    // If we're in Plan or Pursuit tier mode, always enable the submit button
-    if (actualTier === 'plan' || actualTier === 'pursuit') {
-        console.log('Plan or Pursuit tier detected, bypassing validation');
-        submitButton.disabled = false;
-        submitButton.classList.remove('disabled');
-        submitButton.title = 'Submit your information';
-        return;
-    }
+    // We no longer bypass validation for Plan or Pursuit tier
+    // All users must complete all questions before submitting
+    
+    // Determine the target number of questions based on user's tier
+    const targetQuestions = user.payment_tier === 'premium' || user.payment_tier === 'plan' || user.payment_tier === 'pursuit' ? 
+        PREMIUM_TIER_QUESTIONS : BASIC_TIER_QUESTIONS;
     
     // First, save any unsaved responses from textareas
-    for (let i = 1; i <= BASIC_TIER_QUESTIONS; i++) {
+    for (let i = 1; i <= targetQuestions; i++) {
         const textarea = document.getElementById(`question${i}`);
         if (textarea && textarea.value.trim() && !userResponses[i]) {
             userResponses[i] = textarea.value.trim();
@@ -198,7 +214,6 @@ function updateSubmitButtonState() {
     
     // Count responses up to the current tier limit
     let answeredQuestions = 0;
-    const targetQuestions = user.payment_tier === 'premium' ? PREMIUM_TIER_QUESTIONS : BASIC_TIER_QUESTIONS;
     
     // Count responses for questions 1 through targetQuestions
     for (let i = 1; i <= targetQuestions; i++) {
@@ -258,12 +273,25 @@ function showSlide(slideIndex) {
     } else {
         console.error('Slide not found with data-slide:', slideIndex);
         
-        // Fallback: Try to show the first slide if target not found
-        const firstSlide = document.querySelector('.form-slide');
-        if (firstSlide) {
-            firstSlide.classList.add('active');
-            firstSlide.style.display = 'block';
-            console.log('Fallback: Showing first slide');
+        // Special handling for slide 25 if it's not found
+        if (slideIndex === 25) {
+            console.log('Attempting to find slide 25 by alternative means');
+            // Try to find the last slide
+            const allSlides = Array.from(document.querySelectorAll('.form-slide'));
+            if (allSlides.length > 0) {
+                const lastSlide = allSlides[allSlides.length - 1];
+                lastSlide.classList.add('active');
+                lastSlide.style.display = 'block';
+                console.log('Found and activated the last slide as fallback for slide 25');
+            }
+        } else {
+            // Fallback: Try to show the first slide if target not found
+            const firstSlide = document.querySelector('.form-slide');
+            if (firstSlide) {
+                firstSlide.classList.add('active');
+                firstSlide.style.display = 'block';
+                console.log('Fallback: Showing first slide');
+            }
         }
     }
     
@@ -304,14 +332,19 @@ function showSlide(slideIndex) {
     prevButton.disabled = slideIndex === 1; // Disable prev button on first question
     
     // Check if we've reached the end of the current tier
-    const isEndOfBasicTier = slideIndex === BASIC_TIER_QUESTIONS && user.payment_tier !== 'premium';
+    const isEndOfBasicTier = slideIndex === BASIC_TIER_QUESTIONS && user.payment_tier !== 'premium' && user.payment_tier !== 'pursuit' && user.payment_tier !== 'plan';
     const isEndOfPremiumTier = slideIndex === PREMIUM_TIER_QUESTIONS;
     
     if (isEndOfBasicTier || isEndOfPremiumTier) {
         // Special handling for question 5 when user already has basic results
         const hasBasicResults = user.payment_tier === 'basic' || user.payment_tier === 'premium';
+        const isPremiumTier = user.payment_tier === 'premium' || user.payment_tier === 'pursuit' || user.payment_tier === 'plan';
         
-        if (slideIndex === BASIC_TIER_QUESTIONS && hasBasicResults) {
+        if (slideIndex === BASIC_TIER_QUESTIONS && isPremiumTier) {
+            // For Pursuit/Plan/Premium tier users at question 5, show only Next button
+            nextButton.style.display = 'block';
+            submitButton.style.display = 'none';
+        } else if (slideIndex === BASIC_TIER_QUESTIONS && hasBasicResults) {
             // Show both Next and Complete buttons for users with basic results
             nextButton.style.display = 'block';
             submitButton.style.display = 'block';
@@ -324,10 +357,16 @@ function showSlide(slideIndex) {
             submitButton.style.display = 'block';
             submitButton.textContent = 'Update Plan';
         } else if (slideIndex === PREMIUM_TIER_QUESTIONS) {
-            // Show only the Complete button for premium tier with text "Get Plan"
+            // Show only the Complete button for premium tier with text "Get Plan" or "Update Plan" for Pursuit tier
             nextButton.style.display = 'none';
             submitButton.style.display = 'block';
-            submitButton.textContent = 'Get Plan';
+            
+            // If user is on Pursuit tier, change button text to "Update Plan"
+            if (user.payment_tier === 'pursuit') {
+                submitButton.textContent = 'Update Plan';
+            } else {
+                submitButton.textContent = 'Get Plan';
+            }
         } else {
             // Default case for question 5 without basic results
             nextButton.style.display = 'none';
@@ -371,14 +410,38 @@ function showSlide(slideIndex) {
 
 // Go to previous slide
 function goToPrevSlide() {
+    // Log current slide before navigation
+    console.log(`goToPrevSlide called from slide ${currentSlide}`);
+    
     if (currentSlide > 0) {
         saveCurrentSlideData();
-        showSlide(currentSlide - 1);
+        
+        // Special handling for question 25 - ensure we go to 24
+        if (currentSlide === 25) {
+            console.log('Currently on question 25, going back to question 24');
+            showSlide(24);
+            return;
+        }
+        
+        // Special handling for question 24 - ensure we go to 23
+        if (currentSlide === 24) {
+            console.log('Currently on question 24, going back to question 23');
+            showSlide(23);
+            return;
+        }
+        
+        // Normal navigation for other slides
+        const prevSlide = currentSlide - 1;
+        console.log(`Normal navigation from slide ${currentSlide} to ${prevSlide}`);
+        showSlide(prevSlide);
     }
 }
 
 // Go to next slide
 function goToNextSlide() {
+    // Log current slide before navigation
+    console.log(`goToNextSlide called from slide ${currentSlide}`);
+    
     // Save current question response
     saveCurrentSlideData();
     
@@ -389,8 +452,25 @@ function goToNextSlide() {
         return;
     }
     
+    // Special handling for question 23 - check if it's trying to skip to 25
+    if (currentSlide === 23) {
+        console.log('Currently on question 23, should go to question 24 next');
+        showSlide(24);
+        return;
+    }
+    
+    // Special handling for question 24 - ensure we go to 25
+    if (currentSlide === 24) {
+        console.log('Currently on question 24, forcing navigation to question 25');
+        showSlide(25);
+        return;
+    }
+    
+    // Normal navigation for other slides
     if (currentSlide < totalSlides - 1) {
-        showSlide(currentSlide + 1);
+        const nextSlide = currentSlide + 1;
+        console.log(`Normal navigation from slide ${currentSlide} to ${nextSlide}`);
+        showSlide(nextSlide);
     }
 }
 

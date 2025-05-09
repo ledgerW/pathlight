@@ -16,7 +16,7 @@ def main():
         if os.path.exists("pyproject.toml"):
             # Run with Poetry
             result = subprocess.run(
-                ["poetry", "run", "python", "migrate_subscription.py"],
+                ["poetry", "run", "python", "migrations/subscriptions/migrate_subscription.py"],
                 check=True,
                 capture_output=True,
                 text=True
@@ -24,7 +24,7 @@ def main():
         else:
             # Run directly with Python
             result = subprocess.run(
-                ["python", "migrate_subscription.py"],
+                ["python", "migrations/subscriptions/migrate_subscription.py"],
                 check=True,
                 capture_output=True,
                 text=True

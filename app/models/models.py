@@ -35,8 +35,24 @@ class User(SQLModel, table=True):
                     # Fallback to strptime for other formats
                     return datetime.strptime(value, "%Y-%m-%dT%H:%M:%S.%fZ")
                 except ValueError:
-                    # Another fallback for simpler format
-                    return datetime.strptime(value, "%Y-%m-%d")
+                    try:
+                        # Another fallback for simpler format
+                        return datetime.strptime(value, "%Y-%m-%d")
+                    except ValueError:
+                        try:
+                            # SQLite-specific format handling
+                            return datetime.strptime(value, "%Y-%m-%d %H:%M:%S")
+                        except ValueError:
+                            try:
+                                # Another SQLite format
+                                return datetime.strptime(value, "%Y-%m-%d %H:%M:%S.%f")
+                            except ValueError:
+                                # Last resort - try to parse with dateutil if available
+                                try:
+                                    from dateutil import parser
+                                    return parser.parse(value)
+                                except (ImportError, ValueError):
+                                    raise ValueError(f"Could not parse date: {value}")
         return value
 
 

@@ -81,9 +81,9 @@ def get_result_summary(user_id: uuid.UUID, session: Session = Depends(get_sessio
         # Handle case where basic_plan is not valid JSON
         basic_plan = {"purpose": "", "mantra": ""}
     
-    # If user has premium tier and full plan is available, use the purpose and mantra from there
+    # If user has premium or pursuit tier and full plan is available, use the purpose and mantra from there
     full_plan = {}
-    if user.payment_tier == "premium" and result.full_plan:
+    if (user.payment_tier == "premium" or user.payment_tier == "pursuit") and result.full_plan:
         try:
             full_plan = json.loads(result.full_plan)
             # Use premium content if available
@@ -113,11 +113,11 @@ def get_full_result(user_id: uuid.UUID, session: Session = Depends(get_session))
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
     
-    # Check if user has premium tier
-    if user.payment_tier != "premium":
+    # Check if user has premium or pursuit tier
+    if user.payment_tier != "premium" and user.payment_tier != "pursuit":
         raise HTTPException(
             status_code=403, 
-            detail="Premium payment required to access full results"
+            detail="Premium or Pursuit tier required to access full results"
         )
     
     # Get result for this user

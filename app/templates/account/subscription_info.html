@@ -1,0 +1,97 @@
+<div class="account-section">
+    <h2>Subscription</h2>
+    <div class="tier-info">
+        <div class="account-info-label">Current Tier:</div>
+        <div class="tier-badge {{ user.payment_tier }}">
+            {% if user.payment_tier == 'pursuit' %}
+                Pursuit Tier
+            {% elif user.payment_tier == 'plan' %}
+                Plan Tier
+            {% elif user.payment_tier == 'purpose' or user.payment_tier == 'basic' %}
+                Purpose Tier
+            {% else %}
+                Free Tier
+            {% endif %}
+        </div>
+    </div>
+    
+    {% if user.subscription_id or user.payment_tier == 'pursuit' %}
+    <div class="subscription-info">
+        <div class="account-info">
+            <div class="account-info-label">Subscription Status:</div>
+            <div class="account-info-value">
+                {% if user.subscription_status == 'active' %}
+                    Active
+                {% elif user.subscription_status == 'canceled' %}
+                    {% if user.subscription_end_date %}
+                        Canceled (ends on {{ user.subscription_end_date.strftime('%B %d, %Y') }})
+                    {% else %}
+                        Canceled
+                    {% endif %}
+                {% elif user.subscription_status == 'past_due' %}
+                    Past Due (please update payment method)
+                {% else %}
+                    {{ user.subscription_status|capitalize }}
+                {% endif %}
+            </div>
+            
+            {% if user.subscription_status == 'active' %}
+            <div class="account-info-label">Subscription Type:</div>
+            <div class="account-info-value">Monthly ($4.99/month)</div>
+            
+            <div class="account-info-label">Subscription Benefits:</div>
+            <div class="account-info-value">
+                <ul class="subscription-benefits">
+                    <li>Unlimited plan regenerations</li>
+                    <li>Checkbox tracking for plan items</li>
+                    <li>Access to all future premium features</li>
+                </ul>
+            </div>
+            {% endif %}
+        </div>
+        
+        <div class="subscription-actions">
+            {% if user.subscription_status == 'active' %}
+                <button id="cancelSubscriptionButton" class="account-button secondary-button">Cancel Subscription</button>
+            {% elif user.subscription_status == 'canceled' %}
+                <button id="resubscribeButton" class="account-button primary-button">Resubscribe</button>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+    
+    <div class="account-info">
+        <div class="account-info-label">Progress:</div>
+        <div class="account-info-value">
+            {% if user.progress_state|int == 0 %}
+                Not started
+            {% elif user.progress_state|int < 5 %}
+                {{ user.progress_state }} of 5 basic questions completed
+            {% elif user.progress_state|int == 5 %}
+                Basic questions completed
+            {% elif user.progress_state|int < 25 %}
+                {{ user.progress_state }} of 25 questions completed
+            {% else %}
+                All questions completed
+            {% endif %}
+        </div>
+    </div>
+    
+    {% if user.payment_tier == 'none' and user.progress_state|int >= 5 %}
+    <div class="account-actions">
+        <a href="/form/{{ user.id }}" class="account-button primary-button">Unlock Basic Tier ($0.99)</a>
+    </div>
+    {% elif user.payment_tier == 'basic' and user.progress_state|int >= 5 %}
+    <div class="account-actions">
+        <a href="/form/{{ user.id }}" class="account-button primary-button">Continue to Premium Questions</a>
+    </div>
+    {% elif user.payment_tier == 'basic' and user.progress_state|int == 25 %}
+    <div class="account-actions">
+        <a href="/form/{{ user.id }}" class="account-button primary-button">Upgrade to Premium ($4.99)</a>
+    </div>
+    {% elif user.payment_tier == 'plan' and user.subscription_status != 'canceled' %}
+    <div class="account-actions">
+        <button id="subscribeToPursuitButton" class="account-button primary-button">Subscribe to Pursuit Tier ($4.99/month)</button>
+    </div>
+    {% endif %}
+</div>

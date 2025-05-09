@@ -1,0 +1,438 @@
+{% extends "base.html" %}
+
+{% block title %}Pathlight - Your Account{% endblock %}
+
+{% block styles %}
+<link rel="stylesheet" href="/static/css/form.css">
+<style>
+    .account-container {
+        max-width: 800px;
+        margin: 2rem auto;
+        padding: 2rem;
+        background-color: var(--cream, #fff);
+        border-radius: 16px;
+        box-shadow: 0 15px 40px rgba(42, 74, 74, 0.15);
+    }
+    
+    .account-header {
+        margin-bottom: 2rem;
+        text-align: center;
+    }
+    
+    .account-header h1 {
+        font-size: 2.5rem;
+        color: var(--teal, #333);
+        margin-bottom: 0.5rem;
+    }
+    
+    .account-section {
+        margin-bottom: 2rem;
+        padding-bottom: 1.5rem;
+        border-bottom: 1px solid #eee;
+    }
+    
+    .account-section:last-child {
+        border-bottom: none;
+        padding-bottom: 0;
+    }
+    
+    .account-section h2 {
+        font-size: 1.8rem;
+        color: var(--teal, #333);
+        margin-bottom: 1rem;
+    }
+    
+    .account-info {
+        display: grid;
+        grid-template-columns: 150px 1fr;
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+    }
+    
+    .account-info-label {
+        font-weight: 600;
+        color: #555;
+    }
+    
+    .account-info-value {
+        color: #333;
+    }
+    
+    .account-actions {
+        margin-top: 2rem;
+        display: flex;
+        justify-content: center;
+        gap: 1rem;
+    }
+    
+    .account-button {
+        padding: 10px 16px;
+        border: none;
+        border-radius: 6px;
+        font-size: 0.9rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        white-space: nowrap;
+        text-align: center;
+        min-width: 120px;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    }
+    
+    /* Larger buttons for account page actions (not in modals) */
+    .account-actions .account-button {
+        padding: 12px 24px;
+        font-size: 1.1rem;
+        min-width: 160px;
+    }
+    
+    .primary-button {
+        background-color: var(--gold, #4a90e2);
+        color: var(--teal, #333);
+        transform: translateY(0);
+    }
+    
+    .primary-button:hover {
+        background-color: var(--teal, #3a80d2);
+        color: var(--cream, white);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+        transform: translateY(-2px);
+    }
+    
+    .secondary-button {
+        background-color: #f0f0f0;
+        color: #555;
+        border: 1px solid #ddd;
+    }
+    
+    .secondary-button:hover {
+        background-color: #e0e0e0;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    }
+    
+    .tier-info {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        margin-bottom: 1rem;
+    }
+    
+    .tier-badge {
+        display: inline-block;
+        padding: 0.5rem 1rem;
+        border-radius: 1rem;
+        font-size: 0.9rem;
+        font-weight: 600;
+        color: var(--white, white);
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    }
+    
+    .tier-badge.none {
+        background-color: #6c757d;
+    }
+    
+    .tier-badge.purpose, .tier-badge.basic {
+        background-color: var(--gold, #4a90e2);
+        color: var(--teal, #333);
+    }
+    
+    .tier-badge.plan, .tier-badge.premium {
+        background-color: var(--teal, #3a80d2);
+    }
+    
+    .tier-badge.pursuit {
+        background-color: var(--teal, #6a3de8);
+    }
+    
+    /* Status notification */
+    .status-notification {
+        padding: 1rem;
+        border-radius: 4px;
+        margin-bottom: 1rem;
+        display: none;
+    }
+    
+    .status-notification.success {
+        background-color: #d4edda;
+        color: #155724;
+        border: 1px solid #c3e6cb;
+    }
+    
+    .status-notification.error {
+        background-color: #f8d7da;
+        color: #721c24;
+        border: 1px solid #f5c6cb;
+    }
+    
+    .status-notification.info {
+        background-color: #d1ecf1;
+        color: #0c5460;
+        border: 1px solid #bee5eb;
+    }
+    
+    .subscription-info {
+        margin-top: 20px;
+        padding: 15px;
+        background-color: #f9f9f9;
+        border-radius: 8px;
+        border: 1px solid #e0e0e0;
+    }
+    
+    .subscription-benefits {
+        margin-top: 5px;
+        padding-left: 20px;
+    }
+    
+    .subscription-benefits li {
+        margin-bottom: 5px;
+    }
+    
+    .subscription-actions {
+        margin-top: 20px;
+        text-align: right;
+        display: flex;
+        justify-content: flex-end;
+    }
+    
+    .subscription-actions .account-button {
+        min-width: 160px;
+        padding: 10px 16px;
+        font-size: 0.95rem;
+        border-radius: 8px;
+        transition: all 0.2s ease;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="account-container">
+    <div class="account-header">
+        <h1>Your Account</h1>
+    </div>
+    
+    <!-- Status notification area -->
+    <div id="statusNotification" class="status-notification"></div>
+    
+    {% include "account/personal_info.html" %}
+    
+    {% include "account/subscription_info.html" %}
+    
+    {% include "account/account_actions.html" %}
+</div>
+
+{% include "account/modals.html" %}
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Status notification functions
+        function showNotification(message, type) {
+            const notification = document.getElementById('statusNotification');
+            notification.textContent = message;
+            notification.className = 'status-notification ' + type;
+            notification.style.display = 'block';
+            
+            // Auto-hide after 5 seconds
+            setTimeout(() => {
+                notification.style.display = 'none';
+            }, 5000);
+        }
+        
+        // Modal functions
+        function openModal(modalId) {
+            const modal = document.getElementById(modalId);
+            if (modal) {
+                modal.style.display = 'flex';
+            }
+        }
+        
+        function closeAllModals() {
+            const modals = document.querySelectorAll('.modal-overlay');
+            modals.forEach(modal => {
+                modal.style.display = 'none';
+            });
+        }
+        
+        // Add event listeners to close buttons
+        const closeButtons = document.querySelectorAll('[data-dismiss="modal"]');
+        closeButtons.forEach(button => {
+            button.addEventListener('click', closeAllModals);
+        });
+        
+        // Close modal when clicking outside
+        document.querySelectorAll('.modal-overlay').forEach(overlay => {
+            overlay.addEventListener('click', function(e) {
+                if (e.target === this) {
+                    closeAllModals();
+                }
+            });
+        });
+        
+        // Add event listener for logout button
+        const logoutButton = document.getElementById('logoutButton');
+        if (logoutButton) {
+            logoutButton.addEventListener('click', function() {
+                // Redirect to the logout endpoint
+                window.location.href = '/auth/logout';
+            });
+        }
+        
+        // Add event listener for cancel subscription button
+        const cancelSubscriptionButton = document.getElementById('cancelSubscriptionButton');
+        if (cancelSubscriptionButton) {
+            cancelSubscriptionButton.addEventListener('click', function() {
+                openModal('cancelSubscriptionModal');
+            });
+        }
+        
+        // Add event listener for confirm cancel subscription button
+        const confirmCancelSubscription = document.getElementById('confirmCancelSubscription');
+        if (confirmCancelSubscription) {
+            confirmCancelSubscription.addEventListener('click', async function() {
+                try {
+                    // Show loading state
+                    confirmCancelSubscription.textContent = 'Processing...';
+                    confirmCancelSubscription.disabled = true;
+                    
+                    const response = await fetch('/api/payments/{{ user.id }}/cancel-subscription', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        }
+                    });
+                    
+                    closeAllModals();
+                    
+                    if (response.ok) {
+                        const data = await response.json();
+                        showNotification(data.message, 'success');
+                        
+                        // Update the UI to reflect the changes
+                        setTimeout(() => {
+                            window.location.reload();
+                        }, 2000);
+                    } else {
+                        const error = await response.json();
+                        showNotification('Error: ' + error.detail, 'error');
+                    }
+                } catch (error) {
+                    console.error('Error canceling subscription:', error);
+                    showNotification('An error occurred while canceling your subscription. Please try again.', 'error');
+                    closeAllModals();
+                } finally {
+                    // Reset button state
+                    confirmCancelSubscription.textContent = 'Yes, Cancel Subscription';
+                    confirmCancelSubscription.disabled = false;
+                }
+            });
+        }
+        
+        // Add event listener for resubscribe button
+        const resubscribeButton = document.getElementById('resubscribeButton');
+        if (resubscribeButton) {
+            resubscribeButton.addEventListener('click', function() {
+                openModal('resubscribeModal');
+            });
+        }
+        
+        // Add event listener for confirm resubscribe button
+        const confirmResubscribe = document.getElementById('confirmResubscribe');
+        if (confirmResubscribe) {
+            confirmResubscribe.addEventListener('click', async function() {
+                try {
+                    // Show loading state
+                    confirmResubscribe.textContent = 'Processing...';
+                    confirmResubscribe.disabled = true;
+                    
+                    const response = await fetch('/api/payments/{{ user.id }}/resubscribe', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        }
+                    });
+                    
+                    closeAllModals();
+                    
+                    if (response.ok) {
+                        const data = await response.json();
+                        
+                        if (data.checkout_url) {
+                            // Redirect to Stripe checkout
+                            window.location.href = data.checkout_url;
+                        } else {
+                            showNotification(data.message, 'success');
+                        }
+                    } else {
+                        const error = await response.json();
+                        showNotification('Error: ' + error.detail, 'error');
+                    }
+                } catch (error) {
+                    console.error('Error resubscribing:', error);
+                    showNotification('An error occurred while processing your resubscription. Please try again.', 'error');
+                    closeAllModals();
+                } finally {
+                    // Reset button state
+                    confirmResubscribe.textContent = 'Yes, Resubscribe';
+                    confirmResubscribe.disabled = false;
+                }
+            });
+        }
+        
+        // Add event listener for subscribe to pursuit button
+        const subscribeToPursuitButton = document.getElementById('subscribeToPursuitButton');
+        if (subscribeToPursuitButton) {
+            subscribeToPursuitButton.addEventListener('click', async function() {
+                try {
+                    // Show loading state
+                    subscribeToPursuitButton.textContent = 'Processing...';
+                    subscribeToPursuitButton.disabled = true;
+                    
+                    // Create a checkout session for the pursuit tier
+                    const response = await fetch(`/api/payments/{{ user.id }}/create-checkout-session/pursuit`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            is_subscription: true
+                        })
+                    });
+                    
+                    if (response.ok) {
+                        const data = await response.json();
+                        
+                        if (data.checkout_url) {
+                            // Redirect to Stripe checkout
+                            window.location.href = data.checkout_url;
+                        } else {
+                            showNotification('Error: No checkout URL returned', 'error');
+                            subscribeToPursuitButton.textContent = 'Subscribe to Pursuit Tier ($4.99/month)';
+                            subscribeToPursuitButton.disabled = false;
+                        }
+                    } else {
+                        const error = await response.json();
+                        showNotification('Error: ' + error.detail, 'error');
+                        subscribeToPursuitButton.textContent = 'Subscribe to Pursuit Tier ($4.99/month)';
+                        subscribeToPursuitButton.disabled = false;
+                    }
+                } catch (error) {
+                    console.error('Error creating checkout session:', error);
+                    showNotification('An error occurred while processing your subscription request. Please try again.', 'error');
+                    subscribeToPursuitButton.textContent = 'Subscribe to Pursuit Tier ($4.99/month)';
+                    subscribeToPursuitButton.disabled = false;
+                }
+            });
+        }
+        
+        // Check for URL parameters to show notifications
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.has('subscription_canceled')) {
+            showNotification('Your subscription has been canceled. You will have access until the end of your billing period.', 'info');
+        }
+        if (urlParams.has('subscription_active')) {
+            showNotification('Your subscription is now active!', 'success');
+        }
+    });
+</script>
+{% endblock %}
