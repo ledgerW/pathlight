@@ -554,8 +554,22 @@
     
     /* Responsive adjustments */
     @media (max-width: 768px) {
+        .pricing-options-modal {
+            max-height: 90vh;
+            overflow-y: auto;
+            padding: 15px;
+            margin: 10px;
+        }
+        
         .pricing-options {
             flex-direction: column;
+        }
+        
+        .modal {
+            align-items: flex-start;
+            padding-top: 20px;
+            padding-bottom: 20px;
+            overflow-y: auto;
         }
     }
 </style>
