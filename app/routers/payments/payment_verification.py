@@ -56,83 +56,78 @@ async def verify_payment(
     
     try:
         # Special case for direct updates from payment_success.html
-        if session_id == "direct-update" and tier == "pursuit":
-            print(f"Direct update requested for user {user_id} to set tier to pursuit")
+        if session_id == "direct-update" and (tier == "pursuit" or tier == "plan"):
+            print(f"Direct update requested for user {user_id} to set tier to {tier}")
             
-            # Check if the user already has a subscription ID
-            if user.subscription_id:
-                # Get the subscription details
-                try:
-                    subscription = stripe.Subscription.retrieve(user.subscription_id)
-                    
-                    # Update user with subscription details
-                    if force_active:
-                        # Force the subscription status to active
-                        user.subscription_status = "active"
-                        print(f"Forced subscription status to active for user {user_id}")
-                    else:
-                        # Access status using dictionary syntax since Stripe returns a dict-like object
-                        user.subscription_status = subscription.get("status")
+            # For Pursuit tier, handle subscription details
+            if tier == "pursuit":
+                # Check if the user already has a subscription ID
+                if user.subscription_id:
+                    # Get the subscription details
+                    try:
+                        subscription = stripe.Subscription.retrieve(user.subscription_id)
                         
-                    # For active subscriptions, we don't set an end date
-                    # The subscription_end_date is only used for canceled subscriptions
-                    if subscription.get("status") == "canceled" or subscription.get("cancel_at_period_end") == True:
-                        # For canceled subscriptions, set the end date to current_period_end if available
-                        current_period_end = subscription.get("current_period_end")
-                        if current_period_end is not None:
-                            user.subscription_end_date = datetime.fromtimestamp(current_period_end)
+                        # Update user with subscription details
+                        if force_active:
+                            # Force the subscription status to active
+                            user.subscription_status = "active"
+                            print(f"Forced subscription status to active for user {user_id}")
                         else:
-                            # If current_period_end is None, set a default end date (1 month from now)
-                            print(f"Warning: current_period_end is None for canceled subscription {user.subscription_id}")
-                            user.subscription_end_date = datetime.utcnow() + timedelta(days=30)
-                    else:
-                        # For active subscriptions, clear the end date
-                        user.subscription_end_date = None
-                    user.payment_tier = "pursuit"
-                    
-                    session.add(user)
-                    session.commit()
-                    
-                    print(f"Updated user {user_id} with pursuit tier and subscription details from direct update")
-                    
-                    return {
-                        "payment_verified": True,
-                        "tier": "pursuit",
-                        "is_subscription": True,
-                        "direct_update": True,
-                        "subscription_status": user.subscription_status
-                    }
-                except Exception as e:
-                    print(f"Error retrieving subscription: {e}")
-                    
-                    # If there was an error retrieving the subscription but force_active is true,
-                    # set the subscription status to active anyway
-                    if force_active:
-                        user.subscription_status = "active"
-                        print(f"Forced subscription status to active for user {user_id} after Stripe error")
+                            # Access status using dictionary syntax since Stripe returns a dict-like object
+                            user.subscription_status = subscription.get("status")
+                            
+                        # For active subscriptions, we don't set an end date
+                        # The subscription_end_date is only used for canceled subscriptions
+                        if subscription.get("status") == "canceled" or subscription.get("cancel_at_period_end") == True:
+                            # For canceled subscriptions, set the end date to current_period_end if available
+                            current_period_end = subscription.get("current_period_end")
+                            if current_period_end is not None:
+                                user.subscription_end_date = datetime.fromtimestamp(current_period_end)
+                            else:
+                                # If current_period_end is None, set a default end date (1 month from now)
+                                print(f"Warning: current_period_end is None for canceled subscription {user.subscription_id}")
+                                user.subscription_end_date = datetime.utcnow() + timedelta(days=30)
+                        else:
+                            # For active subscriptions, clear the end date
+                            user.subscription_end_date = None
+                        
+                        session.add(user)
+                        session.commit()
+                        
+                        print(f"Updated user {user_id} with subscription details from direct update")
+                    except Exception as e:
+                        print(f"Error retrieving subscription: {e}")
+                        
+                        # If there was an error retrieving the subscription but force_active is true,
+                        # set the subscription status to active anyway
+                        if force_active:
+                            user.subscription_status = "active"
+                            print(f"Forced subscription status to active for user {user_id} after Stripe error")
+                
+                # If no subscription ID or error retrieving it, set the subscription status
+                # If force_active is true, ensure the subscription status is set to active
+                if force_active:
+                    if not user.subscription_id:
+                        user.subscription_id = f"subscription-{user_id}"
+                    user.subscription_status = "active"
+                    # For active subscriptions, clear the end date
+                    user.subscription_end_date = None
+                    print(f"Forced subscription fields for user {user_id}: {user.subscription_id}, {user.subscription_status}")
             
-            # If no subscription ID or error retrieving it, set the tier and possibly the subscription status
-            user.payment_tier = "pursuit"
-            
-            # If force_active is true, ensure the subscription status is set to active
-            if force_active:
-                if not user.subscription_id:
-                    user.subscription_id = f"subscription-{user_id}"
-                user.subscription_status = "active"
-                # For active subscriptions, clear the end date
-                user.subscription_end_date = None
-                print(f"Forced subscription fields for user {user_id}: {user.subscription_id}, {user.subscription_status}")
+            # Set the payment tier for both Plan and Pursuit tiers
+            user.payment_tier = tier
             
             # Always save the changes to the database
             session.add(user)
             session.commit()
             
-            print(f"Set user {user_id} payment tier to pursuit from direct update")
+            print(f"Set user {user_id} payment tier to {tier} from direct update")
             
             return {
                 "payment_verified": True,
-                "tier": "pursuit",
-                "direct_update": True
+                "tier": tier,
+                "direct_update": True,
+                "is_subscription": tier == "pursuit"
             }
         
         # Normal case - verify the checkout session

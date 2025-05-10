@@ -127,8 +127,8 @@ async function verifyPayment(sessionId, tier) {
             url.searchParams.delete('tier');
             window.history.replaceState({}, '', url);
             
-            // If premium tier, show full plan
-            if (tier === 'premium') {
+            // If premium, plan, or pursuit tier, show full plan
+            if (tier === 'premium' || tier === 'plan' || tier === 'pursuit') {
                 showFullPlan();
             } else {
                 // Reload the page to refresh the summary

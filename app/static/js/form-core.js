@@ -119,7 +119,7 @@ document.addEventListener('DOMContentLoaded', function() {
             updateSubmitButtonState();
             
             // If we're at the end of a tier, force enable the button
-            const isEndOfBasicTier = currentSlide === BASIC_TIER_QUESTIONS && user.payment_tier !== 'premium';
+            const isEndOfBasicTier = currentSlide === BASIC_TIER_QUESTIONS && user.payment_tier !== 'premium' && user.payment_tier !== 'plan' && user.payment_tier !== 'pursuit';
             const isEndOfPremiumTier = currentSlide === PREMIUM_TIER_QUESTIONS;
             
             if (isEndOfBasicTier || isEndOfPremiumTier) {
@@ -250,8 +250,8 @@ document.addEventListener('DOMContentLoaded', function() {
         const confirmRegenerationButton = document.getElementById('confirmRegenerationButton');
         if (confirmRegenerationButton) {
             confirmRegenerationButton.addEventListener('click', () => {
-                // Check if user is premium tier to determine which tier to regenerate
-                const tier = user.payment_tier === 'premium' ? 'premium' : 'basic';
+                // Check if user is premium or plan tier to determine which tier to regenerate
+                const tier = (user.payment_tier === 'premium' || user.payment_tier === 'plan') ? 'premium' : 'basic';
                 initiatePayment(tier, true); // Pass true for regeneration
                 
                 const regenerationModal = document.getElementById('regenerationModal');
@@ -463,7 +463,7 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Check if we're at question 5 with basic results and the submit button says "Update Purpose"
         const isAtBasicTier = currentSlide === BASIC_TIER_QUESTIONS;
-        const hasBasicResults = user.payment_tier === 'basic' || user.payment_tier === 'premium';
+        const hasBasicResults = user.payment_tier === 'basic' || user.payment_tier === 'premium' || user.payment_tier === 'plan' || user.payment_tier === 'pursuit';
         const submitButton = document.getElementById('submitButton');
         
         if (isAtBasicTier && hasBasicResults && submitButton.textContent === 'Update Purpose') {
@@ -516,7 +516,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         
         // Check if we're at the end of premium tier and need to show payment modal
-        if (currentSlide === PREMIUM_TIER_QUESTIONS && user.payment_tier !== 'premium' && user.payment_tier !== 'pursuit') {
+        if (currentSlide === PREMIUM_TIER_QUESTIONS && user.payment_tier !== 'premium' && user.payment_tier !== 'pursuit' && user.payment_tier !== 'plan') {
             // Show premium payment modal
             premiumPaymentModal.style.display = 'flex';
             return;
@@ -533,7 +533,7 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Check if we're at the end of premium tier and the submit button says "Update Plan"
         const isAtPremiumTier = currentSlide === PREMIUM_TIER_QUESTIONS;
-        const hasPremiumResults = user.payment_tier === 'premium';
+        const hasPremiumResults = user.payment_tier === 'premium' || user.payment_tier === 'plan';
         const isPursuitTier = user.payment_tier === 'pursuit';
         
         if (isAtPremiumTier && submitButton.textContent === 'Update Plan') {

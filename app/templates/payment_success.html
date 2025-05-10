@@ -116,27 +116,29 @@
                 
                 console.log(`Verifying payment for ${tier} tier for user ${userId}`);
                 
-                // For Pursuit tier, make sure subscription status is updated
-                if (tier === 'pursuit') {
-                    console.log('Updating subscription status for Pursuit tier');
+                // For Plan or Pursuit tier, make sure payment tier is updated
+                if (tier === 'plan' || tier === 'pursuit') {
+                    console.log(`Updating payment tier for ${tier} tier`);
                     
-                    // Call subscription status endpoint to update user's subscription status
-                    const response = await fetch(`/api/payments/${userId}/subscription-status`, {
-                        method: 'GET',
-                        headers: {
-                            'Content-Type': 'application/json'
+                    // For Pursuit tier, also update subscription status
+                    if (tier === 'pursuit') {
+                        // Call subscription status endpoint to update user's subscription status
+                        const response = await fetch(`/api/payments/${userId}/subscription-status`, {
+                            method: 'GET',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            }
+                        });
+                        
+                        if (response.ok) {
+                            const data = await response.json();
+                            console.log('Subscription status updated:', data);
+                        } else {
+                            console.error('Failed to update subscription status');
                         }
-                    });
-                    
-                    if (response.ok) {
-                        const data = await response.json();
-                        console.log('Subscription status updated:', data);
-                    } else {
-                        console.error('Failed to update subscription status');
                     }
                     
-                    // Also call a special endpoint to ensure the user's payment tier is set to pursuit
-                    // and subscription status is set to active
+                    // Call a special endpoint to ensure the user's payment tier is set correctly
                     const updateResponse = await fetch(`/api/payments/${userId}/verify-payment`, {
                         method: 'POST',
                         headers: {
@@ -144,8 +146,8 @@
                         },
                         body: JSON.stringify({
                             session_id: 'direct-update',
-                            tier: 'pursuit',
-                            force_active: true
+                            tier: tier,
+                            force_active: tier === 'pursuit' ? true : false
                         })
                     });
                     

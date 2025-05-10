@@ -308,7 +308,7 @@ async function loadUserData() {
                     showSlide(window.startAtQuestion);
                     
                     // If we're at the end of a tier, update submit button state
-                    const isEndOfBasicTier = window.startAtQuestion === BASIC_TIER_QUESTIONS && user.payment_tier !== 'premium';
+                    const isEndOfBasicTier = window.startAtQuestion === BASIC_TIER_QUESTIONS && user.payment_tier !== 'premium' && user.payment_tier !== 'plan' && user.payment_tier !== 'pursuit';
                     const isEndOfPremiumTier = window.startAtQuestion === PREMIUM_TIER_QUESTIONS;
                     
                     if (isEndOfBasicTier || isEndOfPremiumTier) {
@@ -327,7 +327,7 @@ async function loadUserData() {
                     showSlide(progressState);
                     
                     // If we're at the end of a tier, update submit button state
-                    const isEndOfBasicTier = progressState === BASIC_TIER_QUESTIONS && user.payment_tier !== 'premium';
+                    const isEndOfBasicTier = progressState === BASIC_TIER_QUESTIONS && user.payment_tier !== 'premium' && user.payment_tier !== 'plan' && user.payment_tier !== 'pursuit';
                     const isEndOfPremiumTier = progressState === PREMIUM_TIER_QUESTIONS;
                     
                     if (isEndOfBasicTier || isEndOfPremiumTier) {
@@ -476,6 +476,8 @@ window.createUserFromAnonymous = async function(dobValue, tier = 'purpose') {
         const progress_state = (tier === 'plan' || tier === 'pursuit') ? '0' : BASIC_TIER_QUESTIONS.toString();
         
         // For Pursuit tier, set payment_tier to 'pursuit' directly
+        // For Plan tier, set payment_tier to 'none' initially (will be updated after payment)
+        // For Purpose tier, set payment_tier to 'none'
         const payment_tier = tier === 'pursuit' ? 'pursuit' : 'none';
         
         const userData = {
@@ -730,7 +732,7 @@ function showRegenerationPaymentModal(lastGeneratedAt, regenerationCount = 0) {
     }
     
     // Update the price text based on user's tier
-    const isPremiumTier = user.payment_tier === 'premium';
+    const isPremiumTier = user.payment_tier === 'premium' || user.payment_tier === 'plan';
     const priceText = isPremiumTier ? '$4.99' : '$0.99';
     const modalTitle = isPremiumTier ? 'Update Your Life Plan' : 'Update Your Personal Insight';
     

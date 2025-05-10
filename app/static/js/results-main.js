@@ -75,8 +75,8 @@ document.addEventListener('DOMContentLoaded', function() {
             tierBadge.textContent = `${tier.charAt(0).toUpperCase() + tier.slice(1)} Tier`;
         }
         
-        // If premium tier, show the full plan
-        if (tier === 'premium') {
+        // If premium, plan, or pursuit tier, show the full plan
+        if (tier === 'premium' || tier === 'plan' || tier === 'pursuit') {
             showFullPlan();
         }
         

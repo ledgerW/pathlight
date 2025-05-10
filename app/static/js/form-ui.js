@@ -337,7 +337,7 @@ function showSlide(slideIndex) {
     
     if (isEndOfBasicTier || isEndOfPremiumTier) {
         // Special handling for question 5 when user already has basic results
-        const hasBasicResults = user.payment_tier === 'basic' || user.payment_tier === 'premium';
+        const hasBasicResults = user.payment_tier === 'basic' || user.payment_tier === 'premium' || user.payment_tier === 'plan' || user.payment_tier === 'pursuit';
         const isPremiumTier = user.payment_tier === 'premium' || user.payment_tier === 'pursuit' || user.payment_tier === 'plan';
         
         if (slideIndex === BASIC_TIER_QUESTIONS && isPremiumTier) {
