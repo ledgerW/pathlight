@@ -1,0 +1,499 @@
+{% extends "base.html" %}
+
+{% block title %}Account & Pricing FAQs - Pathlight{% endblock %}
+
+{% block meta %}
+<meta name="description" content="Learn about Pathlight's account features, pricing plans, and subscription options to help you discover your purpose and live with intention.">
+<meta name="keywords" content="Pathlight pricing, purpose discovery cost, account features, subscription plans, purpose tiers">
+
+<!-- Open Graph / Facebook -->
+<meta property="og:type" content="website">
+<meta property="og:url" content="{{ request.url }}">
+<meta property="og:title" content="Account & Pricing FAQs - Pathlight">
+<meta property="og:description" content="Learn about Pathlight's account features, pricing plans, and subscription options to help you discover your purpose and live with intention.">
+<meta property="og:image" content="/static/images/pathlight_logo.png">
+
+<!-- Twitter -->
+<meta property="twitter:card" content="summary_large_image">
+<meta property="twitter:url" content="{{ request.url }}">
+<meta property="twitter:title" content="Account & Pricing FAQs - Pathlight">
+<meta property="twitter:description" content="Learn about Pathlight's account features, pricing plans, and subscription options to help you discover your purpose and live with intention.">
+<meta property="twitter:image" content="/static/images/pathlight_logo.png">
+{% endblock %}
+
+{% block styles %}
+<style>
+    /* FAQ page specific styles */
+    .faq-hero {
+        padding: var(--spacing-xl) 0;
+        background-color: var(--cream);
+        text-align: center;
+    }
+    
+    .faq-hero-content {
+        max-width: 900px;
+        margin: 0 auto;
+        padding: 0 var(--spacing-lg);
+    }
+    
+    .faq-hero h1 {
+        font-size: 3rem;
+        margin-bottom: var(--spacing-md);
+        color: var(--teal);
+    }
+    
+    .faq-hero p {
+        font-size: 1.25rem;
+        margin-bottom: var(--spacing-lg);
+        max-width: 800px;
+        margin-left: auto;
+        margin-right: auto;
+    }
+    
+    .faq-section {
+        padding: var(--spacing-xl) 0;
+    }
+    
+    .faq-section:nth-child(odd) {
+        background-color: var(--dark-cream);
+    }
+    
+    .faq-section:nth-child(even) {
+        background-color: var(--cream);
+    }
+    
+    .faq-content {
+        max-width: 900px;
+        margin: 0 auto;
+        padding: 0 var(--spacing-lg);
+    }
+    
+    .faq-content h2 {
+        color: var(--teal);
+        margin-bottom: var(--spacing-lg);
+        font-size: 2.2rem;
+        text-align: center;
+    }
+    
+    .faq-search {
+        margin-bottom: var(--spacing-xl);
+        display: flex;
+        justify-content: center;
+    }
+    
+    .search-container {
+        position: relative;
+        width: 100%;
+        max-width: 600px;
+    }
+    
+    .search-input {
+        width: 100%;
+        padding: var(--spacing-md) var(--spacing-lg);
+        padding-left: calc(var(--spacing-lg) + 24px); /* Space for the icon */
+        border: 2px solid var(--light-teal);
+        border-radius: var(--radius-md);
+        font-size: 1.1rem;
+        color: var(--teal);
+        background-color: var(--white);
+        transition: border-color 0.3s ease, box-shadow 0.3s ease;
+    }
+    
+    .search-input:focus {
+        outline: none;
+        border-color: var(--teal);
+        box-shadow: var(--shadow-sm);
+    }
+    
+    .search-icon {
+        position: absolute;
+        left: var(--spacing-md);
+        top: 50%;
+        transform: translateY(-50%);
+        color: var(--light-teal);
+        font-size: 1.2rem;
+    }
+    
+    .categories {
+        display: flex;
+        flex-wrap: wrap;
+        gap: var(--spacing-sm);
+        margin-bottom: var(--spacing-lg);
+        justify-content: center;
+    }
+    
+    .category-tag {
+        background-color: var(--light-cream);
+        color: var(--teal);
+        padding: var(--spacing-xs) var(--spacing-sm);
+        border-radius: var(--radius-sm);
+        font-size: 0.9rem;
+        transition: background-color 0.3s ease, color 0.3s ease;
+        text-decoration: none;
+    }
+    
+    .category-tag:hover, .category-tag.active {
+        background-color: var(--gold);
+        color: var(--white);
+    }
+    
+    .faq-list {
+        margin-bottom: var(--spacing-xl);
+    }
+    
+    .faq-item {
+        margin-bottom: var(--spacing-md);
+        border-radius: var(--radius-md);
+        background-color: var(--white);
+        box-shadow: var(--shadow-sm);
+        overflow: hidden;
+    }
+    
+    .faq-question {
+        padding: var(--spacing-md) var(--spacing-lg);
+        font-size: 1.2rem;
+        font-weight: 600;
+        color: var(--teal);
+        background-color: var(--white);
+        cursor: pointer;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        transition: background-color 0.3s ease;
+    }
+    
+    .faq-question:hover {
+        background-color: var(--light-cream);
+    }
+    
+    .faq-question i {
+        transition: transform 0.3s ease;
+    }
+    
+    .faq-question.active i {
+        transform: rotate(180deg);
+    }
+    
+    .faq-answer {
+        padding: 0 var(--spacing-lg);
+        max-height: 0;
+        overflow: hidden;
+        transition: max-height 0.3s ease, padding 0.3s ease;
+    }
+    
+    .faq-answer.active {
+        padding: 0 var(--spacing-lg) var(--spacing-lg);
+        max-height: 1000px; /* Arbitrary large value */
+    }
+    
+    .faq-answer p {
+        margin-bottom: var(--spacing-md);
+        font-size: 1.1rem;
+        line-height: 1.7;
+    }
+    
+    .faq-answer ul, .faq-answer ol {
+        margin-bottom: var(--spacing-md);
+        padding-left: var(--spacing-lg);
+    }
+    
+    .faq-answer li {
+        margin-bottom: var(--spacing-sm);
+        font-size: 1.1rem;
+        line-height: 1.7;
+    }
+    
+    .faq-answer a {
+        color: var(--gold);
+        text-decoration: none;
+        transition: color 0.3s ease;
+    }
+    
+    .faq-answer a:hover {
+        color: var(--teal);
+        text-decoration: underline;
+    }
+    
+    .faq-cta {
+        text-align: center;
+        margin-top: var(--spacing-xl);
+    }
+    
+    .no-results {
+        text-align: center;
+        padding: var(--spacing-xl);
+        font-size: 1.2rem;
+        color: var(--light-teal);
+    }
+    
+    @media (max-width: 768px) {
+        .faq-hero h1 {
+            font-size: 2.5rem;
+        }
+        
+        .faq-content h2 {
+            font-size: 2rem;
+        }
+        
+        .search-input {
+            font-size: 1rem;
+            padding: var(--spacing-sm) var(--spacing-md);
+            padding-left: calc(var(--spacing-md) + 24px);
+        }
+    }
+</style>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // FAQ accordion functionality
+        const faqQuestions = document.querySelectorAll('.faq-question');
+        
+        faqQuestions.forEach(question => {
+            question.addEventListener('click', function() {
+                // Toggle active class on the question
+                this.classList.toggle('active');
+                
+                // Toggle active class on the answer
+                const answer = this.nextElementSibling;
+                answer.classList.toggle('active');
+            });
+        });
+        
+        // Search functionality
+        const searchInput = document.getElementById('faqSearch');
+        const faqItems = document.querySelectorAll('.faq-item');
+        const noResults = document.getElementById('noResults');
+        
+        searchInput.addEventListener('input', function() {
+            const searchTerm = this.value.toLowerCase();
+            let resultsFound = false;
+            
+            faqItems.forEach(item => {
+                const question = item.querySelector('.faq-question').textContent.toLowerCase();
+                const answer = item.querySelector('.faq-answer').textContent.toLowerCase();
+                
+                if (question.includes(searchTerm) || answer.includes(searchTerm)) {
+                    item.style.display = 'block';
+                    resultsFound = true;
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+            
+            // Show/hide no results message
+            if (resultsFound) {
+                noResults.style.display = 'none';
+            } else {
+                noResults.style.display = 'block';
+            }
+        });
+    });
+</script>
+{% endblock %}
+
+{% block content %}
+<section class="faq-hero">
+    <div class="faq-hero-content">
+        <h1>Account & Pricing FAQs</h1>
+        <p>Learn about Pathlight's account features, pricing plans, and subscription options to help you discover your purpose and live with intention.</p>
+    </div>
+</section>
+
+<section class="faq-section">
+    <div class="faq-content">
+        <div class="faq-search">
+            <div class="search-container">
+                <i class="fas fa-search search-icon"></i>
+                <input type="text" id="faqSearch" class="search-input" placeholder="Search account & pricing questions...">
+            </div>
+        </div>
+        
+        <div class="categories">
+            <a href="/faq" class="category-tag">All Questions</a>
+            <a href="/faq/categories/general" class="category-tag">General</a>
+            <a href="/faq/categories/methodology" class="category-tag">Methodology</a>
+            <a href="/faq/categories/account" class="category-tag active">Account & Pricing</a>
+            <a href="/faq/categories/results" class="category-tag">Results & Insights</a>
+            <a href="/faq/categories/technical" class="category-tag">Technical</a>
+        </div>
+        
+        <div class="faq-list">
+            <div class="faq-item">
+                <div class="faq-question">
+                    How much does Pathlight cost?
+                    <i class="fas fa-chevron-down"></i>
+                </div>
+                <div class="faq-answer">
+                    <p>Pathlight offers three flexible pricing options to fit your needs:</p>
+                    <ul>
+                        <li><strong>Purpose Plan</strong>: $0.99 (one-time payment) - Provides your purpose statement and personal mantra after answering the first 5 questions</li>
+                        <li><strong>Plan</strong>: $4.99 (one-time payment) - Provides comprehensive guidance including strengths analysis, potential life purposes, practical next steps, daily plan, and strategies for overcoming obstacles after answering all 25 questions</li>
+                        <li><strong>Pursuit</strong>: $4.99/month (subscription) - Includes everything in the Plan tier plus unlimited plan regenerations, checkbox tracking for plan items, and access to all future premium features</li>
+                    </ul>
+                    <p>There are no hidden fees. You pay only for the insights you want to receive.</p>
+                </div>
+            </div>
+            
+            <div class="faq-item">
+                <div class="faq-question">
+                    What's included in each pricing tier?
+                    <i class="fas fa-chevron-down"></i>
+                </div>
+                <div class="faq-answer">
+                    <p><strong>Purpose Plan ($0.99):</strong></p>
+                    <ul>
+                        <li>5 foundational reflection questions</li>
+                        <li>Personalized purpose statement</li>
+                        <li>Guiding mantra</li>
+                        <li>Core values identification</li>
+                        <li>Unlimited access to your purpose insights</li>
+                    </ul>
+                    
+                    <p><strong>Plan ($4.99):</strong></p>
+                    <ul>
+                        <li>Everything in the Purpose plan</li>
+                        <li>20 additional in-depth questions (25 total)</li>
+                        <li>Practical next steps guidance for 7, 30, and 180 days</li>
+                        <li>Customized daily routine</li>
+                        <li>Obstacle-overcoming strategies</li>
+                        <li>Personalized action plan</li>
+                    </ul>
+                    
+                    <p><strong>Pursuit ($4.99/month):</strong></p>
+                    <ul>
+                        <li>Everything in the Plan tier</li>
+                        <li>Unlimited plan regenerations</li>
+                        <li>Checkbox tracking for plan items</li>
+                        <li>Access to all future premium features</li>
+                        <li>Cancel anytime</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="faq-item">
+                <div class="faq-question">
+                    How do I create an account?
+                    <i class="fas fa-chevron-down"></i>
+                </div>
+                <div class="faq-answer">
+                    <p>Creating an account with Pathlight is simple:</p>
+                    <ol>
+                        <li>Click the "Start Now" button on our homepage</li>
+                        <li>Begin answering the questions</li>
+                        <li>After question 5, you'll be prompted to create an account with your email address</li>
+                        <li>We'll send you a magic link to your email (no passwords required)</li>
+                        <li>Click the link to verify your email and complete your account setup</li>
+                    </ol>
+                    <p>You can also start by clicking "Start Now" and then create an account later when prompted.</p>
+                </div>
+            </div>
+            
+            <div class="faq-item">
+                <div class="faq-question">
+                    What is the Pursuit subscription?
+                    <i class="fas fa-chevron-down"></i>
+                </div>
+                <div class="faq-answer">
+                    <p>The Pursuit subscription is our premium monthly plan that offers enhanced features for those who want ongoing support in their purpose journey:</p>
+                    <ul>
+                        <li><strong>Unlimited regenerations</strong>: Update your responses and generate fresh insights and guidance as often as you like</li>
+                        <li><strong>Progress tracking</strong>: Use checkbox tracking to monitor your progress on plan items</li>
+                        <li><strong>Future features</strong>: Get automatic access to all new premium features as they're released</li>
+                    </ul>
+                    <p>The subscription costs $4.99 per month and can be canceled anytime. It's ideal for those who want to regularly refine their purpose journey and track their progress over time.</p>
+                </div>
+            </div>
+            
+            <div class="faq-item">
+                <div class="faq-question">
+                    Can I update my results if my answers change?
+                    <i class="fas fa-chevron-down"></i>
+                </div>
+                <div class="faq-answer">
+                    <p>Yes! We understand that personal growth is an ongoing journey, and your responses may evolve over time. You can update your answers to any of the 25 questions at any time.</p>
+                    <p>If you want to generate new results based on your updated responses:</p>
+                    <ul>
+                        <li><strong>Purpose Plan users</strong>: You can regenerate your purpose statement and mantra for a small fee of $0.99</li>
+                        <li><strong>Plan users</strong>: You can regenerate your comprehensive guidance for $4.99</li>
+                        <li><strong>Pursuit subscribers</strong>: You can regenerate your results as often as you like at no additional cost (included in your subscription)</li>
+                    </ul>
+                    <p>To update your results:</p>
+                    <ol>
+                        <li>Log in to your account</li>
+                        <li>Go to the Questions section</li>
+                        <li>Update your responses as needed</li>
+                        <li>Click the "Update Purpose" or "Update Plan" button</li>
+                        <li>Confirm the regeneration payment (if applicable)</li>
+                    </ol>
+                </div>
+            </div>
+            
+            <div class="faq-item">
+                <div class="faq-question">
+                    How do I manage my subscription?
+                    <i class="fas fa-chevron-down"></i>
+                </div>
+                <div class="faq-answer">
+                    <p>Managing your Pursuit subscription is easy:</p>
+                    <ol>
+                        <li>Log in to your account</li>
+                        <li>Go to the Account section</li>
+                        <li>Select "Subscription Info"</li>
+                        <li>From there, you can view your subscription details, update payment information, or cancel your subscription</li>
+                    </ol>
+                    <p>If you cancel your subscription, you'll still have access to all Pursuit tier features until the end of your current billing period. After that, your account will be downgraded to the Plan tier, but you'll retain access to your most recent results.</p>
+                    <p>If you have any issues managing your subscription, please contact us at <a href="mailto:hello@followpathlight.com">hello@followpathlight.com</a>.</p>
+                </div>
+            </div>
+            
+            <div class="faq-item">
+                <div class="faq-question">
+                    Can I upgrade or downgrade my plan?
+                    <i class="fas fa-chevron-down"></i>
+                </div>
+                <div class="faq-answer">
+                    <p>Yes, you can upgrade your plan at any time:</p>
+                    <ul>
+                        <li><strong>From Purpose to Plan</strong>: You can upgrade by paying the $4.99 fee and completing the additional 20 questions</li>
+                        <li><strong>From Purpose or Plan to Pursuit</strong>: You can subscribe to the Pursuit tier from your account page</li>
+                    </ul>
+                    <p>If you're a Pursuit subscriber and wish to downgrade:</p>
+                    <ol>
+                        <li>Go to your Account section</li>
+                        <li>Select "Subscription Info"</li>
+                        <li>Click "Cancel Subscription"</li>
+                    </ol>
+                    <p>After canceling, you'll retain access to the Pursuit features until the end of your current billing period, after which you'll be downgraded to the Plan tier.</p>
+                </div>
+            </div>
+            
+            <div class="faq-item">
+                <div class="faq-question">
+                    What payment methods do you accept?
+                    <i class="fas fa-chevron-down"></i>
+                </div>
+                <div class="faq-answer">
+                    <p>We accept all major credit and debit cards, including:</p>
+                    <ul>
+                        <li>Visa</li>
+                        <li>Mastercard</li>
+                        <li>American Express</li>
+                        <li>Discover</li>
+                    </ul>
+                    <p>We process all payments securely through Stripe, a leading payment processor that ensures your financial information is protected with industry-standard encryption and security measures.</p>
+                </div>
+            </div>
+        </div>
+        
+        <div id="noResults" class="no-results" style="display: none;">
+            <p>No matching questions found. Please try a different search term or <a href="mailto:hello@followpathlight.com">contact us</a> with your specific question.</p>
+        </div>
+        
+        <div class="faq-cta">
+            <a href="/form" class="cta-button">Discover Your Purpose</a>
+        </div>
+    </div>
+</section>
+{% endblock %}

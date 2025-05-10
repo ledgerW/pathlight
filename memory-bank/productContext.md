@@ -11,16 +11,19 @@ Users need guidance in discovering their life purpose and personal direction. Th
 1. User discovers the platform (landing page)
 2. User creates an account (register) or logs in (login) via email magic link
 3. User begins answering the 25 reflective questions about themselves
-4. After answering the first 5 questions, user pays $0.99 for the basic plan
-5. User receives basic results (purpose statement and personal mantra)
+4. After answering the first 5 questions, user pays $0.99 for the Purpose tier
+5. User receives basic results (purpose statement, personal mantra, and core values)
 6. User continues answering the remaining 20 questions
-7. User pays $4.99 for the premium plan
+7. User chooses between:
+   - Plan tier ($4.99 one-time payment)
+   - Pursuit tier ($4.99/month subscription)
 8. User receives comprehensive life guidance including:
    - Deep analysis of strengths and values
    - Potential life purposes
    - Practical next steps (7, 30, and 180 days)
    - Daily plan
    - Strategies for overcoming obstacles
+9. Pursuit tier users can regenerate their plan at any time as their responses evolve
 
 ## User Experience Goals
 - **Simplicity**: Easy-to-use question interface with progress tracking
@@ -40,18 +43,20 @@ The application combines:
 This creates a unique tool that provides deeply personalized life purpose guidance based on user responses, with different levels of detail available at different price points.
 
 ## Business Model
-The application uses a tiered payment model:
+The application uses a three-tier payment model:
 - Initial account creation and question access is free
-- Basic results (purpose statement and mantra) cost $0.99
-- Premium comprehensive guidance costs an additional $4.99
-- User accounts track payment tier status (none, basic, premium)
+- Purpose tier ($0.99, one-time payment): Provides purpose statement, personal mantra, and core values identification after answering the first 5 questions
+- Plan tier ($4.99, one-time payment): Provides comprehensive guidance including strengths analysis, potential life purposes, practical next steps, daily plan, and strategies for overcoming obstacles after answering all 25 questions
+- Pursuit tier ($4.99/month, subscription): Includes everything in the Plan tier plus unlimited plan regenerations, checkbox tracking for plan items, and access to all future premium features
+- User accounts track payment tier status (none, purpose, plan, pursuit)
 
 ## Future Opportunities
 - Enhanced AI capabilities with more personalization
-- Result regeneration for updated guidance
 - Community features for shared experiences
 - Follow-up coaching or guidance services
 - Mobile application version
-- Subscription model for ongoing guidance
+- Additional premium features for subscription users
+- Export functionality for the plan (PDF, email, etc.)
+- Progress tracking for completed plan items
 
 This context will be updated as more information about the product becomes available.

@@ -192,6 +192,7 @@
         font-size: 0.9rem;
         transition: background-color 0.3s ease, color 0.3s ease;
         text-decoration: none;
+        cursor: pointer;
     }
     
     .category-tag:hover, .category-tag.active {
@@ -202,6 +203,10 @@
     .guides-cta {
         text-align: center;
         margin-top: var(--spacing-xl);
+    }
+    
+    .guide-card.hidden {
+        display: none;
     }
     
     @media (max-width: 768px) {
@@ -220,6 +225,72 @@
 </style>
 {% endblock %}
 
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Get all category tags and guide cards
+        const categoryTags = document.querySelectorAll('.category-tag');
+        const guideCards = document.querySelectorAll('.guide-card');
+        
+        // Get the current category from URL if any
+        const urlParams = new URLSearchParams(window.location.search);
+        const currentCategory = urlParams.get('category');
+        
+        // Function to filter guides based on category
+        function filterGuides(category) {
+            guideCards.forEach(card => {
+                if (!category || category === 'all') {
+                    // Show all cards if no category or 'all' is selected
+                    card.classList.remove('hidden');
+                } else {
+                    // Check if card has the selected category
+                    const cardCategories = card.dataset.categories ? card.dataset.categories.split(' ') : [];
+                    if (cardCategories.includes(category)) {
+                        card.classList.remove('hidden');
+                    } else {
+                        card.classList.add('hidden');
+                    }
+                }
+            });
+        }
+        
+        // Add click event listeners to category tags
+        categoryTags.forEach(tag => {
+            tag.addEventListener('click', function(e) {
+                e.preventDefault();
+                
+                // Remove active class from all tags
+                categoryTags.forEach(t => t.classList.remove('active'));
+                
+                // Add active class to clicked tag
+                this.classList.add('active');
+                
+                // Get category from href
+                const href = this.getAttribute('href');
+                const category = href.includes('?category=') 
+                    ? href.split('?category=')[1] 
+                    : 'all';
+                
+                // Update URL without reloading page
+                const url = category === 'all' 
+                    ? window.location.pathname 
+                    : `${window.location.pathname}?category=${category}`;
+                    
+                window.history.pushState({}, '', url);
+                
+                // Filter guides
+                filterGuides(category);
+            });
+        });
+        
+        // Initial filtering based on URL
+        if (currentCategory) {
+            filterGuides(currentCategory);
+        }
+    });
+</script>
+{% endblock %}
+
 {% block content %}
 <section class="guides-hero">
     <div class="guides-hero-content">
@@ -233,17 +304,18 @@
         <h2>Featured Guides</h2>
         
         <div class="categories">
-            <a href="/guides" class="category-tag active">All</a>
-            <a href="/guides?category=purpose" class="category-tag">Purpose Discovery</a>
-            <a href="/guides?category=growth" class="category-tag">Personal Growth</a>
-            <a href="/guides?category=practical" class="category-tag">Practical Steps</a>
-            <a href="/guides?category=reflection" class="category-tag">Self-Reflection</a>
-            <a href="/guides?category=implementation" class="category-tag">Purpose Implementation</a>
+            <a href="/guides" class="category-tag {% if not request.query_params.get('category') %}active{% endif %}">All</a>
+            <a href="/guides?category=getting-started" class="category-tag {% if request.query_params.get('category') == 'getting-started' %}active{% endif %}">Getting Started</a>
+            <a href="/guides?category=purpose" class="category-tag {% if request.query_params.get('category') == 'purpose' %}active{% endif %}">Purpose Discovery</a>
+            <a href="/guides?category=growth" class="category-tag {% if request.query_params.get('category') == 'growth' %}active{% endif %}">Personal Growth</a>
+            <a href="/guides?category=practical" class="category-tag {% if request.query_params.get('category') == 'practical' %}active{% endif %}">Practical Steps</a>
+            <a href="/guides?category=reflection" class="category-tag {% if request.query_params.get('category') == 'reflection' %}active{% endif %}">Self-Reflection</a>
+            <a href="/guides?category=implementation" class="category-tag {% if request.query_params.get('category') == 'implementation' %}active{% endif %}">Purpose Implementation</a>
         </div>
         
         <div class="guides-grid">
-            <!-- Sample guide cards - these would be dynamically generated in a real implementation -->
-            <div class="guide-card">
+            <!-- Purpose Discovery Process guide -->
+            <div class="guide-card" data-categories="purpose">
                 <img src="/static/images/3TheFlame.png" alt="Purpose Discovery Process" class="guide-image">
                 <div class="guide-content">
                     <h3 class="guide-title">The Complete Purpose Discovery Process</h3>
@@ -256,29 +328,31 @@
                 </div>
             </div>
             
-            <div class="guide-card">
-                <img src="/static/images/11TheCompass.png" alt="Values Clarification" class="guide-image">
+            <!-- Reflective Questions guide -->
+            <div class="guide-card" data-categories="getting-started reflection">
+                <img src="/static/images/5TheMirror.png" alt="How to Answer Reflective Questions" class="guide-image">
                 <div class="guide-content">
-                    <h3 class="guide-title">Values Clarification Workshop</h3>
+                    <h3 class="guide-title">How to Answer Reflective Questions: A Guide to Deeper Self-Discovery</h3>
                     <div class="guide-meta">
-                        <span class="guide-difficulty difficulty-intermediate">Intermediate</span>
-                        <span class="guide-time"><i class="fas fa-clock"></i> 45 min</span>
+                        <span class="guide-difficulty difficulty-beginner">Beginner</span>
+                        <span class="guide-time"><i class="fas fa-clock"></i> 25 min</span>
                     </div>
-                    <p class="guide-excerpt">Identify and clarify your core values with this interactive workshop. Includes exercises, reflection prompts, and practical applications...</p>
-                    <a href="/guides/items/values-clarification-workshop" class="guide-link">Read Guide →</a>
+                    <p class="guide-excerpt">Learn practical techniques for moving beyond surface-level answers to discover profound insights about yourself through reflective questioning...</p>
+                    <a href="/guides/items/answering-reflective-questions" class="guide-link">Read Guide →</a>
                 </div>
             </div>
             
-            <div class="guide-card">
-                <img src="/static/images/16TheHorizon.png" alt="Purpose-Driven Goals" class="guide-image">
+            <!-- Purpose Statement Implementation guide -->
+            <div class="guide-card" data-categories="getting-started implementation purpose">
+                <img src="/static/images/11TheCompass.png" alt="Making the Most of Your Purpose Statement" class="guide-image">
                 <div class="guide-content">
-                    <h3 class="guide-title">Setting Purpose-Driven Goals</h3>
+                    <h3 class="guide-title">Making the Most of Your Purpose Statement: Practical Implementation Guide</h3>
                     <div class="guide-meta">
-                        <span class="guide-difficulty difficulty-intermediate">Intermediate</span>
+                        <span class="guide-difficulty difficulty-beginner">Beginner</span>
                         <span class="guide-time"><i class="fas fa-clock"></i> 25 min</span>
                     </div>
-                    <p class="guide-excerpt">Learn how to set and achieve goals that align with your life purpose. Includes goal-setting frameworks, tracking methods, and success strategies...</p>
-                    <a href="/guides/items/purpose-driven-goals" class="guide-link">Read Guide →</a>
+                    <p class="guide-excerpt">Learn how to interpret your purpose statement, incorporate it into daily decisions, deepen your connection through targeted exercises, and navigate common doubts...</p>
+                    <a href="/guides/items/making-the-most-of-your-purpose-statement" class="guide-link">Read Guide →</a>
                 </div>
             </div>
         </div>
@@ -294,49 +368,39 @@
         <h2>Getting Started Guides</h2>
         
         <div class="guides-grid">
-            <!-- More sample guide cards -->
-            <div class="guide-card">
-                <img src="/static/images/5TheMirror.png" alt="Self-Reflection Practices" class="guide-image">
+            <!-- Reflective Questions guide -->
+            <div class="guide-card" data-categories="getting-started reflection">
+                <img src="/static/images/5TheMirror.png" alt="How to Answer Reflective Questions" class="guide-image">
                 <div class="guide-content">
-                    <h3 class="guide-title">Essential Self-Reflection Practices</h3>
+                    <h3 class="guide-title">How to Answer Reflective Questions: A Guide to Deeper Self-Discovery</h3>
                     <div class="guide-meta">
                         <span class="guide-difficulty difficulty-beginner">Beginner</span>
-                        <span class="guide-time"><i class="fas fa-clock"></i> 20 min</span>
+                        <span class="guide-time"><i class="fas fa-clock"></i> 25 min</span>
                     </div>
-                    <p class="guide-excerpt">Discover powerful self-reflection techniques to gain deeper insights into yourself. Includes journaling prompts, meditation practices, and more...</p>
-                    <a href="/guides/items/self-reflection-practices" class="guide-link">Read Guide →</a>
+                    <p class="guide-excerpt">Learn practical techniques for moving beyond surface-level answers to discover profound insights about yourself through reflective questioning...</p>
+                    <a href="/guides/items/answering-reflective-questions" class="guide-link">Read Guide →</a>
                 </div>
             </div>
             
-            <div class="guide-card">
-                <img src="/static/images/7TheGift.png" alt="Identifying Strengths" class="guide-image">
+            <!-- Purpose Statement Implementation guide -->
+            <div class="guide-card" data-categories="getting-started implementation purpose">
+                <img src="/static/images/11TheCompass.png" alt="Making the Most of Your Purpose Statement" class="guide-image">
                 <div class="guide-content">
-                    <h3 class="guide-title">Identifying Your Unique Strengths</h3>
+                    <h3 class="guide-title">Making the Most of Your Purpose Statement: Practical Implementation Guide</h3>
                     <div class="guide-meta">
                         <span class="guide-difficulty difficulty-beginner">Beginner</span>
-                        <span class="guide-time"><i class="fas fa-clock"></i> 15 min</span>
+                        <span class="guide-time"><i class="fas fa-clock"></i> 25 min</span>
                     </div>
-                    <p class="guide-excerpt">Learn how to identify and leverage your natural strengths in your purpose journey. Includes assessment tools, reflection exercises, and application strategies...</p>
-                    <a href="/guides/items/identifying-strengths" class="guide-link">Read Guide →</a>
+                    <p class="guide-excerpt">Learn how to interpret your purpose statement, incorporate it into daily decisions, deepen your connection through targeted exercises, and navigate common doubts...</p>
+                    <a href="/guides/items/making-the-most-of-your-purpose-statement" class="guide-link">Read Guide →</a>
                 </div>
             </div>
             
-            <div class="guide-card">
-                <img src="/static/images/9TheStream.png" alt="Daily Purpose Practices" class="guide-image">
-                <div class="guide-content">
-                    <h3 class="guide-title">Daily Purpose Practices</h3>
-                    <div class="guide-meta">
-                        <span class="guide-difficulty difficulty-beginner">Beginner</span>
-                        <span class="guide-time"><i class="fas fa-clock"></i> 10 min</span>
-                    </div>
-                    <p class="guide-excerpt">Simple daily practices to help you stay connected to your purpose. Includes morning routines, mindfulness exercises, and evening reflections...</p>
-                    <a href="/guides/items/daily-purpose-practices" class="guide-link">Read Guide →</a>
-                </div>
+            <div class="coming-soon-message" style="text-align: center; padding: 40px; background-color: var(--light-cream); border-radius: var(--radius-md); grid-column: 1 / -1;">
+                <h3>More guides coming soon!</h3>
+                <p>We're working on creating more practical guides to help you on your purpose journey. Check back soon for new content.</p>
+                <p>Have a topic you'd like us to cover? <a href="mailto:hello@followpathlight.com">Let us know</a>.</p>
             </div>
-        </div>
-        
-        <div class="guides-cta">
-            <a href="/guides?page=2" class="cta-button">View More Guides</a>
         </div>
     </div>
 </section>

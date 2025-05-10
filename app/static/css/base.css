@@ -6,6 +6,7 @@
     --gold: #C4A96A;
     --teal: #2A4A4A;
     --light-teal: #3A6A6A;
+    --dark-teal: #1A3A3A;
     --dark-cream: #E5DFD0;
     --black: #1A1A1A;
     --white: #FFFFFF;
@@ -148,35 +149,52 @@ header {
 
 /* Footer styles */
 footer {
-    padding: var(--spacing-lg);
-    background-color: var(--teal);
-    color: var(--cream);
-    text-align: center;
+    background-color: var(--dark-teal);
+    color: var(--white);
+    padding: var(--spacing-lg) 0;
     margin-top: auto;
 }
 
 .footer-content {
     max-width: 1200px;
     margin: 0 auto;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: var(--spacing-md);
+    padding: 0 var(--spacing-lg);
+    text-align: center;
 }
 
 .footer-links {
     display: flex;
     justify-content: center;
-    gap: var(--spacing-lg);
+    flex-wrap: wrap;
+    gap: var(--spacing-md);
     margin-bottom: var(--spacing-md);
 }
 
 .footer-link {
-    color: var(--cream);
+    color: var(--white);
     text-decoration: none;
-    font-size: 1.1rem;
     transition: color 0.3s ease;
-    position: relative;
+}
+
+.footer-link:hover {
+    color: var(--gold);
+}
+
+.footer-contact {
+    margin-top: var(--spacing-sm);
+    font-size: 0.9rem;
+    color: var(--white);
+}
+
+.footer-contact a {
+    color: var(--gold);
+    text-decoration: none;
+    transition: color 0.3s ease;
+}
+
+.footer-contact a:hover {
+    color: var(--white);
+    text-decoration: underline;
 }
 
 .footer-link:hover {
