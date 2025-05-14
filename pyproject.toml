@@ -20,6 +20,7 @@ sqlalchemy = "^2.0.40"
 langchain-openai = "^0.3.12"
 stytch = "^13.1.0"
 pydantic = {extras = ["email"], version = "^2.11.3"}
+pillow = "^11.2.1"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^7.4.0"

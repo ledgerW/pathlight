@@ -37,6 +37,18 @@
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
+  <url>
+    <loc>https://followpathlight.com/blog/posts/the-historical-evolution-of-purpose-across-cultures</loc>
+    <lastmod>2025-05-14</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://followpathlight.com/blog/posts/how-different-philosophical-traditions-define-purpose</loc>
+    <lastmod>2025-05-14</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
   <!-- Guides Pages -->
   <url>
     <loc>https://followpathlight.com/guides</loc>

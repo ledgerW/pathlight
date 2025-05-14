@@ -266,8 +266,11 @@
     
     .related-post-image {
         width: 100%;
-        height: 150px;
+        height: 80px;
         object-fit: cover;
+        max-width: 180px;
+        margin: 0 auto;
+        display: block;
     }
     
     .related-post-content {
@@ -295,6 +298,16 @@
     .post-cta {
         text-align: center;
         margin: var(--spacing-xl) 0;
+    }
+    
+    .post-cta .cta-button {
+        background-color: var(--gold);
+        color: var(--white);
+    }
+    
+    .post-cta .cta-button:hover {
+        background-color: var(--teal);
+        color: var(--white);
     }
     
     @media (max-width: 768px) {
@@ -327,9 +340,6 @@
     <div class="post-hero-content">
         <h1>{{ title }}</h1>
         <div class="post-meta-header">
-            <div class="post-meta-item">
-                <i class="fas fa-user"></i> {{ author }}
-            </div>
             <div class="post-meta-item">
                 <i class="fas fa-calendar"></i> {{ published_date }}
             </div>
