@@ -575,7 +575,7 @@ document.addEventListener('DOMContentLoaded', function() {
         loadingOverlay.style.display = 'flex';
         
         // Generate results based on tier for other cases
-        if (user.payment_tier === 'premium') {
+        if (user.payment_tier === 'premium' || user.payment_tier === 'plan') {
             loadingMessage.textContent = 'Generating your comprehensive life plan...';
             generatePremiumResults();
         } else {

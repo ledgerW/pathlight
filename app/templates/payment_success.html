@@ -159,15 +159,16 @@
                     }
                 }
                 
-                // For Plan and Pursuit tiers, don't generate results yet
+                // For Pursuit tier, don't generate results yet
                 // They need to answer questions first
-                if (tier === 'plan' || tier === 'pursuit') {
+                if (tier === 'pursuit') {
                     console.log(`Skipping result generation for ${tier} tier - user needs to answer questions first`);
                     return;
                 }
                 
-                // Only generate results for Purpose tier
-                const endpoint = tier === 'premium' ? 'generate-premium' : 'generate-basic';
+                // Generate results based on tier
+                // For Plan tier, use the premium endpoint
+                const endpoint = (tier === 'premium' || tier === 'plan') ? 'generate-premium' : 'generate-basic';
                 
                 console.log(`Generating ${tier} results in the background for user ${userId}`);
                 
