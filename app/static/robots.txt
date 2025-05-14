@@ -1,6 +1,7 @@
 User-agent: *
 Allow: /
 Allow: /login
+Allow: /register
 Allow: /form
 Allow: /blog
 Allow: /blog/
@@ -15,7 +16,6 @@ Allow: /faq/
 Allow: /faq/categories/
 Allow: /faq/categories/*
 Allow: /research
-Disallow: /register
 Disallow: /results
 Disallow: /success
 Disallow: /cancel
