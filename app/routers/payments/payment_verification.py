@@ -121,12 +121,15 @@ async def verify_payment(
                 # If no subscription ID or error retrieving it, set the subscription status
                 # If force_active is true, ensure the subscription status is set to active
                 if force_active:
-                    if not user.subscription_id:
-                        user.subscription_id = f"subscription-{user_id}"
-                    user.subscription_status = "active"
-                    # For active subscriptions, clear the end date
-                    user.subscription_end_date = None
-                    print(f"Forced subscription fields for user {user_id}: {user.subscription_id}, {user.subscription_status}")
+                    # Only set subscription status to active if we have a valid subscription ID
+                    # Don't generate fake subscription IDs
+                    if user.subscription_id:
+                        user.subscription_status = "active"
+                        # For active subscriptions, clear the end date
+                        user.subscription_end_date = None
+                        print(f"Forced subscription status to active for user {user_id} with subscription {user.subscription_id}")
+                    else:
+                        print(f"Warning: Cannot force active status for user {user_id} - no valid subscription ID")
             
             # Set the payment tier for Pursuit tier
             user.payment_tier = tier

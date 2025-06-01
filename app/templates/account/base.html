@@ -146,28 +146,47 @@
     
     /* Status notification */
     .status-notification {
-        padding: 1rem;
-        border-radius: 4px;
-        margin-bottom: 1rem;
+        padding: 1rem 1.5rem;
+        border-radius: 8px;
+        margin-bottom: 1.5rem;
         display: none;
+        font-weight: 500;
+        font-size: 1rem;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        border-left: 4px solid;
+        animation: slideIn 0.3s ease-out;
+    }
+    
+    @keyframes slideIn {
+        from {
+            opacity: 0;
+            transform: translateY(-10px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
     }
     
     .status-notification.success {
         background-color: #d4edda;
         color: #155724;
-        border: 1px solid #c3e6cb;
+        border-color: #28a745;
+        border-left-color: #28a745;
     }
     
     .status-notification.error {
         background-color: #f8d7da;
         color: #721c24;
-        border: 1px solid #f5c6cb;
+        border-color: #dc3545;
+        border-left-color: #dc3545;
     }
     
     .status-notification.info {
         background-color: #d1ecf1;
         color: #0c5460;
-        border: 1px solid #bee5eb;
+        border-color: #17a2b8;
+        border-left-color: #17a2b8;
     }
     
     .subscription-info {
@@ -248,7 +267,7 @@
         }
         
         function closeAllModals() {
-            const modals = document.querySelectorAll('.modal-overlay');
+            const modals = document.querySelectorAll('.modal-overlay, .subscription-modal-overlay');
             modals.forEach(modal => {
                 modal.style.display = 'none';
             });
@@ -261,7 +280,7 @@
         });
         
         // Close modal when clicking outside
-        document.querySelectorAll('.modal-overlay').forEach(overlay => {
+        document.querySelectorAll('.modal-overlay, .subscription-modal-overlay').forEach(overlay => {
             overlay.addEventListener('click', function(e) {
                 if (e.target === this) {
                     closeAllModals();
@@ -308,38 +327,13 @@
                         // Close the cancel modal
                         closeAllModals();
                         
-                        // Show success modal with clear message
-                        const successModal = document.createElement('div');
-                        successModal.className = 'modal-overlay';
-                        successModal.style.display = 'flex';
-                        successModal.innerHTML = `
-                            <div class="subscription-modal">
-                                <div class="subscription-modal-header">
-                                    <h3 class="subscription-modal-title">Subscription Canceled</h3>
-                                    <button class="subscription-modal-close" onclick="this.parentElement.parentElement.parentElement.style.display='none'">&times;</button>
-                                </div>
-                                <div class="subscription-modal-body">
-                                    <div class="subscription-modal-icon success">
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
-                                            <polyline points="22 4 12 14.01 9 11.01"></polyline>
-                                        </svg>
-                                    </div>
-                                    <h4 class="subscription-modal-question">Your subscription has been canceled</h4>
-                                    <div class="subscription-modal-info">
-                                        <p>You will still have access to all Pursuit tier features until the end of your current billing period${data.subscription_end_date ? (' on <strong>' + new Date(data.subscription_end_date).toLocaleDateString('en-US', {year: 'numeric', month: 'long', day: 'numeric'}) + '</strong>') : ''}.</p>
-                                        <p>After that, your account will be downgraded to the Purpose tier.</p>
-                                    </div>
-                                </div>
-                                <div class="subscription-modal-footer">
-                                    <button class="subscription-button subscription-button-primary" onclick="window.location.reload()">OK</button>
-                                </div>
-                            </div>
-                        `;
-                        document.body.appendChild(successModal);
+                        // Show success notification
+                        showNotification('Subscription canceled successfully. You will have access until the end of your billing period.', 'success');
                         
-                        // Also show the notification
-                        showNotification(data.message, 'success');
+                        // Reload the page to show updated subscription status
+                        setTimeout(() => {
+                            window.location.reload();
+                        }, 1000);
                     } else {
                         const error = await response.json();
                         showNotification('Error: ' + error.detail, 'error');

@@ -270,16 +270,12 @@ def create_user_from_anonymous(user_data: AnonymousUserRequest, session: Session
         if user_data.subscription_end_date:
             new_user.subscription_end_date = user_data.subscription_end_date
             
-        # For Pursuit tier, ensure subscription fields are set
+        # For Pursuit tier, only set subscription fields if they are provided
+        # Don't generate fake subscription IDs - they should come from Stripe
         if user_data.payment_tier == "pursuit" and not new_user.subscription_id:
-            # Set subscription fields directly to active
-            new_user.subscription_id = f"subscription-{uuid.uuid4()}"
-            new_user.subscription_status = "active"
-            # Set subscription end date to 1 year from now
-            from datetime import datetime, timedelta
-            new_user.subscription_end_date = datetime.utcnow() + timedelta(days=365)
-            
-            print(f"Set subscription fields for Pursuit tier user: {new_user.subscription_id}, {new_user.subscription_status}")
+            # Log that we're creating a pursuit tier user without subscription details
+            # This should only happen for legacy users or testing scenarios
+            print(f"Warning: Creating pursuit tier user without subscription details for {user_data.email}")
         
         session.add(new_user)
         session.commit()
