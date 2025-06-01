@@ -23,19 +23,11 @@ def mock_request_json(monkeypatch):
 
 
 def test_verify_payment_purpose_tier(client, mock_stripe, mock_authenticated_user, test_db, test_user_in_db):
-    """Test verifying payment for the Purpose tier."""
-    # Mock the Stripe checkout session retrieval
-    mock_stripe.checkout.Session.retrieve.return_value = {
-        "id": "cs_test_purpose",
-        "payment_status": "paid",
-        "customer_details": {"email": test_user_in_db.email},
-        "mode": "payment"
-    }
-    
-    # Make the request
+    """Test verifying payment for the Purpose tier (now free)."""
+    # Make the request with free-tier session ID
     response = client.post(
         f"/api/payments/{test_user_in_db.id}/verify-payment",
-        json={"session_id": "cs_test_purpose", "tier": "purpose"}
+        json={"session_id": "free-tier", "tier": "purpose"}
     )
     
     # Print the response content for debugging
@@ -45,10 +37,11 @@ def test_verify_payment_purpose_tier(client, mock_stripe, mock_authenticated_use
     # Check the response
     assert response.status_code == 200
     assert response.json()["payment_verified"] is True
-    assert "tier" in response.json()
+    assert response.json()["tier"] == "purpose"
+    assert response.json()["direct_update"] is True
     
-    # Verify Stripe was called correctly
-    mock_stripe.checkout.Session.retrieve.assert_called_once()
+    # Verify Stripe was NOT called since Purpose tier is now free
+    mock_stripe.checkout.Session.retrieve.assert_not_called()
     
     # Verify the user's payment tier was updated
     # Refresh the user from the database
@@ -56,40 +49,18 @@ def test_verify_payment_purpose_tier(client, mock_stripe, mock_authenticated_use
     assert test_user_in_db.payment_tier == "purpose"
 
 
-def test_verify_payment_plan_tier(client, mock_stripe, mock_authenticated_user, test_db, test_user_in_db):
-    """Test verifying payment for the Plan tier."""
-    # Mock the Stripe checkout session retrieval
-    mock_stripe.checkout.Session.retrieve.return_value = {
-        "id": "cs_test_plan",
-        "payment_status": "paid",
-        "customer_details": {"email": test_user_in_db.email},
-        "mode": "payment"
-    }
-    
-    # Set the initial payment tier to none
-    test_user_in_db.payment_tier = "none"
-    test_db.add(test_user_in_db)
-    test_db.commit()
-    
-    # Make the request
+def test_verify_payment_plan_tier_removed(client, mock_stripe, mock_authenticated_user, test_user_in_db):
+    """Test verifying payment for the Plan tier (which is now removed)."""
+    # Make the request with plan tier (which is now invalid)
     response = client.post(
         f"/api/payments/{test_user_in_db.id}/verify-payment",
         json={"session_id": "cs_test_plan", "tier": "plan"}
     )
     
-    # Print the response content for debugging
-    print(f"Response status code: {response.status_code}")
-    print(f"Response content: {response.content}")
-    
-    # Check the response
-    assert response.status_code == 200
-    assert response.json()["payment_verified"] is True
-    assert response.json()["tier"] == "plan"
-    
-    # Verify the user's payment tier was updated
-    # Refresh the user from the database
-    test_db.refresh(test_user_in_db)
-    assert test_user_in_db.payment_tier == "plan"
+    # Check the response - should return 400 as Plan tier is no longer valid
+    assert response.status_code == 400
+    assert "detail" in response.json()
+    assert "Invalid tier" in response.json()["detail"]
 
 
 def test_verify_payment_pursuit_tier(client, mock_stripe, mock_authenticated_user, test_db, test_user_in_db):
@@ -199,10 +170,21 @@ def test_verify_payment_invalid_tier(client, mock_stripe, mock_authenticated_use
         "customer_details": {"email": test_user_in_db.email}
     }
     
-    # Make the request
+    # Make the request with an invalid tier
     response = client.post(
         f"/api/payments/{test_user_in_db.id}/verify-payment",
         json={"session_id": "cs_test_invalid_tier", "tier": "invalid"}
+    )
+    
+    # Check the response
+    assert response.status_code == 400
+    assert "detail" in response.json()
+    assert "Invalid tier" in response.json()["detail"]
+    
+    # Make the request with the removed plan tier
+    response = client.post(
+        f"/api/payments/{test_user_in_db.id}/verify-payment",
+        json={"session_id": "cs_test_invalid_tier", "tier": "plan"}
     )
     
     # Check the response
@@ -279,9 +261,9 @@ def test_verify_payment_subscription_payment_failed(client, mock_stripe, mock_au
 
 
 def test_verify_payment_regeneration(client, mock_stripe, mock_authenticated_user, test_db, test_user_in_db, test_basic_result_in_db):
-    """Test verifying payment for regeneration."""
-    # Set up the user with plan tier
-    test_user_in_db.payment_tier = "plan"
+    """Test verifying payment for regeneration (now only available for Pursuit tier)."""
+    # Set up the user with pursuit tier
+    test_user_in_db.payment_tier = "pursuit"
     test_db.add(test_user_in_db)
     test_db.commit()
     
@@ -293,7 +275,7 @@ def test_verify_payment_regeneration(client, mock_stripe, mock_authenticated_use
         "id": "cs_test_regeneration",
         "payment_status": "paid",
         "customer_details": {"email": test_user_in_db.email},
-        "mode": "payment",
+        "mode": "subscription",
         "metadata": {
             "is_regeneration": "true"
         }
@@ -302,7 +284,7 @@ def test_verify_payment_regeneration(client, mock_stripe, mock_authenticated_use
     # Make the request
     response = client.post(
         f"/api/payments/{test_user_in_db.id}/verify-payment",
-        json={"session_id": "cs_test_regeneration", "tier": "plan"}
+        json={"session_id": "cs_test_regeneration", "tier": "pursuit"}
     )
     
     # Check the response
@@ -318,7 +300,7 @@ def test_verify_payment_regeneration(client, mock_stripe, mock_authenticated_use
 def test_direct_update_subscription_status(client, mock_stripe, mock_authenticated_user, test_db, test_user_in_db):
     """Test direct update of subscription status."""
     # Set up the user with a subscription ID but incorrect status
-    test_user_in_db.payment_tier = "plan"
+    test_user_in_db.payment_tier = "purpose"  # Changed from plan to purpose
     test_user_in_db.subscription_id = "sub_test_123"
     test_user_in_db.subscription_status = "canceled"
     test_db.add(test_user_in_db)
@@ -352,7 +334,7 @@ def test_direct_update_subscription_status(client, mock_stripe, mock_authenticat
 def test_direct_update_force_active(client, mock_stripe, mock_authenticated_user, test_db, test_user_in_db):
     """Test direct update with force_active flag."""
     # Set up the user without a subscription
-    test_user_in_db.payment_tier = "plan"
+    test_user_in_db.payment_tier = "purpose"  # Changed from plan to purpose
     test_user_in_db.subscription_id = None
     test_user_in_db.subscription_status = None
     test_user_in_db.subscription_end_date = None

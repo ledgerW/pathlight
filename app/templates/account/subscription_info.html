@@ -5,8 +5,6 @@
         <div class="tier-badge {{ user.payment_tier }}">
             {% if user.payment_tier == 'pursuit' %}
                 Pursuit Tier
-            {% elif user.payment_tier == 'plan' %}
-                Plan Tier
             {% elif user.payment_tier == 'purpose' or user.payment_tier == 'basic' %}
                 Purpose Tier
             {% else %}
@@ -79,17 +77,9 @@
     
     {% if user.payment_tier == 'none' and user.progress_state|int >= 5 %}
     <div class="account-actions">
-        <a href="/form/{{ user.id }}" class="account-button primary-button">Unlock Basic Tier ($0.99)</a>
+        <a href="/form/{{ user.id }}" class="account-button primary-button">Continue with Purpose Tier (Free)</a>
     </div>
-    {% elif user.payment_tier == 'basic' and user.progress_state|int >= 5 %}
-    <div class="account-actions">
-        <a href="/form/{{ user.id }}" class="account-button primary-button">Continue to Premium Questions</a>
-    </div>
-    {% elif user.payment_tier == 'basic' and user.progress_state|int == 25 %}
-    <div class="account-actions">
-        <a href="/form/{{ user.id }}" class="account-button primary-button">Upgrade to Premium ($4.99)</a>
-    </div>
-    {% elif user.payment_tier == 'plan' and user.subscription_status != 'canceled' %}
+    {% elif user.payment_tier == 'purpose' and user.subscription_status != 'canceled' %}
     <div class="account-actions">
         <button id="subscribeToPursuitButton" class="account-button primary-button">Subscribe to Pursuit Tier ($4.99/month)</button>
     </div>

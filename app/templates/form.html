@@ -251,56 +251,48 @@
     </div>
 </div>
 
-<!-- Basic Tier Payment Modal -->
+<!-- Purpose Tier Confirmation Modal -->
 <div id="basicPaymentModal" class="modal" style="display: none;">
     <div class="modal-content">
         <span class="close-modal">&times;</span>
-        <h2>Unlock Your Personal Insight</h2>
+        <h2>Your Free Personal Insight</h2>
         <p>Congratulations on completing the first part of your journey!</p>
-        <p>For just $0.99, you'll receive:</p>
+        <p>You'll receive for free:</p>
         <ul>
-            <li>A personalized summary of your core strengths and values</li>
-            <li>A unique mantra crafted just for you</li>
+            <li>A personalized purpose statement</li>
+            <li>A unique guiding mantra crafted just for you</li>
+            <li>Core values identification</li>
             <li>The ability to save and return to your progress</li>
         </ul>
         <div class="payment-buttons">
-            <button id="proceedToBasicPayment" class="btn-primary">Continue ($0.99)</button>
+            <button id="continueToFree" class="btn-primary">Continue (Free)</button>
             <button id="saveAndExitBasic" class="btn-secondary">Save & Exit</button>
         </div>
     </div>
 </div>
 
-<!-- Premium Tier Payment Modal -->
+<!-- Pursuit Subscription Modal -->
 <div id="premiumPaymentModal" class="modal" style="display: none;">
     <div class="modal-content">
         <span class="close-modal">&times;</span>
-        <h2>Choose Your Path</h2>
+        <h2>Unlock Your Full Life Plan</h2>
         
         <div class="payment-options">
-            <div class="payment-option">
-                <h3>Plan</h3>
-                <p class="price">$4.99 (one-time)</p>
+            <div class="payment-option highlighted" style="width: 100%;">
+                <div class="option-badge">Premium</div>
+                <h3>Pursuit</h3>
+                <p class="price">$4.99/month</p>
                 <ul>
                     <li>A comprehensive analysis of your authentic self</li>
                     <li>Clear identification of potential life purposes</li>
                     <li>Practical next steps for 7, 30, and 180 days</li>
                     <li>A daily plan to set you up for success</li>
                     <li>Strategies for overcoming obstacles</li>
-                </ul>
-                <button id="proceedToPlanPayment" class="btn-primary">Choose Plan ($4.99)</button>
-            </div>
-            
-            <div class="payment-option highlighted">
-                <div class="option-badge">Best Value</div>
-                <h3>Pursuit</h3>
-                <p class="price">$4.99/month</p>
-                <ul>
-                    <li>Everything in the Plan option</li>
                     <li>Unlimited plan regenerations</li>
                     <li>Checkbox tracking for plan items</li>
                     <li>Access to all future premium features</li>
                 </ul>
-                <button id="proceedToPursuitPayment" class="btn-primary">Choose Pursuit ($4.99/mo)</button>
+                <button id="proceedToPursuitPayment" class="btn-primary">Subscribe to Pursuit ($4.99/mo)</button>
             </div>
         </div>
         
@@ -402,17 +394,18 @@
         </div>
         
         <div class="payment-section">
-            <h3>Unlock Your Personal Insight</h3>
-            <p>For just $0.99, you'll receive:</p>
+            <h3>Your Free Personal Insight</h3>
+            <p>You'll receive for free:</p>
             <ul>
-                <li>A personalized summary of your core strengths and values</li>
-                <li>A unique mantra crafted just for you</li>
+                <li>A personalized purpose statement</li>
+                <li>A unique guiding mantra crafted just for you</li>
+                <li>Core values identification</li>
                 <li>The ability to save and return to your progress</li>
             </ul>
         </div>
         
         <div class="account-creation-buttons">
-            <button id="createAccountAndPay" class="btn-primary">Create Account & Continue ($0.99)</button>
+            <button id="createAccountAndPay" class="btn-primary">Create Account & Continue (Free)</button>
         </div>
     </div>
 </div>
@@ -427,7 +420,7 @@
         <div class="pricing-options">
             <div class="pricing-option">
                 <h3>Purpose</h3>
-                <p class="price">$0.99 (one-time)</p>
+                <p class="price">Free</p>
                 <ul>
                     <li>5 foundational reflection questions</li>
                     <li>Personalized purpose statement</li>
@@ -435,32 +428,22 @@
                     <li>Core values identification</li>
                     <li>Unlimited access to your purpose insights</li>
                 </ul>
-                <button id="choosePurposeTier" class="btn-primary">Start with Purpose</button>
-            </div>
-            
-            <div class="pricing-option">
-                <h3>Plan</h3>
-                <p class="price">$4.99 (one-time)</p>
-                <ul>
-                    <li>Everything in Purpose plan</li>
-                    <li>20 additional in-depth questions</li>
-                    <li>Practical next steps guidance</li>
-                    <li>Customized daily routine</li>
-                    <li>Obstacle-overcoming strategies</li>
-                    <li>Personalized action plan</li>
-                </ul>
-                <button id="choosePlanTier" class="btn-primary">Get Your Plan</button>
+                <button id="choosePurposeTier" class="btn-primary">Start with Purpose (Free)</button>
             </div>
             
             <div class="pricing-option highlighted">
-                <div class="option-badge">Best Value</div>
+                <div class="option-badge">Premium</div>
                 <h3>Pursuit</h3>
                 <p class="price">$4.99/month</p>
                 <ul>
-                    <li>Everything in Plan tier</li>
+                    <li>Everything in Purpose tier</li>
+                    <li>20 additional in-depth questions</li>
+                    <li>Comprehensive life plan</li>
+                    <li>Practical next steps guidance</li>
+                    <li>Customized daily routine</li>
+                    <li>Obstacle-overcoming strategies</li>
                     <li>Unlimited plan regenerations</li>
                     <li>Checkbox tracking for plan items</li>
-                    <li>Access to all future premium features</li>
                     <li>Cancel anytime</li>
                 </ul>
                 <button id="choosePursuitTier" class="btn-primary">Start Your Pursuit</button>
@@ -477,16 +460,20 @@
 <div id="regenerationModal" class="modal" style="display: none;">
     <div class="modal-content">
         <span class="close-modal">&times;</span>
-        <h2>Update Your Life Plan</h2>
-        <p>Regenerating your plan will provide fresh insights and guidance based on your responses.</p>
+        <h2>Update Your Results</h2>
+        <p>Regenerating your results will provide fresh insights and guidance based on your updated responses.</p>
         <div class="regeneration-details">
-            <div class="regeneration-info">
-                <p><strong>Cost:</strong> $4.99</p>
+            <div class="regeneration-info" id="regenerationFreeInfo" style="display: none;">
+                <p><strong>Cost:</strong> Free</p>
+                <p><strong>What you'll get:</strong> A new purpose statement and guiding mantra based on your updated responses.</p>
+            </div>
+            <div class="regeneration-info" id="regenerationPaidInfo" style="display: none;">
+                <p><strong>Cost:</strong> Free with your Pursuit subscription</p>
                 <p><strong>What you'll get:</strong> A completely new life plan with updated insights, next steps, daily plan, and strategies.</p>
             </div>
         </div>
         <div class="regeneration-actions">
-            <button id="confirmRegenerationButton" class="cta-button">Update My Plan ($4.99)</button>
+            <button id="confirmRegenerationButton" class="cta-button">Update My Results</button>
         </div>
     </div>
 </div>
@@ -663,12 +650,9 @@
                 const modalButton = accountCreationModal.querySelector('#createAccountAndPay');
                 
                 if (modalTitle && modalButton) {
-                    if (serverTier === 'plan') {
-                        modalTitle.textContent = 'Create Your Account for Plan';
-                        modalButton.textContent = 'Create Account & Continue ($4.99)';
-                    } else if (serverTier === 'pursuit') {
+                    if (serverTier === 'pursuit') {
                         modalTitle.textContent = 'Create Your Account for Pursuit';
-                        modalButton.textContent = 'Create Account & Continue ($4.99/month)';
+                        modalButton.textContent = 'Create Account & Continue';
                     }
                 }
                 

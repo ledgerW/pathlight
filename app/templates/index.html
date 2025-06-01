@@ -3,21 +3,21 @@
 {% block title %}Pathlight - Discover Your Purpose & Reclaim Your Agency{% endblock %}
 
 {% block meta %}
-<meta name="description" content="Transform self-reflection into clarity and direction with Pathlight's research-backed purpose discovery tool. Choose from one-time insights or our monthly subscription with unlimited regenerations.">
+<meta name="description" content="Transform self-reflection into clarity and direction with Pathlight's research-backed purpose discovery tool. Get your purpose for free or choose our monthly subscription with unlimited regenerations.">
 <meta name="keywords" content="life purpose, find my purpose, purpose discovery, personal agency, self-reflection, meaningful life, intentional living, clarity, direction, authentic self">
 
 <!-- Open Graph / Facebook -->
 <meta property="og:type" content="website">
 <meta property="og:url" content="{{ request.url }}">
 <meta property="og:title" content="Pathlight | Discover Your Purpose & Reclaim Your Agency">
-<meta property="og:description" content="Transform self-reflection into clarity and direction with Pathlight's purpose discovery process. Choose from one-time insights or our monthly subscription with unlimited regenerations.">
+<meta property="og:description" content="Transform self-reflection into clarity and direction with Pathlight's purpose discovery process. Get your purpose for free or choose our monthly subscription with unlimited regenerations.">
 <meta property="og:image" content="/static/images/pathlight_logo.png">
 
 <!-- Twitter -->
 <meta property="twitter:card" content="summary_large_image">
 <meta property="twitter:url" content="{{ request.url }}">
 <meta property="twitter:title" content="Pathlight | Discover Your Purpose & Reclaim Your Agency">
-<meta property="twitter:description" content="Transform self-reflection into clarity and direction with Pathlight's purpose discovery process. Choose from one-time insights or our monthly subscription with unlimited regenerations.">
+<meta property="twitter:description" content="Transform self-reflection into clarity and direction with Pathlight's purpose discovery process. Get your purpose for free or choose our monthly subscription with unlimited regenerations.">
 <meta property="twitter:image" content="/static/images/pathlight_logo.png">
 
 <!-- Schema.org markup for Google -->
@@ -34,23 +34,16 @@
       {
         "@type": "Offer",
         "name": "Purpose",
-        "price": "0.99",
+        "price": "0",
         "priceCurrency": "USD",
         "description": "Personalized purpose statement and guiding mantra with 5 foundational questions"
-      },
-      {
-        "@type": "Offer",
-        "name": "Plan",
-        "price": "4.99",
-        "priceCurrency": "USD",
-        "description": "Complete guidance with 25 questions, practical next steps, daily routine, and obstacle strategies"
       },
       {
         "@type": "Offer",
         "name": "Pursuit",
         "price": "4.99",
         "priceCurrency": "USD",
-        "description": "Monthly subscription with everything in Plan plus unlimited regenerations, checkbox tracking, and future premium features",
+        "description": "Monthly subscription with complete guidance, 25 questions, practical next steps, daily routine, obstacle strategies, unlimited regenerations, checkbox tracking, and future premium features",
         "eligibleDuration": "P1M"
       }
     ]
@@ -221,8 +214,8 @@
             <div class="pricing-plan purpose">
                 <div class="plan-header">
                     <h3>Purpose</h3>
-                    <div class="plan-price">$0.99</div>
-                    <div class="plan-billing">one-time payment</div>
+                    <div class="plan-price">Free</div>
+                    <div class="plan-billing">forever</div>
                 </div>
                 <div class="plan-features">
                     <ul>
@@ -234,33 +227,12 @@
                     </ul>
                 </div>
                 <div class="plan-cta">
-                    <a href="/start-purpose" class="cta-button">Start with Purpose (Free)</a>
-                </div>
-            </div>
-            
-            <div class="pricing-plan plan">
-                <div class="plan-header">
-                    <h3>Plan</h3>
-                    <div class="plan-price">$4.99</div>
-                    <div class="plan-billing">one-time payment</div>
-                </div>
-                <div class="plan-features">
-                    <ul>
-                        <li>Everything in Purpose plan</li>
-                        <li>20 additional in-depth questions</li>
-                        <li>Practical next steps guidance</li>
-                        <li>Customized daily routine</li>
-                        <li>Obstacle-overcoming strategies</li>
-                        <li>Personalized action plan</li>
-                    </ul>
-                </div>
-                <div class="plan-cta">
-                    <a href="/start-plan" class="cta-button">Get Your Plan ($4.99)</a>
+                    <a href="/start-purpose" class="cta-button">Start with Purpose</a>
                 </div>
             </div>
             
             <div class="pricing-plan pursuit">
-                <div class="plan-badge">Best Value</div>
+                <div class="plan-badge">Premium Features</div>
                 <div class="plan-header">
                     <h3>Pursuit</h3>
                     <div class="plan-price">$4.99</div>
@@ -268,7 +240,11 @@
                 </div>
                 <div class="plan-features">
                     <ul>
-                        <li>Everything in Plan tier</li>
+                        <li>Everything in Purpose tier</li>
+                        <li>20 additional in-depth questions</li>
+                        <li>Practical next steps guidance</li>
+                        <li>Customized daily routine</li>
+                        <li>Obstacle-overcoming strategies</li>
                         <li>Unlimited plan regenerations</li>
                         <li>Checkbox tracking for plan items</li>
                         <li>Access to all future premium features</li>
@@ -276,7 +252,7 @@
                     </ul>
                 </div>
                 <div class="plan-cta">
-                    <a href="/start-pursuit" class="cta-button">Start Your Pursuit ($4.99/mo)</a>
+                    <a href="/form?tier=pursuit&show_account_creation=true" class="cta-button">Start Your Pursuit</a>
                 </div>
             </div>
         </div>

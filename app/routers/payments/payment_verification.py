@@ -51,16 +51,30 @@ async def verify_payment(
         raise HTTPException(status_code=404, detail="User not found")
     
     # Validate tier
-    if tier not in ["purpose", "plan", "pursuit"]:
-        raise HTTPException(status_code=400, detail="Invalid tier. Must be 'purpose', 'plan', or 'pursuit'")
+    if tier not in ["purpose", "pursuit"]:
+        raise HTTPException(status_code=400, detail="Invalid tier. Must be 'purpose' or 'pursuit'")
     
     try:
-        # Special case for direct updates from payment_success.html
-        if session_id == "direct-update" and (tier == "pursuit" or tier == "plan"):
+        # Special case for direct updates from payment_success.html or free tier
+        if session_id == "direct-update" or session_id == "free-tier":
             print(f"Direct update requested for user {user_id} to set tier to {tier}")
             
+            # For free tier (purpose), just update the payment tier
+            if tier == "purpose" or session_id == "free-tier":
+                user.payment_tier = "purpose"
+                session.add(user)
+                session.commit()
+                
+                print(f"Set user {user_id} payment tier to purpose (free tier)")
+                
+                return {
+                    "payment_verified": True,
+                    "tier": "purpose",
+                    "direct_update": True,
+                    "is_subscription": False
+                }
             # For Pursuit tier, handle subscription details
-            if tier == "pursuit":
+            elif tier == "pursuit":
                 # Check if the user already has a subscription ID
                 if user.subscription_id:
                     # Get the subscription details
@@ -114,7 +128,7 @@ async def verify_payment(
                     user.subscription_end_date = None
                     print(f"Forced subscription fields for user {user_id}: {user.subscription_id}, {user.subscription_status}")
             
-            # Set the payment tier for both Plan and Pursuit tiers
+            # Set the payment tier for Pursuit tier
             user.payment_tier = tier
             
             # Always save the changes to the database
@@ -182,9 +196,12 @@ async def verify_payment(
                 
                 print(f"Updated user {user_id} with pursuit tier and subscription details: {user.subscription_id}, {user.subscription_status}")
             else:
-                # Update the user's payment tier for one-time payments
-                # Always set the payment tier to the requested tier
-                user.payment_tier = tier
+                # For purpose tier (which is now free), just update the payment tier
+                if tier == "purpose":
+                    user.payment_tier = "purpose"
+                else:
+                    # For other one-time payments (should not happen with new structure)
+                    user.payment_tier = tier
                 session.add(user)
                 session.commit()
                 

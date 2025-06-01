@@ -4,6 +4,31 @@
 Implementing and refining the database schema, AI integration, and user authentication flow for the life purpose application. The focus is on supporting the three-tier payment model (including subscription option), improving result generation, enhancing the user experience, and streamlining the authentication process.
 
 ## Recent Changes
+- **FIXED CRITICAL SUBSCRIPTION CANCELLATION BUG**: Resolved the issue where canceled subscriptions would lose access immediately instead of maintaining access until the end of the billing period:
+  - Fixed subscription_management.py to always preserve subscription_end_date when canceling
+  - Created has_premium_access() utility function to properly check premium access for all subscription states
+  - Updated AI routes and results endpoints to use the new premium access logic
+  - Added comprehensive test suite to verify the fix works correctly
+  - Created background task for subscription cleanup and expiration handling
+  - Now canceled subscriptions properly maintain access until subscription_end_date expires
+
+- Reworked plan offerings to simplify the payment model:
+  - Made Purpose tier completely free (previously $0.99)
+  - Removed Plan tier entirely (previously $4.99 one-time)
+  - Kept Pursuit tier as the only paid option ($4.99/month subscription)
+  - Updated backend code to handle free Purpose tier
+  - Updated frontend to reflect new pricing structure
+  - Updated unit tests to verify new behavior
+
+- Fixed subscription cancellation process issues:
+  - Updated subscription_management.py to keep payment_tier as "pursuit" until subscription actually ends
+  - Added clear success message with dedicated modal showing exact end date
+  - Fixed references from "Plan tier" to "Purpose tier" in cancellation flow
+  - Added comments explaining subscription_end_date usage for tier downgrade
+  - Added note about implementing scheduled task to check for expired subscriptions
+  - Improved UI feedback with clear success messages
+  - Fixed account creation modal height issue by hiding payment section
+
 - Implemented subscription payment model:
   - Added subscription tier ("Pursuit") at $4.99/month
   - Updated database schema to support subscriptions
@@ -42,6 +67,12 @@ Implementing and refining the database schema, AI integration, and user authenti
   - Added "Resubscribe" button for users who previously canceled
 
 ## Next Steps
+- Update marketing language, home page, and FAQ to reflect new pricing structure:
+  - Update all references to pricing on the home page
+  - Update FAQ section with new pricing information
+  - Update any marketing materials that mention the old pricing structure
+  - Test all user flows to confirm the new behavior works correctly
+
 - Create additional content for blog, guides, and FAQ sections
 - Replace placeholder tracking IDs with actual analytics account IDs
 - Monitor SEO performance and make adjustments as needed
@@ -73,7 +104,7 @@ Implementing and refining the database schema, AI integration, and user authenti
 - Following SEO best practices for all content pages
 
 - Using structured JSON data for storing AI-generated results
-- Implementing a three-tier payment model (purpose: $0.99, plan: $4.99, pursuit: $4.99/month subscription)
+- Implementing a simplified two-tier payment model (purpose: free, pursuit: $4.99/month subscription)
 - Using a multi-layered authentication approach with localStorage, Authorization headers, and cookies
 - Using environment-specific cookie settings for authentication
 - Using intelligent content parsing to extract structured information from AI-generated text
@@ -98,7 +129,7 @@ Implementing and refining the database schema, AI integration, and user authenti
 
 ## Learnings and Insights
 - The application is an AI-powered life purpose guidance system
-- The three-tier payment model allows users to get basic insights before committing to the full experience
+- The freemium model with a single paid subscription option simplifies the user experience while still providing value
 - Modern browsers have increasingly strict cookie policies in HTTPS environments
 - A multi-layered authentication approach provides the most robust solution
 - Browser security policies can block cookies in certain scenarios, requiring fallback mechanisms

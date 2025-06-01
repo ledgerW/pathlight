@@ -235,10 +235,10 @@
                 <div class="subscription-modal-info">
                     {% if user.subscription_end_date %}
                         <p>You will still have access to all Pursuit tier features until the end of your current billing period on <strong>{{ user.subscription_end_date.strftime('%B %d, %Y') }}</strong>.</p>
-                        <p>After that date, your account will be downgraded to the Plan tier.</p>
+                        <p>After that date, your account will be downgraded to the Purpose tier.</p>
                     {% else %}
                         <p>You will still have access to all Pursuit tier features until the end of your current billing period.</p>
-                        <p>After that, your account will be downgraded to the Plan tier.</p>
+                        <p>After that, your account will be downgraded to the Purpose tier.</p>
                     {% endif %}
                 </div>
             </div>

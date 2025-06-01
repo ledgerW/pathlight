@@ -47,14 +47,13 @@ async def create_checkout_session(
         raise HTTPException(status_code=404, detail="User not found")
     
     # Validate tier
-    if tier not in ["purpose", "plan", "pursuit"]:
-        raise HTTPException(status_code=400, detail="Invalid tier. Must be 'purpose', 'plan', or 'pursuit'")
+    if tier not in ["purpose", "pursuit"]:
+        raise HTTPException(status_code=400, detail="Invalid tier. Must be 'purpose' or 'pursuit'")
     
     # Check if user has already paid for this tier or higher
     # Skip this check if it's a regeneration payment or subscription
-    if not is_regeneration and not is_subscription and ((tier == "purpose" and user.payment_tier in ["purpose", "plan", "pursuit"]) or \
-       (tier == "plan" and user.payment_tier in ["plan", "pursuit"]) or \
-       (tier == "pursuit" and user.payment_tier == "pursuit" and user.subscription_status == "active")):
+    # Purpose tier is now free, so we only check for Pursuit tier
+    if not is_regeneration and not is_subscription and tier == "pursuit" and user.payment_tier == "pursuit" and user.subscription_status == "active":
         raise HTTPException(status_code=400, detail=f"User has already paid for {tier} tier")
     
     try:
@@ -66,13 +65,23 @@ async def create_checkout_session(
             email=user.email if is_magic_link_sent else None
         )
         
-        # Get cancel URL
-        cancel_url = get_cancel_url(user_id)
+        # Get cancel URL with tier
+        cancel_url = get_cancel_url(user_id, tier)
         
         # Get price ID and mode based on tier
         price_id, mode = get_price_id_and_mode(tier)
         
-        # Create Stripe checkout session
+        # For Purpose tier (free), update user directly and return success URL
+        if tier == "purpose" or price_id is None or mode is None:
+            # Update user's payment tier to purpose
+            user.payment_tier = "purpose"
+            session.add(user)
+            session.commit()
+            
+            # Return success URL directly without creating a checkout session
+            return {"checkout_url": success_url.replace("{CHECKOUT_SESSION_ID}", "free-tier")}
+        
+        # For Pursuit tier, create Stripe checkout session
         checkout_session = stripe.checkout.Session.create(
             payment_method_types=["card"],
             line_items=[

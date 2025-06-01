@@ -72,12 +72,15 @@ async function initiatePayment() {
         // Show payment modal
         document.getElementById('paymentModal').style.display = 'flex';
         
-        // Create checkout session for premium tier
-        const response = await fetch(`/api/payments/${userId}/create-checkout-session/premium`, {
+        // Create checkout session for pursuit tier (subscription)
+        const response = await fetch(`/api/payments/${userId}/create-checkout-session/pursuit`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-            }
+            },
+            body: JSON.stringify({
+                is_subscription: true
+            })
         });
         
         if (!response.ok) {
@@ -127,8 +130,8 @@ async function verifyPayment(sessionId, tier) {
             url.searchParams.delete('tier');
             window.history.replaceState({}, '', url);
             
-            // If premium, plan, or pursuit tier, show full plan
-            if (tier === 'premium' || tier === 'plan' || tier === 'pursuit') {
+            // If pursuit tier, show full plan
+            if (tier === 'pursuit') {
                 showFullPlan();
             } else {
                 // Reload the page to refresh the summary

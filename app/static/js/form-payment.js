@@ -26,13 +26,21 @@ async function initiatePayment(tier, isRegeneration = false, isSubscription = fa
         
         // Hide payment modals
         document.getElementById('basicPaymentModal').style.display = 'none';
-        document.getElementById('premiumPaymentModal').style.display = 'none';
+        if (document.getElementById('premiumPaymentModal')) {
+            document.getElementById('premiumPaymentModal').style.display = 'none';
+        }
         
         // Show loading overlay
         const loadingOverlay = document.getElementById('loadingOverlay');
         const loadingMessage = document.getElementById('loadingMessage');
         loadingOverlay.style.display = 'flex';
-        loadingMessage.textContent = 'Preparing payment...';
+        
+        // For Purpose tier (free), show different loading message
+        if (tier === 'purpose') {
+            loadingMessage.textContent = 'Preparing your free Purpose results...';
+        } else {
+            loadingMessage.textContent = 'Preparing payment...';
+        }
         
         // Check if a magic link has been sent
         const magicLinkSent = localStorage.getItem('magic_link_sent') === 'true';
@@ -85,10 +93,13 @@ async function initiatePayment(tier, isRegeneration = false, isSubscription = fa
         const data = await response.json();
         console.log('Checkout session created:', data);
         
+        // For Purpose tier (free), we might be redirected directly to results
+        // For Pursuit tier, we'll be redirected to Stripe Checkout
+        
         // Hide loading overlay
         loadingOverlay.style.display = 'none';
         
-        // Redirect to Stripe Checkout
+        // Redirect to the provided URL
         window.location.href = data.checkout_url;
         
     } catch (error) {
@@ -156,8 +167,12 @@ async function verifyPayment(sessionId, tier) {
             // Update user object
             user.payment_tier = tier;
             
+            // If this is a free tier, update the UI to reflect that
+            if (tier === 'purpose') {
+                showNotification(`Your free Purpose tier is now active.`, 'success');
+            }
             // If this is a subscription, update the UI to reflect that
-            if (data.is_subscription) {
+            else if (data.is_subscription) {
                 showNotification(`Subscription successful! Your ${tier} tier is now active.`, 'success');
             }
             
@@ -176,8 +191,8 @@ async function verifyPayment(sessionId, tier) {
                     await generateBasicResults();
                 }
             } else {
-                // If premium tier, show all questions
-                if (tier === 'plan' || tier === 'pursuit') {
+                // If pursuit tier, show all questions
+                if (tier === 'pursuit') {
                     // Redirect to form with all questions
                     window.location.href = `/form/${user.id}`;
                 } else {
@@ -204,14 +219,6 @@ async function verifyPayment(sessionId, tier) {
 
 // Add event listeners for payment buttons when the document is loaded
 document.addEventListener('DOMContentLoaded', function() {
-    // Plan payment button
-    const planButton = document.getElementById('proceedToPlanPayment');
-    if (planButton) {
-        planButton.addEventListener('click', function() {
-            initiatePayment('plan');
-        });
-    }
-    
     // Pursuit (subscription) payment button
     const pursuitButton = document.getElementById('proceedToPursuitPayment');
     if (pursuitButton) {
@@ -220,10 +227,18 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
-    // Update the basic payment button to use 'purpose' tier instead of 'basic'
+    // Update the basic payment button to use 'purpose' tier (now free)
     const basicButton = document.getElementById('proceedToBasicPayment');
     if (basicButton) {
         basicButton.addEventListener('click', function() {
+            initiatePayment('purpose');
+        });
+    }
+    
+    // Continue to Purpose button (free)
+    const continueToFreeButton = document.getElementById('continueToFree');
+    if (continueToFreeButton) {
+        continueToFreeButton.addEventListener('click', function() {
             initiatePayment('purpose');
         });
     }

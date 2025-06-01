@@ -35,24 +35,29 @@ async def cancel_subscription(
             cancel_at_period_end=True
         )
         
-        # Update user's subscription status
+        # Update user's subscription status to "canceled"
         user.subscription_status = "canceled"
         
-        # Downgrade payment tier from "pursuit" to "plan"
-        if user.payment_tier == "pursuit":
-            user.payment_tier = "plan"
+        # Note: We keep the payment_tier as "pursuit" until the subscription actually ends
+        # The subscription_end_date is used to determine when to actually downgrade the tier
+        # This ensures the user maintains access to Pursuit tier features until the end of their billing period
         
         # Store the subscription end date from Stripe
-        if subscription.get("cancel_at_period_end") and subscription.get("current_period_end"):
-            # If canceling at period end, keep the end date
+        # Always preserve the current_period_end so we know when to revoke access
+        if subscription.get("current_period_end"):
             user.subscription_end_date = datetime.fromtimestamp(subscription.get("current_period_end"))
         else:
-            # Otherwise, clear the subscription end date
-            user.subscription_end_date = None
+            # Fallback: if no current_period_end, set to 30 days from now
+            from datetime import timedelta
+            user.subscription_end_date = datetime.utcnow() + timedelta(days=30)
+            print(f"Warning: No current_period_end found for subscription {subscription_id}, setting fallback end date")
         
         # Keep track of when the subscription was canceled
         print(f"Canceling subscription {subscription_id} for user {user_id}")
-        print(f"Downgrading user from pursuit to plan tier")
+        print(f"User will be downgraded from pursuit to purpose tier at the end of the billing period")
+        
+        # Note: A scheduled task should check for expired subscriptions daily and downgrade users
+        # from 'pursuit' to 'purpose' tier when subscription_end_date is reached
         
         session.add(user)
         session.commit()

@@ -113,8 +113,9 @@ async def generate_premium_results(
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
     
-    # Check if user has paid for premium or pursuit tier
-    if user.payment_tier != "premium" and user.payment_tier != "pursuit":
+    # Check if user has premium access (handles canceled subscriptions properly)
+    from app.routers.payments.payment_utils import has_premium_access
+    if not has_premium_access(user):
         raise HTTPException(
             status_code=403,
             detail="Premium or Pursuit tier required to generate full results"

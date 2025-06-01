@@ -136,7 +136,7 @@
         color: var(--teal, #333);
     }
     
-    .tier-badge.plan, .tier-badge.premium {
+    .tier-badge.premium {
         background-color: var(--teal, #3a80d2);
     }
     
@@ -302,16 +302,44 @@
                         }
                     });
                     
-                    closeAllModals();
-                    
                     if (response.ok) {
                         const data = await response.json();
-                        showNotification(data.message, 'success');
                         
-                        // Update the UI to reflect the changes
-                        setTimeout(() => {
-                            window.location.reload();
-                        }, 2000);
+                        // Close the cancel modal
+                        closeAllModals();
+                        
+                        // Show success modal with clear message
+                        const successModal = document.createElement('div');
+                        successModal.className = 'modal-overlay';
+                        successModal.style.display = 'flex';
+                        successModal.innerHTML = `
+                            <div class="subscription-modal">
+                                <div class="subscription-modal-header">
+                                    <h3 class="subscription-modal-title">Subscription Canceled</h3>
+                                    <button class="subscription-modal-close" onclick="this.parentElement.parentElement.parentElement.style.display='none'">&times;</button>
+                                </div>
+                                <div class="subscription-modal-body">
+                                    <div class="subscription-modal-icon success">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                                            <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                                        </svg>
+                                    </div>
+                                    <h4 class="subscription-modal-question">Your subscription has been canceled</h4>
+                                    <div class="subscription-modal-info">
+                                        <p>You will still have access to all Pursuit tier features until the end of your current billing period${data.subscription_end_date ? (' on <strong>' + new Date(data.subscription_end_date).toLocaleDateString('en-US', {year: 'numeric', month: 'long', day: 'numeric'}) + '</strong>') : ''}.</p>
+                                        <p>After that, your account will be downgraded to the Purpose tier.</p>
+                                    </div>
+                                </div>
+                                <div class="subscription-modal-footer">
+                                    <button class="subscription-button subscription-button-primary" onclick="window.location.reload()">OK</button>
+                                </div>
+                            </div>
+                        `;
+                        document.body.appendChild(successModal);
+                        
+                        // Also show the notification
+                        showNotification(data.message, 'success');
                     } else {
                         const error = await response.json();
                         showNotification('Error: ' + error.detail, 'error');

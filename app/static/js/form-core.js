@@ -315,43 +315,13 @@ document.addEventListener('DOMContentLoaded', function() {
                         const paymentSection = accountCreationModal.querySelector('.payment-section');
                         
                         if (modalTitle && modalButton && paymentSection) {
-                            if (urlTier === 'plan') {
-                                modalTitle.textContent = 'Create Your Account for Plan';
-                                modalButton.textContent = 'Create Account & Continue ($4.99)';
-                                
-                                // Update payment section content for Plan tier
-                                const paymentSectionTitle = paymentSection.querySelector('h3');
-                                const paymentSectionText = paymentSection.querySelector('p');
-                                const paymentSectionList = paymentSection.querySelector('ul');
-                                
-                                if (paymentSectionTitle && paymentSectionText && paymentSectionList) {
-                                    paymentSectionTitle.textContent = 'Get Your Complete Life Plan';
-                                    paymentSectionText.textContent = 'For just $4.99, you\'ll receive:';
-                                    paymentSectionList.innerHTML = `
-                                        <li>A comprehensive analysis of your authentic self</li>
-                                        <li>Practical next steps for 7, 30, and 180 days</li>
-                                        <li>A daily plan to set you up for success</li>
-                                        <li>Strategies for overcoming obstacles</li>
-                                    `;
-                                }
-                            } else if (urlTier === 'pursuit') {
+                            if (urlTier === 'pursuit') {
                                 modalTitle.textContent = 'Create Your Account for Pursuit';
-                                modalButton.textContent = 'Create Account & Continue ($4.99/month)';
+                                modalButton.textContent = 'Create Account & Continue';
                                 
-                                // Update payment section content for Pursuit tier
-                                const paymentSectionTitle = paymentSection.querySelector('h3');
-                                const paymentSectionText = paymentSection.querySelector('p');
-                                const paymentSectionList = paymentSection.querySelector('ul');
-                                
-                                if (paymentSectionTitle && paymentSectionText && paymentSectionList) {
-                                    paymentSectionTitle.textContent = 'Start Your Pursuit Subscription';
-                                    paymentSectionText.textContent = 'For just $4.99/month, you\'ll receive:';
-                                    paymentSectionList.innerHTML = `
-                                        <li>Everything in the Plan tier</li>
-                                        <li>Unlimited plan regenerations</li>
-                                        <li>Checkbox tracking for plan items</li>
-                                        <li>Access to all future premium features</li>
-                                    `;
+                                // Hide the payment section for Pursuit tier since user already knows what they're purchasing
+                                if (paymentSection) {
+                                    paymentSection.style.display = 'none';
                                 }
                             }
                         }
@@ -501,16 +471,16 @@ document.addEventListener('DOMContentLoaded', function() {
             // Check if results already exist
             const resultsData = await checkExistingResults();
             
-            if (resultsData.has_results && user.payment_tier === 'basic') {
+            if (resultsData.has_results && user.payment_tier === 'purpose') {
                 // Show regeneration payment modal
                 showRegenerationPaymentModal(resultsData.last_generated_at, resultsData.regeneration_count);
                 return;
             }
             
-            // If no existing results or user hasn't paid yet, show basic payment modal
+            // If no existing results or user hasn't paid yet, proceed with free Purpose tier
             if (user.payment_tier === 'none') {
-                // Show basic payment modal
-                basicPaymentModal.style.display = 'flex';
+                // Purpose tier is now free, so initiate the free tier process
+                initiatePayment('purpose');
                 return;
             }
         }
