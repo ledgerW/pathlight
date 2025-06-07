@@ -49,6 +49,12 @@
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
+  <url>
+    <loc>https://followpathlight.com/blog/posts/purpose-and-longevity-research</loc>
+    <lastmod>2025-01-07</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
   <!-- Guides Pages -->
   <url>
     <loc>https://followpathlight.com/guides</loc>
