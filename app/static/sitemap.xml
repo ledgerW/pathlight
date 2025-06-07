@@ -61,6 +61,12 @@
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
+  <url>
+    <loc>https://followpathlight.com/blog/posts/the-psychology-of-flow-states-and-purpose</loc>
+    <lastmod>2025-10-20</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
   <!-- Guides Pages -->
   <url>
     <loc>https://followpathlight.com/guides</loc>
