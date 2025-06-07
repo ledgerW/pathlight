@@ -51,5 +51,4 @@ Thumbs.db
 poetry.lock 
 
 dev_auth_token.json
-memory-bank/
 file::memory:
