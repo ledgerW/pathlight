@@ -3,6 +3,7 @@ import os
 import json
 from langchain_openai import ChatOpenAI
 from langsmith import traceable
+from langchain_core.runnables import RunnableLambda
 from app.models import User, FormResponse
 from app.prompts import get_question_text, get_zodiac_sign
 
@@ -11,7 +12,9 @@ from .ai_prompts import summary_prompt, full_plan_prompt
 
 # Initialize OpenAI client
 openai_api_key = os.getenv("OPENAI_API_KEY")
-llm = ChatOpenAI(temperature=0.2, model="gpt-4.1", max_tokens=5000, api_key=openai_api_key)
+llm = ChatOpenAI(
+    temperature=0.2, model="gpt-4.1", max_tokens=5000, api_key=openai_api_key
+)
 
 def format_responses(user: User, zodiac_info: Dict[str, str], responses: List[FormResponse]) -> str:
     """
@@ -52,14 +55,12 @@ def generate_purpose(user: User, zodiac_info: Dict[str, str], responses: List[Fo
     # Format responses for the prompt
     formatted_responses = format_responses(user, zodiac_info, responses)
     
-    # Generate summary only
-    summary_prompt_formatted = summary_prompt.format(responses=formatted_responses)
-    
-    # Bind the schema to the model
+    # Build the chain using the prompt and LLM
     model_with_structure = llm.with_structured_output(SummaryOutput)
-    
+    summary_chain = summary_prompt | RunnableLambda(model_with_structure.invoke)
+
     # Invoke LLM for summary with structured output
-    summary_output = model_with_structure.invoke(summary_prompt_formatted)
+    summary_output = summary_chain.invoke({"responses": formatted_responses})
     
     return summary_output
 
@@ -90,24 +91,18 @@ def generate_plan(
     
     # If no existing basic plan, generate one
     if not existing_basic_plan:
-        # Bind the schema to the model
         model_with_structure = llm.with_structured_output(SummaryOutput)
-        
-        # Invoke LLM for summary with structured output
-        summary_output = model_with_structure.invoke(summary_prompt.format(responses=formatted_responses))
-        
-        # Convert to JSON string for storage
+        summary_chain = summary_prompt | RunnableLambda(model_with_structure.invoke)
+        summary_output = summary_chain.invoke({"responses": formatted_responses})
         basic_plan_json = json.dumps(summary_output.model_dump())
     else:
         basic_plan_json = existing_basic_plan
-    
+
     # Generate full plan
-    full_plan_prompt_formatted = full_plan_prompt.format(responses=formatted_responses)
-    
-    # Bind the schema to the model for full plan
-    model_with_structure = llm.with_structured_output(FullPlanOutput)
-    
+    model_with_structure_full = llm.with_structured_output(FullPlanOutput)
+    full_plan_chain = full_plan_prompt | RunnableLambda(model_with_structure_full.invoke)
+
     # Invoke LLM for full plan with structured output
-    full_plan_output = model_with_structure.invoke(full_plan_prompt_formatted)
+    full_plan_output = full_plan_chain.invoke({"responses": formatted_responses})
     
     return basic_plan_json, full_plan_output

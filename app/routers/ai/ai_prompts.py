@@ -1,4 +1,6 @@
-from langchain.prompts import ChatPromptTemplate
+"""Prompt templates used for AI generation."""
+
+from langchain_core.prompts import ChatPromptTemplate
 
 # Define the system prompt
 system_prompt = """You are here to listen to the user's story, think deeply about it, and then give them purpose and agency and an empirical path to follow.
@@ -49,20 +51,26 @@ Marcus Aurelius reminds us that virtue, duty, and rational reflection are the co
 
 
 # Define prompt templates with the system message
-summary_prompt = ChatPromptTemplate([
-    ("system", system_prompt),
-    ("user", """
-Based on the user's responses to the reflective questions below, create their purpose and a mantra.
+summary_prompt = ChatPromptTemplate.from_messages(
+    [
+        ("system", system_prompt),
+        (
+            "user",
+            """Based on the user's responses to the reflective questions below, create their purpose and a mantra.
 
 USER RESPONSES:
 {responses}
-""")
-])
+""",
+        ),
+    ]
+)
 
-full_plan_prompt = ChatPromptTemplate([
-    ("system", system_prompt),
-    ("user", """
-Based on the user's responses to the reflective questions below, create their mantra, purpose, next steps, daily plan, and obstacles.
+full_plan_prompt = ChatPromptTemplate.from_messages(
+    [
+        ("system", system_prompt),
+        (
+            "user",
+            """Based on the user's responses to the reflective questions below, create their mantra, purpose, next steps, daily plan, and obstacles.
 
 For each action item in the next steps and daily plan sections, assign one of these categories:
 health, learning, mindfulness, writing, planning, social, nutrition, rest, creativity, family, friendship, career, finance, medical, travel, hobbies, goals, reflection, gratitude, nature
@@ -87,5 +95,7 @@ For the obstacles section, identify both personal and external challenges the us
 
 USER RESPONSES:
 {responses}
-""")
-])
+""",
+        ),
+    ]
+)
