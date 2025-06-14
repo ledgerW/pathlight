@@ -1,20 +1,11 @@
 from typing import List, Dict, Optional, Tuple
-import os
 import json
-from langchain_openai import ChatOpenAI
 from langsmith import traceable
-from langchain_core.runnables import RunnableLambda
 from app.models import User, FormResponse
 from app.prompts import get_question_text, get_zodiac_sign
 
 from .ai_models import SummaryOutput, FullPlanOutput
-from .ai_prompts import summary_prompt, full_plan_prompt
-
-# Initialize OpenAI client
-openai_api_key = os.getenv("OPENAI_API_KEY")
-llm = ChatOpenAI(
-    temperature=0.2, model="gpt-4.1", max_tokens=5000, api_key=openai_api_key
-)
+from .ai_chains import summary_chain, full_plan_chain
 
 def format_responses(user: User, zodiac_info: Dict[str, str], responses: List[FormResponse]) -> str:
     """
@@ -55,11 +46,7 @@ def generate_purpose(user: User, zodiac_info: Dict[str, str], responses: List[Fo
     # Format responses for the prompt
     formatted_responses = format_responses(user, zodiac_info, responses)
     
-    # Build the chain using the prompt and LLM
-    model_with_structure = llm.with_structured_output(SummaryOutput)
-    summary_chain = summary_prompt | RunnableLambda(model_with_structure.invoke)
-
-    # Invoke LLM for summary with structured output
+    # Use the pre-built chain from ai_chains module
     summary_output = summary_chain.invoke({"responses": formatted_responses})
     
     return summary_output
@@ -89,20 +76,14 @@ def generate_plan(
     # Format responses for the prompt
     formatted_responses = format_responses(user, zodiac_info, responses)
     
-    # If no existing basic plan, generate one
+    # If no existing basic plan, generate one using the pre-built chain
     if not existing_basic_plan:
-        model_with_structure = llm.with_structured_output(SummaryOutput)
-        summary_chain = summary_prompt | RunnableLambda(model_with_structure.invoke)
         summary_output = summary_chain.invoke({"responses": formatted_responses})
         basic_plan_json = json.dumps(summary_output.model_dump())
     else:
         basic_plan_json = existing_basic_plan
 
-    # Generate full plan
-    model_with_structure_full = llm.with_structured_output(FullPlanOutput)
-    full_plan_chain = full_plan_prompt | RunnableLambda(model_with_structure_full.invoke)
-
-    # Invoke LLM for full plan with structured output
+    # Generate full plan using the pre-built chain
     full_plan_output = full_plan_chain.invoke({"responses": formatted_responses})
     
     return basic_plan_json, full_plan_output
