@@ -731,18 +731,83 @@ function showRegenerationPaymentModal(lastGeneratedAt, regenerationCount = 0) {
         loadingOverlay.style.display = 'none';
     }
     
-    // Update the price text based on user's tier
+    // Check if user is on Purpose tier (free regeneration)
+    const isPurposeTier = user.payment_tier === 'purpose' || user.payment_tier === 'basic';
     const isPremiumTier = user.payment_tier === 'premium' || user.payment_tier === 'plan';
-    const priceText = isPremiumTier ? '$4.99' : '$0.99';
-    const modalTitle = isPremiumTier ? 'Update Your Life Plan' : 'Update Your Personal Insight';
+    const isPursuitTier = user.payment_tier === 'pursuit';
     
-    // Update modal title
-    document.querySelector('#regenerationModal h2').textContent = modalTitle;
-    
-    // Update button text with correct price
-    const buttonElement = document.getElementById('confirmRegenerationButton');
-    if (buttonElement) {
-        buttonElement.textContent = `Update My Plan (${priceText})`;
+    if (isPurposeTier) {
+        // For Purpose tier users, show a simple confirmation modal (no payment)
+        const modalTitle = 'Update Your Purpose';
+        const modalText = 'Are you sure you want to regenerate your Purpose insights? This will create a new purpose statement and mantra based on your current responses.';
+        const buttonText = 'Update My Purpose (Free)';
+        
+        // Update modal content
+        document.querySelector('#regenerationModal h2').textContent = modalTitle;
+        
+        // Update the modal content to show free regeneration info
+        const regenerationFreeInfo = document.getElementById('regenerationFreeInfo');
+        const regenerationPaidInfo = document.getElementById('regenerationPaidInfo');
+        
+        if (regenerationFreeInfo) {
+            regenerationFreeInfo.style.display = 'block';
+        }
+        if (regenerationPaidInfo) {
+            regenerationPaidInfo.style.display = 'none';
+        }
+        
+        // Update button text
+        const buttonElement = document.getElementById('confirmRegenerationButton');
+        if (buttonElement) {
+            buttonElement.textContent = buttonText;
+        }
+    } else if (isPursuitTier) {
+        // For Pursuit tier users, show free regeneration for premium plan
+        const modalTitle = 'Update Your Life Plan';
+        
+        // Update modal content
+        document.querySelector('#regenerationModal h2').textContent = modalTitle;
+        
+        // Update the modal content to show free regeneration info for subscription
+        const regenerationFreeInfo = document.getElementById('regenerationFreeInfo');
+        const regenerationPaidInfo = document.getElementById('regenerationPaidInfo');
+        
+        if (regenerationFreeInfo) {
+            regenerationFreeInfo.style.display = 'none';
+        }
+        if (regenerationPaidInfo) {
+            regenerationPaidInfo.style.display = 'block';
+        }
+        
+        // Update button text
+        const buttonElement = document.getElementById('confirmRegenerationButton');
+        if (buttonElement) {
+            buttonElement.textContent = 'Update My Plan (Free)';
+        }
+    } else {
+        // For other tiers, show paid regeneration
+        const priceText = isPremiumTier ? '$4.99' : '$0.99';
+        const modalTitle = isPremiumTier ? 'Update Your Life Plan' : 'Update Your Personal Insight';
+        
+        // Update modal title
+        document.querySelector('#regenerationModal h2').textContent = modalTitle;
+        
+        // Hide free info, show paid info
+        const regenerationFreeInfo = document.getElementById('regenerationFreeInfo');
+        const regenerationPaidInfo = document.getElementById('regenerationPaidInfo');
+        
+        if (regenerationFreeInfo) {
+            regenerationFreeInfo.style.display = 'none';
+        }
+        if (regenerationPaidInfo) {
+            regenerationPaidInfo.style.display = 'none';
+        }
+        
+        // Update button text with correct price
+        const buttonElement = document.getElementById('confirmRegenerationButton');
+        if (buttonElement) {
+            buttonElement.textContent = `Update My Plan (${priceText})`;
+        }
     }
     
     // Show the modal

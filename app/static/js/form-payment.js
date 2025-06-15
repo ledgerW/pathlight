@@ -37,7 +37,7 @@ async function initiatePayment(tier, isRegeneration = false, isSubscription = fa
         
         // For Purpose tier (free), show different loading message
         if (tier === 'purpose') {
-            loadingMessage.textContent = 'Preparing your free Purpose results...';
+            loadingMessage.textContent = 'Generating your free Purpose insights...';
         } else {
             loadingMessage.textContent = 'Preparing payment...';
         }
@@ -160,20 +160,16 @@ async function verifyPayment(sessionId, tier) {
                 return; // Exit early to prevent further processing
             }
             
-            // For users who are already logged in (not using magic link flow)
-            // Show regular success message
-            showNotification(`Payment successful! Your ${tier} tier is now active.`, 'success');
-            
             // Update user object
             user.payment_tier = tier;
             
-            // If this is a free tier, update the UI to reflect that
+            // Show appropriate success message based on tier
             if (tier === 'purpose') {
-                showNotification(`Your free Purpose tier is now active.`, 'success');
-            }
-            // If this is a subscription, update the UI to reflect that
-            else if (data.is_subscription) {
+                showNotification(`Your free Purpose insights are ready!`, 'success');
+            } else if (data.is_subscription) {
                 showNotification(`Subscription successful! Your ${tier} tier is now active.`, 'success');
+            } else {
+                showNotification(`Payment successful! Your ${tier} tier is now active.`, 'success');
             }
             
             // Update tier badge

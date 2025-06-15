@@ -48,8 +48,13 @@
 <div class="payment-container">
     <div class="payment-content success">
         <img src="/static/images/16TheHorizon.png" alt="The Horizon" class="payment-image">
+        {% if tier == 'purpose' %}
+        <h1>Welcome to Pathlight!</h1>
+        <p>Your free Purpose insights are ready! We've sent you a magic link to access your personalized guidance.</p>
+        {% else %}
         <h1>Payment Successful!</h1>
-        <p>Thank you for your purchase. Your {{ tier }} plan has been activated.</p>
+        <p>Thank you for your subscription. Your {{ tier|title }} plan has been activated.</p>
+        {% endif %}
         
         <div class="email-instructions">
             <h3>Check Your Email</h3>

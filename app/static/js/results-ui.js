@@ -216,6 +216,7 @@ async function showRegenerationModal() {
             
             const statusData = await response.json();
             const isSubscriptionUser = statusData.payment_tier === 'pursuit';
+            const isPurposeUser = statusData.payment_tier === 'purpose';
             
             // Check if user has a subscription
             let hasActiveSubscription = false;
@@ -228,8 +229,53 @@ async function showRegenerationModal() {
                 }
             }
             
-            // Update the modal content based on subscription status
-            if (hasActiveSubscription) {
+            // Update the modal content based on user tier and subscription status
+            if (isPurposeUser) {
+                // For Purpose tier users, show free regeneration
+                let purposeContent = document.getElementById('purposeRegenerationContent');
+                if (!purposeContent) {
+                    // Create purpose content
+                    purposeContent = document.createElement('div');
+                    purposeContent.id = 'purposeRegenerationContent';
+                    purposeContent.innerHTML = `
+                        <p>Regenerating your Purpose insights will provide fresh guidance based on your responses.</p>
+                        <div class="regeneration-details">
+                            <div class="regeneration-info">
+                                <p><strong>Cost:</strong> Free</p>
+                                <p><strong>What you'll get:</strong> A new purpose statement and guiding mantra based on your updated responses.</p>
+                            </div>
+                        </div>
+                        <div class="regeneration-actions">
+                            <button id="confirmPurposeRegenerationButton" class="cta-button">Update My Purpose (Free)</button>
+                        </div>
+                    `;
+                    
+                    // Replace the existing content
+                    const existingContent = regenerationModal.querySelector('.modal-content');
+                    existingContent.innerHTML = `
+                        <span class="close-modal">&times;</span>
+                        <h2>Update Your Purpose</h2>
+                    `;
+                    existingContent.appendChild(purposeContent);
+                } else {
+                    purposeContent.style.display = 'block';
+                    const oneTimeContent = document.getElementById('oneTimeRegenerationContent');
+                    const subscriptionContent = document.getElementById('subscriptionRegenerationContent');
+                    if (oneTimeContent) oneTimeContent.style.display = 'none';
+                    if (subscriptionContent) subscriptionContent.style.display = 'none';
+                }
+                
+                // Add event listener for purpose regeneration button
+                const confirmPurposeButton = document.getElementById('confirmPurposeRegenerationButton');
+                if (confirmPurposeButton) {
+                    // Remove any existing event listeners
+                    const newButton = confirmPurposeButton.cloneNode(true);
+                    confirmPurposeButton.parentNode.replaceChild(newButton, confirmPurposeButton);
+                    
+                    // Add new event listener
+                    newButton.addEventListener('click', initiatePurposeRegeneration);
+                }
+            } else if (hasActiveSubscription) {
                 // Create subscription content if it doesn't exist
                 let subscriptionContent = document.getElementById('subscriptionRegenerationContent');
                 if (!subscriptionContent) {
@@ -367,6 +413,41 @@ async function showRegenerationModal() {
         if (confirmSubscriptionButton) {
             confirmSubscriptionButton.addEventListener('click', initiateSubscriptionRegeneration);
         }
+    }
+}
+
+// Initiate free regeneration for Purpose tier users
+async function initiatePurposeRegeneration() {
+    try {
+        // Show loading overlay
+        const loadingMessage = showGeneratingResultsMessage();
+        
+        // Hide regeneration modal
+        document.getElementById('regenerationModal').style.display = 'none';
+        
+        // Call the basic regenerate endpoint (free for Purpose tier)
+        const response = await fetch(`/api/ai/${userId}/generate-basic`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+        
+        if (!response.ok) {
+            throw new Error('Failed to regenerate purpose');
+        }
+        
+        // Reload the page to show the new purpose
+        window.location.reload();
+        
+    } catch (error) {
+        console.error('Error regenerating purpose:', error);
+        // Remove loading message
+        const loadingMessage = document.querySelector('.generating-results-message');
+        if (loadingMessage) {
+            loadingMessage.remove();
+        }
+        showNotification('Error regenerating purpose. Please try again.', 'error');
     }
 }
 

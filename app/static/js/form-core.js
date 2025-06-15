@@ -250,13 +250,49 @@ document.addEventListener('DOMContentLoaded', function() {
         const confirmRegenerationButton = document.getElementById('confirmRegenerationButton');
         if (confirmRegenerationButton) {
             confirmRegenerationButton.addEventListener('click', () => {
-                // Check if user is premium or plan tier to determine which tier to regenerate
-                const tier = (user.payment_tier === 'premium' || user.payment_tier === 'plan') ? 'premium' : 'basic';
-                initiatePayment(tier, true); // Pass true for regeneration
+                // Check if user is on Purpose tier (free regeneration)
+                const isPurposeTier = user.payment_tier === 'purpose' || user.payment_tier === 'basic';
+                const isPursuitTier = user.payment_tier === 'pursuit';
                 
-                const regenerationModal = document.getElementById('regenerationModal');
-                if (regenerationModal) {
-                    regenerationModal.style.display = 'none';
+                if (isPurposeTier) {
+                    // For Purpose tier users, regenerate for free
+                    const regenerationModal = document.getElementById('regenerationModal');
+                    if (regenerationModal) {
+                        regenerationModal.style.display = 'none';
+                    }
+                    
+                    // Show loading overlay
+                    const loadingOverlay = document.getElementById('loadingOverlay');
+                    const loadingMessage = document.getElementById('loadingMessage');
+                    loadingOverlay.style.display = 'flex';
+                    loadingMessage.textContent = 'Updating your Purpose insights...';
+                    
+                    // Call the basic regeneration directly
+                    generateBasicResults();
+                } else if (isPursuitTier) {
+                    // For Pursuit tier users, regenerate premium plan for free
+                    const regenerationModal = document.getElementById('regenerationModal');
+                    if (regenerationModal) {
+                        regenerationModal.style.display = 'none';
+                    }
+                    
+                    // Show loading overlay
+                    const loadingOverlay = document.getElementById('loadingOverlay');
+                    const loadingMessage = document.getElementById('loadingMessage');
+                    loadingOverlay.style.display = 'flex';
+                    loadingMessage.textContent = 'Updating your life plan...';
+                    
+                    // Call the premium regeneration directly
+                    generatePremiumResults();
+                } else {
+                    // For other tiers, show payment modal
+                    const tier = (user.payment_tier === 'premium' || user.payment_tier === 'plan') ? 'premium' : 'basic';
+                    initiatePayment(tier, true); // Pass true for regeneration
+                    
+                    const regenerationModal = document.getElementById('regenerationModal');
+                    if (regenerationModal) {
+                        regenerationModal.style.display = 'none';
+                    }
                 }
             });
         }

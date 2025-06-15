@@ -69,14 +69,26 @@ async function initializeStripe() {
 // Initiate payment
 async function initiatePayment() {
     try {
+        // Get user ID from global variable set by template
+        const currentUserId = window.userId || userId;
+        
+        if (!currentUserId) {
+            showNotification('User ID not found. Please refresh the page and try again.', 'error');
+            return;
+        }
+        
         // Show payment modal
         document.getElementById('paymentModal').style.display = 'flex';
         
+        // Get authentication token
+        const authToken = localStorage.getItem('stytch_session_token');
+        
         // Create checkout session for pursuit tier (subscription)
-        const response = await fetch(`/api/payments/${userId}/create-checkout-session/pursuit`, {
+        const response = await fetch(`/api/payments/${currentUserId}/create-checkout-session/pursuit`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
+                'Authorization': authToken ? `Bearer ${authToken}` : ''
             },
             body: JSON.stringify({
                 is_subscription: true
@@ -103,7 +115,15 @@ async function initiatePayment() {
 // Verify payment
 async function verifyPayment(sessionId, tier) {
     try {
-        const response = await fetch(`/api/payments/${userId}/verify-payment`, {
+        // Get user ID from global variable set by template
+        const currentUserId = window.userId || userId;
+        
+        if (!currentUserId) {
+            console.error('User ID not found for payment verification');
+            return;
+        }
+        
+        const response = await fetch(`/api/payments/${currentUserId}/verify-payment`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -145,3 +165,7 @@ async function verifyPayment(sessionId, tier) {
         console.error('Error verifying payment:', error);
     }
 }
+
+// Make functions globally accessible
+window.initiatePayment = initiatePayment;
+window.verifyPayment = verifyPayment;

@@ -72,7 +72,7 @@ async def generate_basic_results(
         
         # Update user payment tier if not already set
         if user.payment_tier == "none":
-            user.payment_tier = "basic"
+            user.payment_tier = "purpose"
             session.add(user)
             session.commit()
         

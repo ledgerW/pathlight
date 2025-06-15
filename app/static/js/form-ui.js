@@ -349,8 +349,12 @@ function showSlide(slideIndex) {
             nextButton.style.display = 'block';
             submitButton.style.display = 'block';
             
-            // Update button text to "Update Purpose"
-            submitButton.textContent = 'Update Purpose';
+            // Update button text to "Update Purpose" for Purpose tier users
+            if (user.payment_tier === 'purpose' || user.payment_tier === 'basic') {
+                submitButton.textContent = 'Update Purpose';
+            } else {
+                submitButton.textContent = 'Update Purpose';
+            }
         } else if (slideIndex === PREMIUM_TIER_QUESTIONS && user.payment_tier === 'premium') {
             // Show only the Complete button for premium tier with text "Update Plan"
             nextButton.style.display = 'none';
