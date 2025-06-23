@@ -50,7 +50,7 @@ Blog posts in this category explore fundamental concepts related to finding and 
    - The role of surrender and openness in purpose discovery
    - Balancing intentional seeking with allowing purpose to emerge
 
-7. **"Purpose Beyond Passion: When 'Follow Your Passion' Is Bad Advice"**
+7. ~~**"Purpose Beyond Passion: When 'Follow Your Passion' Is Bad Advice"**~~ (Completed: June 23, 2025)
    - The limitations of the "follow your passion" narrative
    - Research on sustainable purpose vs. fleeting passion
    - How skills, market needs, and values factor into meaningful work
